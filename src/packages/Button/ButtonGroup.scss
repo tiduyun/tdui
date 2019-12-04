@@ -1,0 +1,35 @@
+@import "../styles/inc.scss";
+
+.v-button-group {
+
+  .v-button--active:not(.el-button--text) {
+    $bgcolor: $color-primary;
+    $active-bgcolor: mix($color-white, $color-primary, $button-hover-tint-percent);
+    color: #fff;
+    background-color: $bgcolor;
+    border-color: $bgcolor;
+    &:hover, &:focus {
+      background: $active-bgcolor;
+      border-color: $active-bgcolor;
+      color: #fff;
+    }
+  }
+
+  /* v-button-group--text */
+  @at-root #{&}--text {
+    $padding-h: 6px !default;
+
+    margin-left: -1 * $padding-h;
+    margin-right: -1 * $padding-h;
+
+    .v-button {
+      margin: auto 0;
+      padding-left: $padding-h;
+      padding-right: $padding-h;
+    }
+
+    .v-button--active {
+      @include link($color-highlight)
+    }
+  }
+}

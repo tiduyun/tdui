@@ -1,0 +1,23 @@
+@import "../styles/inc.scss";
+
+.v-icon {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 1.16em;
+
+  @include link($color-info, $color-primary);
+
+  &.is-light {
+   @include link(lighten($color-highlight, 2%), lighten($color-highlight, 15%));
+  }
+
+  &.is-disabled {
+    color: $disabled-color-base;
+  }
+}
+
+.v-svg-icon {
+  @include size(1em);
+  fill: currentColor;
+  overflow: hidden;
+}

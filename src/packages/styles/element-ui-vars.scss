@@ -1,0 +1,50 @@
+@import "./variables.scss";
+
+/* adapter consts for element-ui themes */
+
+/* theme color */
+$--color-white: $color-white;
+$--color-black: #2c3e50;
+$--color-text-primary: $color-text-regular;
+
+$--fill-base: $--color-white;
+
+$--color-primary: $color-primary;
+$--color-success: $color-success;
+$--color-info: $color-info;
+$--color-warning: $color-warning;
+$--color-danger: $color-danger;
+
+$--color-text-secondary: $color-info;
+$--color-text-placeholder: $color-text-placeholder;
+
+// Border
+$--border-color-base: $border-color-base;
+$--border-color-light: #dfe4ed;
+$--border-color-lighter: #e6ebf5;
+
+// Disable base
+$--disabled-fill-base: $disabled-fill-base;
+$--disabled-color-base: $disabled-color-base;
+
+/* button */
+$--button-primary-border-color: $button-primary-border-color;
+$--button-default-border-color: $button-default-border-color;
+$--button-font-weight: 400;
+
+/* tabel */
+$--table-border: 1px solid $border-color-base;
+$--table-striped-row-background-color: #fbfdff;
+
+/* checkbox icon color */
+$--checkbox-checked-background-color: $--color-primary;
+$--checkbox-checked-icon-color: $--fill-base;
+
+/* date-picker */
+$--datepicker-active-color: $color-highlight;
+$--datepicker-inrange-background-color: lighten($color-highlight, 34%);
+$--datepicker-inrange-hover-background-color: lighten($color-highlight, 35%);
+
+/* pagination */
+$--pagination-hover-color: $color-text-hover;
+$--pagination-active-color: $color-text-hover;

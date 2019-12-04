@@ -1,0 +1,12 @@
+.v-select {
+  &--popper {
+    .icon-option {
+      > * {
+        vertical-align: middle;
+      }
+      .v-icon {
+        margin-right: 6px;
+      }
+    }
+  }
+}

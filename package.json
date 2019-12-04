@@ -1,0 +1,70 @@
+{
+  "name": "@tdio/tdui",
+  "version": "1.0.0",
+  "description": "Tiduyun.com Front-End UI",
+  "module": "lib/tdui.esm.js",
+  "types": "lib/index.d.ts",
+  "keywords": [
+    "ui"
+  ],
+  "repository": "allex/tdui",
+  "scripts": {
+    "precommit": "yarn lint && yarn test",
+    "lint": "tslint -p src/",
+    "lint:fix": "tslint -p src/ --fix",
+    "test": "jest --coverage --passWithNoTests",
+    "build": "yarn lint && (tsc -p src/utils/; rb -c)",
+    "prepare": "yarn build"
+  },
+  "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
+  "dependencies": {
+    "@tdio/utils": "*",
+    "tslib": "^1",
+    "vue": "^2.6.6",
+    "vue-property-decorator": "^8",
+    "vuex": "^3.0.1",
+    "vuex-class": "^0.3.2"
+  },
+  "devDependencies": {
+    "@allex/typescript": "next",
+    "@babel/core": "^7.6.2",
+    "@babel/preset-env": "^7.6.2",
+    "@babel/runtime": "^7.6.2",
+    "@types/node": "^10.5.4",
+    "@vue/babel-preset-jsx": "^1.1.2",
+    "babel-core": "bridge",
+    "babel-jest": "^23.6.0",
+    "element-ui": "next",
+    "husky": "^1.1.2",
+    "jest": "^23.6.0",
+    "rimraf": "^2.6.1",
+    "ts-mockito": "^2.3.0",
+    "ts-node": "^7.0.0",
+    "tslint": "^5"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/"
+  ],
+  "jest": {
+    "testEnvironment": "node",
+    "modulePaths": [
+      "src"
+    ],
+    "testMatch": [
+      "**/?(*-)+(spec|test).?(m)js"
+    ],
+    "roots": [
+      "test"
+    ],
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "moduleDirectories": [
+      "node_modules"
+    ],
+    "transform": {
+      "\\.js$": "babel-jest"
+    }
+  }
+}

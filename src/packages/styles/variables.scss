@@ -1,0 +1,82 @@
+/* --------- globally theme consts (start) ---------- */
+
+// colors
+$color-black: #595a5d !default;
+$color-white: #fff !default;
+
+$color-primary: #566779 !default;
+$color-success: #40e193 !default;
+$color-warning: #ffc688 !default;
+$color-danger: #f44747 !default;
+$color-info: #909399 !default;
+$color-highlight: #f38231 !default;
+
+$color-text-primary: #303133 !default;
+$color-text-regular: #606266 !default;
+$color-text-secondary: #909399 !default;
+$color-text-placeholder: #c0c4cc !default;
+$color-text-hover: #409eff !default;
+
+// fonts
+$font-size-normal: 12px;
+$font-size-extra-large: 28px;
+$font-size-large: 18px;
+$font-size-medium: 16px;
+$font-size-base: 14px;
+$font-size-title: $font-size-base;
+
+// border
+$border-color-base: #e4e7ed !default;
+$border-color-tint: lighten($border-color-base, 4%);
+
+// background
+$background-color-base: #f5f7fa !default;
+$background-color-info: #f8fafd !default;
+
+// Disable base
+$disabled-fill-base: $background-color-base !default;
+$disabled-color-base: $color-text-placeholder !default;
+
+// button
+$button-primary-border-color: #344557;
+$button-default-border-color: $border-color-base;
+$button-hover-tint-percent: 20% !default;
+
+/* --------- globally theme consts (end) ------------ */
+
+// app layout
+$app-navbar-height: 50px;
+$app-main-margin: 20px;
+$app-detail-header-height: 52px;
+
+// topnav
+$top-menu-item-color: $color-text-regular;
+$top-menu-item-active-bg: #f7f4f826;
+$top-menu-item-active-color: $color-highlight;
+$top-menu-icon-color: #9ba6bf;
+$top-menu-icon-active-color: $color-highlight;
+
+// sidebar
+$menuText: $color-text-regular;
+$menuBg: $color-white;
+$menuHoverBg: $color-white;
+$menuHoverText: lighten($color-highlight, 10%);
+$menuActiveBg: lighten($menuBg, 2%);
+$menuActiveText: #2a98fe;
+
+$subMenuBg: $color-white;
+$subMenuHover: $color-white;
+$subMenuActiveText: $color-highlight;
+
+$sidebar-icon-color: #9ba6bf;
+$sidebar-width: 160px;
+$sidebar-width-thin: 54px;
+
+// form
+$v-form-page-ctl-width: 300px !default;
+$v-form-page-ctl-gap-width: 6px !default;
+$v-form-item-gutter-size: 20px !default;
+
+$v-dialog-size-small: 460px;
+$v-dialog-size-normal: 640px;
+$v-dialog-size-large: 900px;

@@ -1,0 +1,526 @@
+/* element-ui style overwrite */
+
+.el-menu {
+  &-item {
+    height: 40px;
+    line-height: 40px;
+  }
+}
+
+.el-header {
+  height: $app-navbar-height !important;
+  padding: 0 !important;
+
+  .el-menu .el-menu-item {
+    height: 50px;
+    line-height: 50px;
+  }
+
+  .user {
+    margin-left: 80px;
+    margin-right: 20px;
+    vertical-align: middle;
+    line-height: 50px;
+
+    .el-dropdown-link {
+      display: inline-block;
+    }
+  }
+
+  .news {
+    line-height: 50px;
+
+    .el-badge__content.is-fixed {
+      top: 10px;
+    }
+  }
+}
+
+// el message box
+.el-message-box {
+  width: 460px;
+  padding-bottom: 0;
+
+  &__title {
+    font-size: $font-size-medium;
+  }
+
+  &__header {
+    padding: 20px;
+  }
+
+  &__content {
+    font-size: $font-size-normal;
+    padding: 0 20px;
+  }
+
+  &__status {
+    top: auto;
+    transform: none;
+  }
+
+  &__btns {
+    padding: 20px;
+    text-align: center;
+  }
+}
+
+// el message
+.el-message {
+  min-width: 200px;
+  min-height: 60px;
+  justify-content: center;
+  box-shadow: 2px 2px 5px rgba(38, 46, 63, 0.12);
+
+  &--error,
+  &--success {
+    background-color: #fff;
+    border-color: $border-color-base;
+
+    .el-message__content {
+      color: $color-primary;
+    }
+  }
+
+  &__icon {
+    margin-right: 6px;
+    font-size: 16px;
+  }
+
+  &__content {
+    color: $color-primary;
+    font-size: 13px;
+  }
+}
+
+// date-picker
+.el-date-table {
+  td.start-date span,
+  td.end-date span {
+    box-shadow: 0 2px 6px 0px	rgba(245, 130, 32, 0.5);
+  }
+}
+
+.el-time-panel__btn.confirm {
+  color: $color-highlight;
+}
+
+.el-tree {
+  &--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+    color: $color-highlight;
+    font-weight: bold;
+  }
+
+  &-node__label {
+    font-size: $font-size-normal;
+  }
+
+  &-node .el-tree-node__content {
+    height: 30px;
+
+    > label.el-checkbox {
+      margin-right: 0;
+    }
+  }
+
+  @at-root body .el-tree-select-popper .el-tree {
+    margin-right: 0;
+  }
+}
+
+.el-tabs {
+  &--border-card {
+    box-shadow: none !important;
+  }
+
+  &__content {
+    position: static !important;
+  }
+
+  &__item {
+    &:hover {
+      color: lighten($color-highlight, 10%);
+    }
+
+    &.is-active {
+      color: $color-highlight;
+    }
+  }
+
+  &__active-bar {
+    background-color: $color-highlight;
+  }
+}
+
+.el-table {
+  &--small {
+    th,
+    td { padding: 12px 0; }
+  }
+
+  th > .cell {
+    line-height: 1.5;
+  }
+
+  .cell {
+    line-height: 1.6;
+    .el-tooltip { color: inherit; }
+    label { font-weight: normal; }
+  }
+
+  .col-right,
+  .col-actions {
+    text-align: right;
+  }
+
+  .col-right { text-align: right; }
+  .col-center { text-align: center; }
+
+  td.col-actions {
+    color: #e8e8e8;
+    .el-icon-arrow-down.el-icon--right { margin-left: 2px; }
+  }
+
+  .col-break-text {
+    .cell { line-height: 18px; }
+  }
+
+  .el-button--text {
+    padding: 0;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  &--border {
+    th,
+    td { padding: 8px 0; }
+  }
+
+  &__fixed-header-wrapper {
+    z-index: 4;
+  }
+
+  @at-root &--no-row-hover {
+    &.el-table--enable-row-hover .el-table__body tr:hover > td {
+      background: $color-white;
+    }
+  }
+}
+
+.el-pagination {
+  font-weight: normal;
+
+  .btn-prev,
+  .btn-next {
+    .el-icon { font-weight: normal; }
+  }
+
+  .el-pager li {
+    margin: 0 3px;
+    min-width: 22px;
+  }
+
+  &__sizes .el-input .el-input__inner:hover {
+    border-color: $color-text-placeholder;
+  }
+}
+
+.el-form-item--small {
+
+  // Reset form-item gutter and line height
+  &.el-form-item {
+    margin-bottom: $v-form-item-gutter-size;
+
+    .el-form-item__error {
+      padding-top: 4px;
+    }
+  }
+
+  .el-button,
+  .el-form-item__label,
+  .el-form-item__content {
+    font-size: $font-size-normal;
+  }
+
+  .el-form-item__content {
+    vertical-align: middle;
+
+    .el-alert {
+      margin: 8px 0 0;
+    }
+  }
+}
+
+.el-tooltip {
+  color: $color-info;
+
+  & + span {
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+}
+
+.el-tag--mini {
+  padding: 0 8px 0 5px;
+  line-height: 18px;
+}
+
+.el-radio,
+.el-checkbox {
+  font-size: $font-size-normal;
+  font-weight: normal;
+  margin-right: 6px;
+
+  & + span,
+  & + i {
+    margin-left: 6px;
+    margin-right: 6px;
+  }
+}
+
+.el-radio__label,
+.el-checkbox__label,
+.el-transfer-panel .el-transfer-panel__header .el-checkbox .el-checkbox__label {
+  padding-left: 6px;
+  padding-right: 0;
+  font-size: $font-size-normal;
+}
+
+.el-radio__input.is-reverse.is-checked:not(.is-disabled) .el-radio__inner::after {
+  width: 7px;
+  height: 7px;
+}
+
+.el-transfer {
+  &__buttons {
+    padding: 0 10px;
+  }
+
+  &-panel__item {
+    display: block;
+  }
+
+  &-panel .el-checkbox__label {
+    vertical-align: middle;
+  }
+}
+
+.el-step {
+  &__icon-inner { font-weight: normal; }
+
+  @at-root .is-process #{&}__icon {
+    background: $color-primary;
+    border-color: $color-primary;
+
+    .el-step__icon-inner {
+      color: #fff;
+      font-weight: bold;
+    }
+  }
+}
+
+.el-range-editor--small .el-range-input,
+.el-button--text,
+.el-input--small,
+.el-popper,
+.el-transfer,
+.el-select-dropdown__item,
+.el-select-dropdown__empty,
+.el-step__title,
+[class^=el-alert__] {
+  font-size: $font-size-normal;
+}
+
+.el-popper[x-placement^=bottom] {
+  margin-top: 8px;
+}
+
+.el-popover {
+  &__title {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+}
+
+.el-dialog {
+  $header-height: 45px;
+  $header-border-bottom-width: 1px;
+  $footer-height: 76px;
+
+  overflow: hidden;
+  border-radius: 5px;
+
+  &__wrapper {
+    line-height: initial;
+  }
+
+  &__title {
+    font-size: $font-size-medium;
+    color: $color-text-primary;
+  }
+
+  &__header {
+    height: $header-height;
+  }
+
+  &__headerbtn {
+    position: absolute;
+    top: ($header-height - 16px)/2;
+    right: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  &__body {
+    padding: 20px;
+    font-size: $font-size-normal;
+  }
+
+  &__footer {
+    padding: 0 0 20px 0;
+    text-align: center;
+  }
+}
+
+// based on .el-dialog
+.el-dialog.v-side-panel {
+  $panel-width: 620px;
+  $panel-header-height: 48px;
+  $panel-header-border-bottom-width: 1px;
+
+  $panel-footer-height: 51px;
+  $panel-footer-padding-top: 2px;
+
+  width: $panel-width;
+  height: initial;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 60px;
+  margin: 0;
+  border-radius: 0;
+  margin-top: 0 !important;
+
+  .el-dialog__header {
+    border-bottom: $panel-header-border-bottom-width solid #efefef;
+    padding: 0 48px 0 24px;
+    height: $panel-header-height;
+    line-height: $panel-header-height;
+    position: relative;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  .el-dialog__headerbtn {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .el-dialog__body {
+    position: absolute;
+    top: $panel-header-height - 1px;
+    bottom: $panel-footer-height;
+    left: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 16px;
+  }
+
+  .el-dialog__footer {
+    left: 0;
+    height: $panel-footer-height;
+    line-height: $panel-footer-height;
+    background: #fff;
+    width: 100%;
+    border-top: 1px solid #efefef;
+    overflow: hidden;
+    padding: 2px 16px 0 0;
+    position: absolute;
+    bottom: 0;
+    text-align: right;
+
+    .dialog-footer {
+      $height: $panel-footer-height - $panel-footer-padding-top;
+
+      height: $height;
+      line-height: $height - 4px;
+    }
+  }
+}
+
+.el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.el-dropdown-menu {
+  .el-dropdown-menu__item > a {
+    display: block;
+    padding: 2px 0;
+    text-align: left;
+    line-height: inherit;
+  }
+
+  &--small {
+    .el-button--text {
+      padding: 2px 0;
+    }
+  }
+}
+
+.el-select {
+  &-dropdown {
+    &__empty { color: #ccc; }
+    &__item { padding: 0 10px; }
+    // select selected
+    &__item.selected { color: $color-highlight; }
+  }
+}
+
+/* input */
+
+.el-input {
+  &.read-only {
+    .el-input__inner {
+      cursor: not-allowed;
+      background-color: #f3f5f5;
+      color: $color-black;
+    }
+  }
+
+  &__inner {
+    padding: 0 8px;
+  }
+}
+
+.el-input-number--small {
+  width: 100px;
+  margin-right: 6px;
+
+  .el-input__inner {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+.el-textarea__inner {
+  padding: 6px 8px;
+}
+
+.el-input-group__prepend {
+  .el-select {
+    min-width: 100px;
+  }
+}
