@@ -41,7 +41,7 @@ class Popover<D extends {}> extends Vue {
    */
   static create <D = any> (
     reference: { nodeType: number; nodeName: string; popoverVm: any }, // duck-like
-    options: PopoverOptions<D>
+    options: Partial<PopoverOptions<D>>
   ): Popover<D> {
     if (reference.popoverVm) {
       return reference.popoverVm

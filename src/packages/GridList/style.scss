@@ -1,0 +1,54 @@
+@import "../styles/inc.scss";
+
+.v-gridlist {
+
+  &__toolbar {
+    @extend %clearfix;
+
+    padding-bottom: 6px;
+    line-height: 32px;
+
+    form {
+      @extend %clearfix;
+
+      text-align: right;
+      margin-bottom: -10px;
+
+      &.align-left {
+        text-align: left;
+      }
+    }
+
+    .el-form-item {
+      margin-bottom: 10px;
+
+      .el-form-item__label {
+        padding-right: 8px;
+        color: $color-text-regular;
+      }
+
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+
+  &__grid {
+    .el-table-column--selection {
+      .cell {
+        text-overflow: initial;
+        padding: 0;
+        text-align: center;
+      }
+    }
+  }
+
+  &__pagination {
+    margin-top: 20px;
+    text-align: right;
+
+    .el-pagination {
+      .el-select .el-input { width: 84px; }
+    }
+  }
+}
