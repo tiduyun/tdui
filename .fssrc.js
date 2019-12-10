@@ -3,7 +3,7 @@
 
 import path from 'path'
 
-import { version, name, author, license, description, dependencies } from './package.json'
+import { version, name, author, license, description, dependencies, peerDependencies } from './package.json'
 
 const banner = (name, short = false) => {
   let s
@@ -46,7 +46,7 @@ const plugins = [
 export default {
   destDir: resolve('lib'),
   vue: true,
-  dependencies: { events: true, ...dependencies },
+  dependencies: { events: true, ...dependencies, ...peerDependencies },
   compress: false,
   entry: [
     {

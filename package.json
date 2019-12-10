@@ -13,41 +13,60 @@
     "lint": "tslint -p src/",
     "lint:fix": "tslint -p src/ --fix",
     "test": "jest --coverage --passWithNoTests",
-    "build": "yarn lint && (tsc -p src/utils/; rb -c)",
+    "build": "yarn lint && (tsc -p src/utils/ && rb -c)",
     "prepare": "yarn build"
   },
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
   "dependencies": {
     "@allex/base64": "^1.0.2",
-    "@tdio/utils": "*",
+    "@tdio/utils": "*"
+  },
+  "peerDependencies": {
+    "element-ui": "next",
     "tslib": "^1",
     "vue": "^2.6.6",
     "vue-property-decorator": "^8",
-    "vuex": "^3.0.1",
-    "vuex-class": "^0.3.2"
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@allex/typescript": "next",
     "@babel/core": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
     "@babel/runtime": "^7.6.2",
+    "@commitlint/cli": "^7.2.1",
+    "@tdio/commitlint-conventional": "^1.0.1",
     "@types/node": "^10.5.4",
     "@vue/babel-preset-jsx": "^1.1.2",
     "babel-core": "bridge",
     "babel-jest": "^23.6.0",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
     "element-ui": "next",
-    "husky": "^1.1.2",
+    "husky": "^1.3.1",
     "jest": "^23.6.0",
-    "rimraf": "^2.6.1",
+    "lint-staged": "^8.1.5",
     "ts-mockito": "^2.3.0",
     "ts-node": "^7.0.0",
-    "tslint": "^5"
+    "tslint": "^5",
+    "vue": "^2.6.6",
+    "vue-property-decorator": "^8.3.0",
+    "vuex": "^3.0.1"
   },
   "license": "MIT",
   "files": [
     "lib/"
   ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.{jsx,ts,tsx,vue}": [
+      "yarn lint --",
+      "git add"
+    ]
+  },
   "jest": {
     "testEnvironment": "node",
     "modulePaths": [
