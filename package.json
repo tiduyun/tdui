@@ -18,6 +18,7 @@
   },
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
   "dependencies": {
+    "@allex/base64": "^1.0.2",
     "@tdio/utils": "*",
     "tslib": "^1",
     "vue": "^2.6.6",
@@ -34,6 +35,7 @@
     "@vue/babel-preset-jsx": "^1.1.2",
     "babel-core": "bridge",
     "babel-jest": "^23.6.0",
+    "babel-plugin-transform-async-to-promises": "^0.8.15",
     "element-ui": "next",
     "husky": "^1.1.2",
     "jest": "^23.6.0",
