@@ -46,8 +46,6 @@ const Emitter: { [k: string]: any } = {
   }
 }
 
-type VueClass<V> = (new (...args: any[]) => V & Vue) & typeof Vue
-
 function componentFactory <T extends VueClass<any>> (Component: T): T {
   // prototype props.
   const proto = Component.prototype

@@ -22,7 +22,7 @@ const getIconfontBaseClass = (s: string): string => {
 }
 
 @Component
-export default class Icon extends Vue {
+export class Icon extends Vue {
   name: string = 'Icon'
 
   @Prop({ type: String, default: '' })

@@ -110,13 +110,13 @@ export function getStyle (element: Element, styleName: string): string {
 /* istanbul ignore next */
 export const on = (function () {
   if (!isServer && isStandard) {
-    return (el: Node, event: string, handler: EventHandler) => {
+    return (el: Node | null, event: string, handler: EventHandler) => {
       if (el && event && handler) {
         el.addEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node, event: string, handler: EventHandler) => {
+  return (el: Node | null, event: string, handler: EventHandler) => {
     if (el && event && handler) {
       el.attachEvent(`on${event}`, handler)
     }
@@ -126,13 +126,13 @@ export const on = (function () {
 /* istanbul ignore next */
 export const off = (function () {
   if (!isServer && isStandard) {
-    return (el: Node, event: string, handler: EventHandler) => {
+    return (el: Node | null, event: string, handler: EventHandler) => {
       if (el && event) {
         el.removeEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node, event: string, handler: EventHandler) => {
+  return (el: Node | null, event: string, handler: EventHandler) => {
     if (el && event) {
       el.detachEvent(`on${event}`, handler)
     }
@@ -140,7 +140,7 @@ export const off = (function () {
 }())
 
 /* istanbul ignore next */
-export const once = (el: Node, event: string, handler?: EventHandler) => {
+export const once = (el: Node | null, event: string, handler?: EventHandler) => {
   const listener = function (e: Event) {
     if (handler) {
       handler.bind(el)(e)

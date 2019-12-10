@@ -8,7 +8,6 @@ import { deepAssign, get, isArray, isValue, valueEquals } from '@tdio/utils'
 import { contains, off, on } from '@/utils/dom'
 import { Emittable } from '@/utils/emittable'
 
-import { Stream } from 'stream'
 import './TreeSelect.scss'
 
 declare module 'element-ui/types/tree' {

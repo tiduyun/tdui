@@ -1,5 +1,7 @@
 /// <reference path="common.d.ts" />
 
+import Vue from 'vue'
+
 export {}
 
 interface $T {
@@ -17,4 +19,6 @@ declare global {
 
   // i18n helper
   const $t: $T
+
+  type VueClass<V> = (new (...args: any[]) => V & Vue) & typeof Vue
 }

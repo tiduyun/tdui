@@ -7,7 +7,7 @@ import AbsSelectView from './AbsSelectView'
 
 import { IOption } from '../../../types/common'
 
-import Icon from '../Icon'
+import { Icon } from '../Icon'
 
 import './Select.scss'
 
