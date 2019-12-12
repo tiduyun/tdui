@@ -18,12 +18,12 @@ interface PopoverState<D> {
   model: D;
   rules: IValidateRuleObject | null;
   listeners: Kv<(e: Event & { data?: D; }) => void | Promise<any>>
-  reference: Element & { popoverVm: any } | null;
+  reference: Element & { popoverVm: Popover<D> | null } | null;
   scopedSlots: Kv<(h: CreateElement) => VNode>;
   render (this: Popover<D>, h: CreateElement, args: { model: D; rules?: IValidateRuleObject; }): VNode;
 }
 
-type PopoverOptions<D> = Pick<
+export type PopoverOptions<D> = Pick<
   PopoverState<D>, 'props' | 'model' | 'rules' | 'listeners' | 'scopedSlots' | 'render'
 >
 
@@ -40,7 +40,7 @@ class Popover<D extends {}> extends Vue {
    * @param options {PopoverOptions}
    */
   static create <D = any> (
-    reference: { nodeType: number; nodeName: string; popoverVm: any }, // duck-like
+    reference: { nodeType: number; nodeName: string; popoverVm?: Popover<D> | null }, // duck-like
     options: Partial<PopoverOptions<D>>
   ): Popover<D> {
     if (reference.popoverVm) {

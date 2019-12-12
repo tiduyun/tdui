@@ -1,0 +1,13 @@
+@import "../styles/inc.scss";
+
+.v-editable {
+  .v-icon-modify {
+    margin-left: 4px;
+  }
+}
+
+.v-editable__popover {
+  .el-form-item {
+    margin-bottom: 13px;
+  }
+}

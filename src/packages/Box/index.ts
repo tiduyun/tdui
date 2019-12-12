@@ -1,3 +1,4 @@
 export {
-  Popover
+  Popover,
+  PopoverOptions
 } from './source/popover'
