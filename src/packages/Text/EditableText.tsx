@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { isEmpty } from '@tdio/utils'
+import { isEmpty, isFunction } from '@tdio/utils'
 
 import { findUpward } from '@/utils/vue'
 
@@ -77,7 +77,7 @@ export default class EditableText extends Vue {
           ) : (
             [
               <span name="text">{ isEmpty(currentValue) ? emptyText : currentValue }</span>,
-              showEditIcon ? <Icon icon-name="el-icon-edit-outline" class="v-icon-modify" onclick={this.showModifyPop} tooltip={$t('Modify')} light={true} /> : null
+              showEditIcon ? <Icon icon-name="el-icon-edit-outline" class="v-icon-modify" onClick={this.showModifyPop} tooltip={$t('Modify')} light={true} /> : null
             ]
           )
         }
@@ -87,6 +87,11 @@ export default class EditableText extends Vue {
 
   private showModifyPop (e: Event) {
     const { rules = [], prop, label } = this.getFieldScheme()
+    const {
+      $slots,
+      $scopedSlots
+    } = this
+    const editorSlot = $scopedSlots.editor || $slots.editor
     return Popover.create<D>(e.currentTarget as Node, {
       props: {
         title: label,
@@ -100,7 +105,11 @@ export default class EditableText extends Vue {
       ) => (
         <el-form class="v-form" props={{ model, rules, statusIcon: true }}>
           <el-form-item prop="text" showMessage={false}>
-            <el-input v-model={ model.text } props={ this.$attrs } />
+            {
+              editorSlot
+                ? (isFunction(editorSlot) ? (editorSlot as Function)(model) : editorSlot)
+                : (<el-input v-model={ model.text } props={ this.$attrs } />)
+            }
           </el-form-item>
         </el-form>
       ),

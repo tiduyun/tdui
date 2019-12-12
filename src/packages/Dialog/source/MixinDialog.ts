@@ -1,7 +1,7 @@
 import { ElDialog } from 'element-ui/types/dialog'
 import { Component, Mixins, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { hasOwn, isEmpty, isFunction, isPromise, isValue } from '@tdio/utils'
+import { get, hasOwn, isEmpty, isFunction, isPromise, isValue } from '@tdio/utils'
 
 import { parseBase64 } from '@/utils'
 import { findDownward } from '@/utils/vue'
@@ -38,35 +38,65 @@ class MixinDialog extends Vue {
   @Prop(String)
   routeQueryKey!: string
 
-  state: IDialogModel = { visible: false, data: {} }
-
   get dlgRef (): ElDialog {
     return findDownward(this, 'ElDialog') as ElDialog
   }
 
   close () {
-    this.state.visible = false
+    this.entity.visible = false
   }
 
   show () {
-    this.state.visible = true
+    this.entity.visible = true
   }
 
   @Watch('visible')
   setVisible (v: boolean) {
-    const state = this.state
-    if (v !== state.visible) {
-      state.visible = v
+    this.entity.visible = !!v
+  }
+
+  created () {
+    // sync state with instance props
+    const { entity, title, visible } = this
+
+    const syncVisible = this.syncVisible.bind(this)
+
+    if (isValue(title) && entity.title !== title) {
+      entity.title = title
     }
+    if (isValue(visible) && entity.visible !== visible) {
+      entity.visible = visible
+      syncVisible()
+    }
+
+    this.callInter('created')
+
+    const onSubmit = entity.onSubmit
+    if (onSubmit && isFunction(onSubmit)) {
+      this.$on('submit', (e: Event, resolve: ICallback) => {
+        const r: any = onSubmit.call(entity, e)
+        if (isPromise(r)) {
+          r.then((a: any) => resolve(null, a), resolve)
+        } else {
+          this.$nextTick(resolve)
+        }
+      })
+    }
+
+    this.$on('close', syncVisible)
+    this.$on('opened', syncVisible)
+
+    // sync dialog state to router
+    this.initRouter()
   }
 
-  syncVisible () {
-    const { state } = this
-    this.$emit('update:entity', state)
-    this.$emit('update:visible', state.visible)
+  private syncVisible () {
+    const { entity } = this
+    this.$emit('update:entity', entity)
+    this.$emit('update:visible', entity.visible)
   }
 
-  initRouter () {
+  private initRouter () {
     const routeQueryKey = this.routeQueryKey
     if (!routeQueryKey) {
       return
@@ -86,7 +116,7 @@ class MixinDialog extends Vue {
         const [key, data] = args
         if (key === routeQueryKey) {
           closeDlg = false
-          this.state.data = { ...this.state.data, ...data }
+          this.entity.data = { ...this.entity.data, ...data }
           this.$nextTick(() => this.show())
         }
       }
@@ -118,46 +148,12 @@ class MixinDialog extends Vue {
     })
   }
 
-  created () {
-    // sync state with instance props
-    const { entity, title, visible } = this
-
-    if (entity) {
-      this.state = entity
+  private callInter (hook: string) {
+    const inter = this.entity
+    const f = get<(...args: any[]) => any>(inter, hook)
+    if (f && isFunction(f)) {
+      f.call(inter, this)
     }
-
-    const { state } = this
-    const syncVisible = this.syncVisible.bind(this)
-
-    if (isValue(title) && state.title !== title) {
-      state.title = title
-    }
-    if (isValue(visible) && state.visible !== visible) {
-      state.visible = visible
-      syncVisible()
-    }
-
-    if (isFunction(this.state.$init)) {
-      this.state.$init(this)
-    }
-
-    const onSubmit = state.onSubmit
-    if (onSubmit && isFunction(onSubmit)) {
-      this.$on('submit', (e: Event, resolve: ICallback) => {
-        const r: any = onSubmit.call(state, e)
-        if (isPromise(r)) {
-          r.then((a: any) => resolve(null, a), resolve)
-        } else {
-          this.$nextTick(resolve)
-        }
-      })
-    }
-
-    this.$on('close', syncVisible)
-    this.$on('opened', syncVisible)
-
-    // sync dialog state to router
-    this.initRouter()
   }
 }
 

@@ -4,22 +4,26 @@ import { deepClone, isEmpty, isFunction, isString, noop } from '@tdio/utils'
 
 import { IDialogModel } from './types'
 
-export interface AbsDialogModel<T> extends IDialogModel<T> {
+type DataTransform <D> = (this: IDialogModelService<D>, d: D) => D
+
+export interface IDialogModelService<T> extends IDialogModel<T> {
+  $vm: Vue;
+  $parent: Vue;
+  primaryKey: string;
   data: T;
   visible: boolean;
-  $vm?: Vue;
-  $parent?: Vue;
-  show (info?: any, title?: string): void;
+  transform: DataTransform<T>;
+  show (info?: T, title?: string): void;
   hide (): void;
 }
 
-const def = (o: any, k: string, value: any, descriptor?: any) => Object.defineProperty(o, k, Object.assign({ value, ...descriptor }))
+const def = (o: {}, k: string, value: any, descriptor?: {}) => Object.defineProperty(o, k, Object.assign({ value, ...descriptor }))
 
-export class DialogModelService <T extends Kv> implements AbsDialogModel<T> {
+export class DialogModelService <T extends Kv> implements IDialogModelService<T> {
   _pending: Array<[string, any]> = []
 
-  $vm?: Vue
-  $parent?: Vue
+  $vm!: Vue
+  $parent!: Vue
 
   visible: boolean = false
   title: string = ''
@@ -36,7 +40,7 @@ export class DialogModelService <T extends Kv> implements AbsDialogModel<T> {
   onHide = noop
 
   /** @constructor */
-  constructor (fn: (self: AbsDialogModel<T>) => Partial<IDialogModel<T>>) {
+  constructor (fn: <M = any> (self: IDialogModelService<T> & M) => IDialogModel<T> & M) {
     const impls = fn.call(this, this)
     Object.keys(impls).forEach((k) => {
       const v: any = impls[k]
@@ -45,7 +49,11 @@ export class DialogModelService <T extends Kv> implements AbsDialogModel<T> {
     })
   }
 
-  $init (vm: Vue) {
+  transform (data: T) {
+    return deepClone(data)
+  }
+
+  created (vm: Vue) {
     const ctx = vm.$parent
 
     this.$vm = vm
@@ -61,20 +69,15 @@ export class DialogModelService <T extends Kv> implements AbsDialogModel<T> {
     vm.$on('hide', this.onHide.bind(ctx))
   }
 
-  parseData (data: T): T {
-    return deepClone(data) as T
-  }
-
-  show (info?: any, title?: string) {
+  show (info?: T | string, title?: string) {
     if (isString(info)) {
-      title = info
-      info = undefined
+      title = info as string
     }
     if (title && isString(title)) {
       this.title = title
     }
-    if (info !== undefined) {
-      Vue.set(this, 'data', isEmpty(info) ? {} : this.parseData(info))
+    if (info && typeof info === 'object') {
+      Vue.set(this, 'data', isEmpty(info) ? {} : this.transform(info as T))
     }
     this.visible = true
   }

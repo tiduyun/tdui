@@ -31,7 +31,6 @@ export default class AbsFormDialog extends MixinDialog {
   skipValidator!: boolean
 
   isShow: boolean = false
-
   form: ElForm | null = null
 
   validate (): Promise<boolean> {
@@ -48,7 +47,7 @@ export default class AbsFormDialog extends MixinDialog {
         return true
       }
     }
-    return new Promise(resolve => this.$emit('submit', e, resolve))
+    return new Promise((resolve, reject) => this.$emit('submit', e, (err: Error, data: any) => err ? reject(err) : resolve(data)))
   }
 
   clearValidate (reset?: boolean) {
@@ -60,16 +59,16 @@ export default class AbsFormDialog extends MixinDialog {
   }
 
   created () {
-    const state = this.state
-    this.isShow = state.visible!
+    const entity = this.entity
+    const initial = deepClone(entity.data)
 
-    const initial = deepClone(state.data)
+    this.isShow = entity.visible!
 
     this.$on('closed', () => {
       this.form!.resetFields()
 
       // reset to initialize state
-      reactSet(this.state.data = {}, initial)
+      reactSet(this.entity.data = {}, initial)
 
       this.$emit('hide')
     })
@@ -87,20 +86,22 @@ export default class AbsFormDialog extends MixinDialog {
       size,
       width,
       appendToBody,
-      state
+      entity
     } = this
+
     const dlgClassNames = [
       dialogClass,
       size ? `v-dialog--${size}` : ''
     ].filter(Boolean)
+
     return (
       <el-dialog
         ref="dlg"
         class={[{ [className]: !!className }, 'v-form-dlg']}
         customClass={dlgClassNames.join(' ')}
-        visible={state.visible}
-        on={{ 'update:visible': (e: boolean) => state.visible = e }}
-        title={state.title}
+        visible={entity.visible}
+        on={{ 'update:visible': (e: boolean) => entity.visible = e }}
+        title={entity.title}
         width={width}
         append-to-body = {appendToBody}
         closeOnClickModal={false}
@@ -113,14 +114,14 @@ export default class AbsFormDialog extends MixinDialog {
           this.isShow ? (
             <div class="dialog-body">
               {
-                $scopedSlots.default ? $scopedSlots.default({ model: state.data, rules: state.rules, $self: state, $this: this }) : ''
+                $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : ''
               }
             </div>
           ) : null
         }
         <template slot="footer">
           {
-            $scopedSlots.footer ? $scopedSlots.footer({ $self: state, $this: this }) : (
+            $scopedSlots.footer ? $scopedSlots.footer({ $self: entity, $this: this }) : (
               <div class="dialog-footer">
                 <Button onClick={this.close}>{$t('Cancel')}</Button>
                 <Button type="primary" onClick={this.submit}>{$t('Save')}</Button>
