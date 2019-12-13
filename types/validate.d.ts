@@ -1,5 +1,7 @@
 type ValidatorTrigger = 'click' | 'blur' | 'change'
 
+type ValidatorFunc = (rule: Kv, value: string | undefined, callback: ICallback) => void
+
 export interface IValidateRuleItem {
   type?: string;
   message?: string;
@@ -8,7 +10,7 @@ export interface IValidateRuleItem {
   min?: number;
   max?: number;
   len?: number;
-  validator?: IFunc;
+  validator?: ValidatorFunc;
   pattern?: RegExp;
 }
 

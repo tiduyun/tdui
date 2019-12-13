@@ -6,7 +6,7 @@ import { get, hasOwn, isEmpty, isFunction, isPromise, isValue } from '@tdio/util
 import { parseBase64 } from '@/utils'
 import { findDownward } from '@/utils/vue'
 
-import { IDialogModel } from './types'
+import { IDialogModelService } from './DialogModelService'
 
 const parseRouterArgs = (blob: string): [string, any] | null => {
   if (blob) {
@@ -30,7 +30,7 @@ class MixinDialog extends Vue {
   title!: boolean
 
   @Prop({ type: Object, default: () => ({ visible: false, data: {} }) })
-  entity!: IDialogModel
+  entity!: IDialogModelService<any, Kv>
 
   @Prop(String)
   className!: string

@@ -2,28 +2,35 @@ import Vue from 'vue'
 
 import { deepClone, isEmpty, isFunction, isString, noop } from '@tdio/utils'
 
-import { IDialogModel } from './types'
+import { IValidateRuleObject } from '../../../../types/validate'
 
-type DataTransform <D> = (this: IDialogModelService<D>, d: D) => D
+type IGenericAction<A, T> = (arg1: A) => Promise<T>
 
-export interface IDialogModelService<T> extends IDialogModel<T> {
-  $vm: Vue;
-  $parent: Vue;
-  primaryKey: string;
+interface IDialogModel<T> {
+  [key: string]: any;
+  primaryKey?: string;
+  data?: T;
+  visible?: boolean;
+  rules?: IValidateRuleObject;
+  onSubmit?: IGenericAction<Event, any>;
+}
+
+export interface IDialogModelService<V extends Vue, T> extends IDialogModel<T> {
   data: T;
   visible: boolean;
-  transform: DataTransform<T>;
+  $parent: V;
+  $vm: Vue;
+  init ($this: V): IDialogModel<T>;
+  transform (data: T): T;
   show (info?: T, title?: string): void;
   hide (): void;
 }
 
 const def = (o: {}, k: string, value: any, descriptor?: {}) => Object.defineProperty(o, k, Object.assign({ value, ...descriptor }))
 
-export class DialogModelService <T extends Kv> implements IDialogModelService<T> {
-  _pending: Array<[string, any]> = []
-
+export class DialogModelService <V extends Vue, T extends Kv> implements IDialogModelService<V, T> {
+  $parent!: V
   $vm!: Vue
-  $parent!: Vue
 
   visible: boolean = false
   title: string = ''
@@ -31,7 +38,7 @@ export class DialogModelService <T extends Kv> implements IDialogModelService<T>
   primaryKey: string = 'id'
 
   get hasKey () {
-    return !isEmpty(this.data[this.primaryKey])
+    return !isEmpty(this.data[this.primaryKey!])
   }
 
   /** @abstract */
@@ -40,13 +47,12 @@ export class DialogModelService <T extends Kv> implements IDialogModelService<T>
   onHide = noop
 
   /** @constructor */
-  constructor (fn: <M = any> (self: IDialogModelService<T> & M) => IDialogModel<T> & M) {
-    const impls = fn.call(this, this)
-    Object.keys(impls).forEach((k) => {
-      const v: any = impls[k]
-      if (isFunction(v)) this._pending.push([k, v])
-      else def(this, k, v, { enumerable: true, writable: true, configurable: true })
-    })
+  constructor (init: (this: IDialogModelService<V, T>, $this: V) => IDialogModelService<V, T> & any) {
+    this.init = init.bind(this)
+  }
+
+  init ($this: V): IDialogModel<T> {
+    return this
   }
 
   transform (data: T) {
@@ -54,15 +60,17 @@ export class DialogModelService <T extends Kv> implements IDialogModelService<T>
   }
 
   created (vm: Vue) {
-    const ctx = vm.$parent
+    const ctx: V = vm.$parent as V
+    const impls = this.init(ctx)
+
+    Object.keys(impls).forEach((k) => {
+      const v: any = impls[k]
+      if (isFunction(v)) def(this, k, v)
+      else def(this, k, v, { enumerable: true, writable: true, configurable: true })
+    })
 
     this.$vm = vm
     this.$parent = ctx
-
-    const pending = this._pending
-    let o: [ string, any]
-    while (o = pending.pop()!) def(this, o[0], o[1])
-
     this.onInit()
 
     vm.$on('show', this.onShow.bind(ctx))
