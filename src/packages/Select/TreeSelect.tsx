@@ -218,7 +218,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       width: this.width,
       placeholder: $t('Select...'),
       ...this.params.select,
-      ...this.$attrs,
       filterable: false,
       disabled: this.disabled,
       popperClass: 'select-option',
