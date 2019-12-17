@@ -28,7 +28,25 @@ export interface IDialogModelService<V extends Vue, T> extends IDialogModel<T> {
 
 const def = (o: {}, k: string, value: any, descriptor?: {}) => Object.defineProperty(o, k, Object.assign({ value, ...descriptor }))
 
-export class DialogModelService <V extends Vue, T extends Kv> implements IDialogModelService<V, T> {
+/** @abstract */
+class AbsService <V, T> {
+  onInit () {}
+  onShow () {}
+  onHide () {}
+  init ($this: V): IDialogModel<T> {
+    return this
+  }
+  transform (data: T) {
+    return deepClone(data)
+  }
+}
+
+export class DialogModelService <V extends Vue, T extends Kv> extends AbsService<V, T> implements IDialogModelService<V, T> {
+
+  get hasKey () {
+    return !isEmpty(this.data[this.primaryKey!])
+  }
+
   $parent!: V
   $vm!: Vue
 
@@ -37,26 +55,21 @@ export class DialogModelService <V extends Vue, T extends Kv> implements IDialog
   data: T = {} as T
   primaryKey: string = 'id'
 
-  get hasKey () {
-    return !isEmpty(this.data[this.primaryKey!])
-  }
-
-  /** @abstract */
-  onInit = noop
-  onShow = noop
-  onHide = noop
+  private inited = false
+  private pending: Array<() => void> = []
 
   /** @constructor */
   constructor (init: (this: IDialogModelService<V, T>, $this: V) => IDialogModelService<V, T> & any) {
-    this.init = init.bind(this)
+    super()
+    def(this, 'init', init.bind(this))
   }
 
-  init ($this: V): IDialogModel<T> {
-    return this
-  }
-
-  transform (data: T) {
-    return deepClone(data)
+  ready (fn: () => void) {
+    if (this.inited) {
+      fn()
+    } else {
+      this.pending.push(fn)
+    }
   }
 
   created (vm: Vue) {
@@ -65,29 +78,40 @@ export class DialogModelService <V extends Vue, T extends Kv> implements IDialog
 
     Object.keys(impls).forEach((k) => {
       const v: any = impls[k]
-      if (isFunction(v)) def(this, k, v)
-      else def(this, k, v, { enumerable: true, writable: true, configurable: true })
+      if (isFunction(v)) def(this, k, v.bind(this))
+      else Vue.set(this, k, v)
     })
 
+    this.inited = true
     this.$vm = vm
     this.$parent = ctx
-    this.onInit()
 
-    vm.$on('show', this.onShow.bind(ctx))
-    vm.$on('hide', this.onHide.bind(ctx))
+    vm.$on('show', this.onShow)
+    vm.$on('hide', this.onHide)
+
+    // dequeue ready cbs (fifo)
+    const pending = this.pending
+    while (pending.length) {
+      const f = pending.shift()
+      if (f) f()
+    }
+
+    this.onInit()
   }
 
   show (info?: T | string, title?: string) {
     if (isString(info)) {
       title = info as string
     }
-    if (title && isString(title)) {
-      this.title = title
-    }
-    if (info && typeof info === 'object') {
-      Vue.set(this, 'data', isEmpty(info) ? {} : this.transform(info as T))
-    }
     this.visible = true
+    this.ready(() => {
+      if (title && isString(title)) {
+        this.title = title
+      }
+      if (info && typeof info === 'object') {
+        Vue.set(this, 'data', isEmpty(info) ? {} : this.transform(info as T))
+      }
+    })
   }
 
   hide () {

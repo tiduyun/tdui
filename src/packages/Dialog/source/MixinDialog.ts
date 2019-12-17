@@ -38,6 +38,8 @@ class MixinDialog extends Vue {
   @Prop(String)
   routeQueryKey!: string
 
+  inited = false
+
   get dlgRef (): ElDialog {
     return findDownward(this, 'ElDialog') as ElDialog
   }
@@ -69,22 +71,25 @@ class MixinDialog extends Vue {
       syncVisible()
     }
 
-    this.callInter('created')
+    if (!this.inited) {
+      this.callInter('created')
+      this.inited = true
 
-    const onSubmit = entity.onSubmit
-    if (onSubmit && isFunction(onSubmit)) {
-      this.$on('submit', (e: Event, resolve: ICallback) => {
-        const r: any = onSubmit.call(entity, e)
-        if (isPromise(r)) {
-          r.then((a: any) => resolve(null, a), resolve)
-        } else {
-          this.$nextTick(resolve)
-        }
-      })
+      const onSubmit = entity.onSubmit
+      if (onSubmit && isFunction(onSubmit)) {
+        this.$on('submit', (e: Event, resolve: ICallback) => {
+          const r: any = onSubmit.call(entity, e)
+          if (isPromise(r)) {
+            r.then((a: any) => resolve(null, a), resolve)
+          } else {
+            this.$nextTick(resolve)
+          }
+        })
+      }
     }
 
-    this.$on('close', syncVisible)
     this.$on('opened', syncVisible)
+    this.$on('close', syncVisible)
 
     // sync dialog state to router
     this.initRouter()

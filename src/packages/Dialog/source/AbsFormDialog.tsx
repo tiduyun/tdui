@@ -111,7 +111,7 @@ export default class AbsFormDialog extends MixinDialog {
         on-opened={() => this.$emit('opened')}
       >
         {
-          this.isShow ? (
+          (this.inited && this.isShow) ? (
             <div class="dialog-body">
               {
                 $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : ''
