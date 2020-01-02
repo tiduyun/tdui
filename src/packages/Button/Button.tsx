@@ -8,7 +8,10 @@ const prefixCls = `v-button`
 
 type Func = Function
 
-@Component({ name: 'v-button' })
+@Component({
+  name: 'v-button',
+  inheritAttrs: false
+})
 @Emittable
 export default class Button extends Vue {
   componentName: string = 'vButton'

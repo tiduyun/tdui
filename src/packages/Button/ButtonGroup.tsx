@@ -24,6 +24,7 @@ const getBtnValue = (c: Vue) => defaultTo(c.value, c.$attrs.value)
 
 @Component({
   name: 'v-button-group',
+  inheritAttrs: false,
   components: { Button }
 })
 @Emittable
