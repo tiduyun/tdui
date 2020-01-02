@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { isEmpty, isFunction } from '@tdio/utils'
+import { isEmpty, isFunction, template } from '@tdio/utils'
 
 import { findUpward } from '@/utils/vue'
 
@@ -103,12 +103,14 @@ export default class EditableText extends Vue {
         h: CreateElement,
         { model, rules }: { model: D; rules?: IValidateRuleObject; }
       ) => (
-        <el-form class="v-form" props={{ model, rules, statusIcon: true }}>
+        <el-form class="v-form" props={{ model, rules, statusIcon: false }}>
           <el-form-item prop="text" showMessage={false}>
             {
               editorSlot
                 ? (isFunction(editorSlot) ? (editorSlot as Function)(model) : editorSlot)
-                : (<el-input v-model={ model.text } props={ this.$attrs } />)
+                : (<el-input v-model={ model.text } props={ this.$attrs }>
+                   { $slots['editor-suffix'] ? <template slot="suffix">{ $slots['editor-suffix'] }</template> : null }
+                </el-input>)
             }
           </el-form-item>
         </el-form>
