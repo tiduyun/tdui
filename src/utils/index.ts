@@ -4,8 +4,12 @@ export function parseBase64 <T = any> (s: string): T {
   return JSON.parse(b64Decode(s))
 }
 
-export function toBase64 (o: Kv): string {
-  return b64Encode(JSON.stringify(o), true)
+export function toBase64 <T> (o: T): string {
+  let s = o as any as string
+  if (typeof o !== 'string') {
+    s = JSON.stringify(o)
+  }
+  return b64Encode(s, true)
 }
 
 export interface ITruncateOption {
