@@ -4,7 +4,7 @@
  * @autho allex_wang
  */
 
-import Vue from 'vue'
+import Vue, { CreateElement, RenderContext, VNode } from 'vue'
 
 import { isArray } from '@tdio/utils'
 
@@ -75,3 +75,22 @@ export function composeFilter (filters: Array<ComposeFilterOption | any>) {
   })
   return (v: any) => fns.reduce((r, [f, args]) => f(r, ...args), v)
 }
+
+type FunctionalComponentRender<T> = (this: RenderContext<T>, h: CreateElement, props: T) => VNode
+
+/**
+ * Helper for create functional vue component by a plain render function
+ *
+ * @param {Function} A plain vue render function. with args of the props, @see <FunctionalComponentRender>
+ */
+export const functionalComponent = <Props = Kv> (render: FunctionalComponentRender<Props>) => ({
+  functional: true,
+  render (h: CreateElement, ctx: RenderContext<Props>) {
+    return render.apply({
+      $slots: ctx.children,
+      $scopedSlots: ctx.scopedSlots,
+      $listeners: ctx.listeners,
+      ...ctx
+    }, [h, ctx.props])
+  }
+})
