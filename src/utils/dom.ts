@@ -5,12 +5,50 @@
  * MIT Licensed
  */
 
-import Vue from 'vue'
+import { parseHTML } from './parseHTML'
 
-type EventHandler = ((e: Event) => void) & ThisType<Element>
+type EventHandler = (this: Node, e: Event) => void
 
 const isStandard = typeof document !== 'undefined' && !!document.addEventListener
-const isServer = Vue.prototype.$isServer
+
+// inspired from jquery.init
+const rquickExpr = /^(?:\s*(<[\w\W]+>)[^>]*|#([\w-]+))$/
+
+export function $ (selector: string | Node, context?: Node | Document): Node | Node[] {
+  let match: Array<string | null> | null = null
+
+  // Handle HTML strings
+  if (typeof selector === 'string') {
+    if (selector[0] === '<' &&
+        selector[selector.length - 1] === '>' &&
+        selector.length >= 3
+    ) {
+      // Assume that strings that start and end with <> are HTML and skip the regex check
+      match = [null, selector, null]
+    } else {
+      match = rquickExpr.exec(selector) as any
+    }
+
+    const ctx = context && context.nodeType ? context.ownerDocument || (context as Document) : document
+
+    // Match html or make sure no context is specified for #id
+    if (match && (match[1])) {
+      if (match[1]) {
+        // HANDLE: $(html) -> DOM
+        const elem = parseHTML(match[1]!, ctx)
+        return elem.length > 1 ? elem : elem[0]
+      } else {
+        // HANDLE: $(#id)
+        return ctx.getElementById(match[2]!) as Node
+      }
+    } else  {
+      // HANDLE: $(expr, $(...))
+      return ctx.querySelectorAll(selector) as any
+    }
+  }
+
+  return selector
+}
 
 /* istanbul ignore next */
 export function hasClass (el: Element, cls: string): boolean {
@@ -109,14 +147,14 @@ export function getStyle (element: Element, styleName: string): string {
 
 /* istanbul ignore next */
 export const on = (function () {
-  if (!isServer && isStandard) {
-    return (el: Node | null, event: string, handler: EventHandler) => {
+  if (isStandard) {
+    return (el: Node, event: string, handler: EventHandler) => {
       if (el && event && handler) {
         el.addEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node | null, event: string, handler: EventHandler) => {
+  return (el: Node, event: string, handler: EventHandler) => {
     if (el && event && handler) {
       el.attachEvent(`on${event}`, handler)
     }
@@ -125,14 +163,14 @@ export const on = (function () {
 
 /* istanbul ignore next */
 export const off = (function () {
-  if (!isServer && isStandard) {
-    return (el: Node | null, event: string, handler: EventHandler) => {
+  if (isStandard) {
+    return (el: Node, event: string, handler: EventHandler) => {
       if (el && event) {
         el.removeEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node | null, event: string, handler: EventHandler) => {
+  return (el: Node, event: string, handler: EventHandler) => {
     if (el && event) {
       el.detachEvent(`on${event}`, handler)
     }
@@ -140,7 +178,7 @@ export const off = (function () {
 }())
 
 /* istanbul ignore next */
-export const once = (el: Node | null, event: string, handler?: EventHandler) => {
+export const once = (el: Node, event: string, handler?: EventHandler) => {
   const listener = function (e: Event) {
     if (handler) {
       handler.bind(el)(e)
