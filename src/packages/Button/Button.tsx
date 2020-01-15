@@ -1,8 +1,9 @@
+import { get, isEmpty, isFunction, isPromise, set, throttle } from '@tdio/utils'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { Emittable } from '@/utils/emittable'
-import { get, isEmpty, isFunction, isPromise, set, throttle } from '@tdio/utils'
+import { tooltipProps } from '@/utils/normalize'
 
 const prefixCls = `v-button`
 
@@ -113,9 +114,15 @@ export default class Button extends Vue {
   }
 
   render (h: CreateElement) {
-    const $slots = this.$slots
-    const type = this.type || this.$attrs.type
-    const isLoading = this.loading || this.lock
+    const {
+      $slots,
+      $attrs,
+      $listeners,
+      loading,
+      lock
+    } = this
+    const type = this.type || $attrs.type
+    const isLoading = loading || lock
 
     let text: VNode[] | string | undefined = $slots.default
     if (this.loadingText) {
@@ -130,15 +137,20 @@ export default class Button extends Vue {
       }
     }
 
-    return (
+    const btn = (
       <el-button
         class="v-button"
         loading={isLoading}
-        props={{ ...this.$attrs, type }}
-        on={{ ...this.$listeners, click: this.handleClick }}
+        props={{ ...$attrs, type }}
+        on={{ ...$listeners, click: this.handleClick }}
       >
         { text || null }
       </el-button>
     )
+
+    const tooltip = tooltipProps({ ...this.$props, ...$attrs })
+    return tooltip.content
+      ? (<el-tooltip props={tooltip}>{ btn }</el-tooltip>)
+      : btn
   }
 }

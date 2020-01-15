@@ -3,16 +3,16 @@ import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 
 import { isValue } from '@tdio/utils'
 
-import AbsSelectView from './AbsSelectView'
+import { tooltipProps } from '@/utils/normalize'
 
 import { IOption } from '../../../types/common'
-
 import { Icon } from '../Icon'
 
+import AbsSelectView from './AbsSelectView'
 import './Select.scss'
 
 @Component({
-  components: { Icon }
+  inheritAttrs: false
 })
 export default class Select extends Mixins(AbsSelectView) {
   @Prop({ type: Boolean, default: false })
@@ -23,6 +23,9 @@ export default class Select extends Mixins(AbsSelectView) {
 
   @Prop({ type: Boolean, default: null })
   disabled!: boolean
+
+  @Prop()
+  tooltip!: string | {}
 
   render (h: CreateElement) {
     const { $slots, $scopedSlots, disabled } = this
@@ -43,7 +46,7 @@ export default class Select extends Mixins(AbsSelectView) {
         )
     )
 
-    return (
+    const selectNode = (
       <el-select
         ref="select"
         class={classPrefix}
@@ -68,5 +71,10 @@ export default class Select extends Mixins(AbsSelectView) {
         }
       </el-select>
     )
+
+    const tooltip = tooltipProps({ ...this.$props, ...this.$attr })
+    return tooltip.content
+      ? (<el-tooltip props={tooltip}>{ selectNode }</el-tooltip>)
+      : selectNode
   }
 }

@@ -4,24 +4,9 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { truncate } from '@/utils'
 import { isEmpty, isObject, pick } from '@tdio/utils'
 
-type TooltipOptions = Kv & Partial<{
-  content: string;
-  placement: string;
-  popperClass: string;
-}>
+import { TooltipOptions, tooltipProps } from '@/utils/normalize'
 
-const normalizeTooltip = ({ props }: RenderContext): TooltipOptions => {
-  let tooltip: TooltipOptions = props.tooltip || {}
-  if (typeof tooltip === 'string') {
-    tooltip = { content: tooltip }
-  }
-  if (!isObject(tooltip)) {
-    tooltip = {}
-  }
-  return Object.assign(tooltip, pick(props, ['tooltipClass', 'popperClass', 'placement']))
-}
-
-const renderTextWithTooltip = (h: CreateElement, context: RenderContext, text: string, tooltip: TooltipOptions) => {
+const renderTextWithTooltip = (h: CreateElement, context: RenderContext, text: string, tooltip: Partial<TooltipOptions>) => {
   const textNode = (<span class="v-text" { ...context.data }>{ text }</span>)
   return (
     tooltip.content
@@ -47,7 +32,7 @@ export default class RichText extends Vue {
   isUnicodeLength!: boolean
 
   @Prop({ type: [String, Object, Boolean] })
-  tooltip!: TooltipOptions | string | boolean
+  tooltip!: Partial<TooltipOptions> | string | boolean
 
   @Prop({ type: String, default: 'v-text' })
   tooltipClass!: string
@@ -68,7 +53,7 @@ export default class RichText extends Vue {
     }
 
     let text = getText()
-    const tooltip: TooltipOptions = normalizeTooltip(context)
+    const tooltip = tooltipProps(context.props)
     const { isUnicodeLength } = props
     const truncateLength = parseInt(props.truncateLength, 10)
 
