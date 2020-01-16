@@ -16,6 +16,7 @@ export interface ITabComponent {
   name: string;
   label: string;
   impl: string | Vue;
+  async: boolean;
 }
 
 export interface IProps extends Kv {

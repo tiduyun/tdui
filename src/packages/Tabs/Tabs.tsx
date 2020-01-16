@@ -52,18 +52,26 @@ export class Tabs extends Vue {
   }
 
   render (h: CreateElement) {
+    const props = (tab: ITabComponent) => ({
+      is: tab.impl,
+      props: this.compProps(tab.name)
+    })
     return (
       <el-tabs v-model={this.activeTab}>
         {
-          this.tabs.map(tab => (
-            <el-tab-pane key={tab.name} name={tab.name} label={tab.label}>
-              {
-                tab.name === this.activeTab ? (
-                  <ViewLoader><component { ...{ is: tab.impl } } props={this.compProps(tab.name)} /></ViewLoader>
-                ) : null
-              }
-            </el-tab-pane>
-          ))
+          this.tabs.map(t => {
+            return (
+              <el-tab-pane key={t.name} name={t.name} label={t.label}>
+                {
+                  t.name === this.activeTab && (
+                    t.async === false
+                      ? <component { ...props(t) } />
+                      : <ViewLoader><component { ...props(t) } /></ViewLoader>
+                    )
+                }
+              </el-tab-pane>
+            )
+          })
         }
       </el-tabs>
     )
