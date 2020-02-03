@@ -1,6 +1,6 @@
 {
   "name": "@tdio/tdui",
-  "version": "1.0.3",
+  "version": "1.0.3-dev.20200203",
   "description": "Tiduyun.com Front-End UI",
   "module": "lib/tdui.esm.js",
   "types": "lib/index.d.ts",

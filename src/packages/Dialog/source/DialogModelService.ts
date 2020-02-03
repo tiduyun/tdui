@@ -22,7 +22,7 @@ export interface IDialogModelService<V extends Vue, T> extends IDialogModel<T> {
   $vm: Vue;
   init ($this: V): IDialogModel<T>;
   transform (data: T): T;
-  show (info?: T, title?: string): void;
+  show (info?: Partial<T>, title?: string): void;
   hide (): void;
 }
 
@@ -99,7 +99,7 @@ export class DialogModelService <V extends Vue, T extends Kv> extends AbsService
     this.onInit()
   }
 
-  show (info?: T | string, title?: string) {
+  show (info?: Partial<T> | string, title?: string) {
     if (isString(info)) {
       title = info as string
     }
