@@ -6,7 +6,7 @@
 
 import Vue, { CreateElement, RenderContext, VNode } from 'vue'
 
-import { isArray } from '@tdio/utils'
+import { hasOwn, isArray } from '@tdio/utils'
 
 /**
  * Find components upward
@@ -94,3 +94,14 @@ export const functionalComponent = <Props = Kv> (render: FunctionalComponentRend
     }, [h, ctx.props])
   }
 })
+
+export const isVNode = (o: any): boolean => {
+  let arr = o as VNode[]
+  if (!isArray(o)) {
+    if (!o || !hasOwn(o, 'tag')) {
+      return false
+    }
+    arr = [ o as VNode ]
+  }
+  return !arr.some(o => !o || !hasOwn(o, 'tag'))
+}

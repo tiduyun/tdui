@@ -51,6 +51,9 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: [Object, Array], default: () => ({}) })
   storeState!: any
 
+  @Prop({ type: Object })
+  initialState!: IListResult<Q, T>
+
   @Prop({ type: Boolean, default: true })
   showPagination!: boolean
 
@@ -68,6 +71,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
 
   created () {
     const state = this.storeState
+    const initialState = this.initialState
 
     // reset store state
     reactSet(state, {
@@ -76,6 +80,11 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       list: [],
       loading: false
     })
+
+    // Optioanl set initialize state
+    if (initialState) {
+      reactSet(state, initialState)
+    }
 
     if (this.loadOnCreated) {
       this.load()

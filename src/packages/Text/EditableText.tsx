@@ -1,14 +1,16 @@
-import { CreateElement } from 'vue'
+import { CreateElement, VNode } from 'vue'
 import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { isEmpty, isFunction, template } from '@tdio/utils'
+import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 
-import { findUpward } from '@/utils/vue'
+import { TooltipOptions, tooltipProps } from '@/utils/normalize'
+import { findUpward, isVNode } from '@/utils/vue'
 
 import { IValidateRuleItem, IValidateRuleObject } from '../../../types/validate'
 
 import { Popover, PopoverOptions } from '../Box'
 import { Icon } from '../Icon'
+import RichText from './RichText'
 
 import './EditableText.scss'
 
@@ -25,6 +27,23 @@ interface D extends Kv {
 
 @Component
 export default class EditableText extends Vue {
+  /* rich-text props (start) */
+  @Prop({ type: String, default: 'top' })
+  placement!: string
+
+  @Prop({ type: [String, Number], default: -1 })
+  truncateLength!: number | string
+
+  @Prop({ type: Boolean, default: false })
+  isUnicodeLength!: boolean
+
+  @Prop({ type: [String, Object, Boolean] })
+  tooltip!: Partial<TooltipOptions> | string | boolean
+
+  @Prop({ type: String, default: 'v-text' })
+  tooltipClass!: string
+  /* rich-text props (end) */
+
   @Prop({ type: Boolean, default: true })
   editable!: boolean
 
@@ -47,37 +66,40 @@ export default class EditableText extends Vue {
   @Prop({ type: Function, default: () => {} })
   onSubmit!: (prop: string, value: string) => Promise<any>
 
-  private currentValue: string | null = null
-
-  @Watch('value', { immediate: true })
-  setCurrentValue (newVal: any, oldVal: any) {
-    if (newVal !== oldVal) {
-      this.currentValue = newVal
-    }
-  }
-
   render (h: CreateElement) {
     const {
+      value,
       editable,
       $slots,
-      currentValue,
       editorClass,
-      emptyText,
-      showEditIcon
+      showEditIcon,
+      emptyText
     } = this
+
+    const textProps = pick(this.$props, ['placement', 'truncateLength', 'isUnicodeLength', 'tooltip', 'tooltipClass'])
+    const viText = this.getViText()
+    const textStr = value || (typeof viText === 'string' ? viText as string : '') || ''
 
     return (
       <span class="v-editable">
         {
           editable ? (
             [
-              $slots.editor ? $slots.editor : (<el-input value={currentValue} class={{ [editorClass]: !!editorClass }} props={this.$attrs} on={this.$listeners} clearable />),
-              $slots['editor-suffix'] ? $slots['editor-suffix'] : null
+              $slots.editor
+                ? $slots.editor
+                : (<el-input value={textStr} class={{ [editorClass]: !!editorClass }} props={this.$attrs} on={this.$listeners} clearable />),
+              $slots['editor-suffix']
+                ? $slots['editor-suffix']
+                : null
             ]
           ) : (
             [
-              <span name="text">{ isEmpty(currentValue) ? emptyText : currentValue }</span>,
-              showEditIcon ? <Icon icon-name="el-icon-edit-outline" class="v-icon-modify" onClick={this.showModifyPop} tooltip={$t('Modify')} light={true} /> : null
+              isVNode(viText)
+                ? viText
+                : textStr && (<RichText props={textProps}>{textStr}</RichText>) || emptyText,
+              showEditIcon
+                ? <Icon icon-name="el-icon-edit-outline" class="v-icon-modify" onClick={ (e: Event) => this.showModifyPop(textStr, e) } tooltip={$t('Modify')} light={true} />
+                : null
             ]
           )
         }
@@ -85,7 +107,23 @@ export default class EditableText extends Vue {
     )
   }
 
-  private showModifyPop (e: Event) {
+  private getViText (): string | VNode[] | VNode {
+    const {
+      value,
+      $slots
+    } = this
+    let str = ''
+    let slot: VNode | VNode[] | undefined
+    if ((slot = $slots.default || $slots.text)) {
+      // it's a default slot (plain text)
+      if (isArray(slot)) {
+        str = get(slot, '[0].text', '')!.trim()
+      }
+    }
+    return str || slot || value
+  }
+
+  private showModifyPop (text: string, e: Event) {
     const { rules = [], prop, label } = this.getFieldScheme()
     const {
       $slots,
@@ -97,7 +135,7 @@ export default class EditableText extends Vue {
         title: label,
         popperClass: 'v-editable__popover'
       },
-      model: { text: this.currentValue },
+      model: { text },
       rules: { text: rules },
       render: (
         h: CreateElement,
@@ -130,8 +168,7 @@ export default class EditableText extends Vue {
     }
     return {
       ...formProps,
-      ...this.fieldScheme,
-      value: this.currentValue
+      ...this.fieldScheme
     }
   }
 
