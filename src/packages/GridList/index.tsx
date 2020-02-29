@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, identity, isEmpty, omit, pick, unset } from '@tdio/utils'
+import { assign, deepAssign, get, identity, isEmpty, pick, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -20,16 +20,20 @@ interface IPagination {
   total?: number;
 }
 
-// data list api params
+// Data list api params
 interface IListParams <Q extends IQuery = IQuery> extends Kv {
   query: Q;
-  pager?: IPagination;
+  pager?: IPagination | Nil;
+
+  // Internal config for io
+  $xargs?: {
+    silent?: boolean;
+    loading?: boolean;
+  }
 }
 
 // This interface for store list type data that with pagination info
-interface IListResult<T, Q> {
-  query: Q;
-  pager?: IPagination;
+interface IListResult<T, Q> extends IListParams<Q> {
   list: T[];
 }
 
@@ -69,22 +73,34 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: [Boolean, Object], default: false })
   autoReload!: boolean | ReloadOptions
 
-  created () {
-    const state = this.storeState
-    const initialState = this.initialState
+  /* Api for element-ui/pagination implements */
+  get internalPageCount (): number {
+    const { pager = {} } = this.storeState
+    return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
+  }
 
-    // reset store state
-    reactSet(state, {
+  setState (state: Partial<IListParams>, force?: boolean) {
+    const store = this.storeState
+    reactSet(
+      store,
+      force
+        ? state
+        : deepAssign({}, store, state, (r, s, k) => k === 'list' ? s : undefined)
+    )
+  }
+
+  created () {
+    // set initialize state optionally
+    const initialState = deepAssign({
       query: {},
       pager: newPager(),
       list: [],
-      loading: false
-    })
+      $xargs: {
+        loading: false
+      }
+    }, this.initialState)
 
-    // Optioanl set initialize state
-    if (initialState) {
-      reactSet(state, initialState)
-    }
+    this.setState(initialState)
 
     if (this.loadOnCreated) {
       this.load()
@@ -97,39 +113,37 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   load (params: Partial<IListParams> = {}): Promise<Ds<Q, T>> {
     const state = this.storeState
 
-    if (!state.query) state.query = {}
-    if (!state.pager) state.pager = newPager()
-
     if (!isEmpty(params)) {
-      deepAssign(state, params)
+      this.setState(params)
     }
 
-    // get state refs omitting `list` property
-    const listParams = omit(state, 'list') as IListParams<Q>
+    const apiParams = pick(state, ['query']) as IListParams<Q>
     if (!this.showPagination) {
-      unset(listParams, 'pager')
+      apiParams.pager = null
+    } else {
+      apiParams.pager = state.pager
     }
 
-    // merge custom query
-    const holder: Q = { ...listParams.query }
-    listParams.query = this.chainQuery(holder) || holder
+    // Apply custom query
+    const hoist: Q = { ...state.query }
+    apiParams.query = this.chainQuery(hoist) || hoist
 
-    // update local state
-    reactSet(state, listParams)
-
-    return this._load(listParams)
+    return this._load(apiParams)
   }
 
   onSizeChange (size: number) {
-    this.load({ pager: { size } })
+    this.setState({ pager: { size } })
+    this.debounceLoad()
   }
 
   onPageChange (page: number) {
-    this.load({ pager: { page } })
+    this.setState({ pager: { page } })
+    this.debounceLoad()
   }
 
   onSortChange ({ column, prop, order }: any) {
-    this.load({ query: { sortProp: prop, sortOrder: order } })
+    this.setState({ query: { sortProp: prop, sortOrder: order } })
+    this.debounceLoad()
   }
 
   render (h: CreateElement) {
@@ -153,7 +167,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
         }
         {
           gridSlot ? (
-            <div v-loading={ state.loading && !state.silent } class="v-gridlist__grid">{ gridSlot({ ...scope, grid: state }) }</div>
+            <div v-loading={ get(state, '$xargs.loading') && !get(state, '$xargs.silent') } class="v-gridlist__grid">{ gridSlot({ ...scope, grid: state }) }</div>
           ) : null
         }
         {
@@ -182,18 +196,34 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   }
 
   private _load (params: IListParams): Promise<Ds<Q, T>> {
-    const state = this.storeState
-    state.loading = true
-    return this.storeLoadList(this.paramsReduce(params)).then(
+    // update local state
+    this.setState({
+      ...params,
+      $xargs: {
+        loading: true
+      }
+    })
+
+    const listParams = this.paramsReduce({
+      ...params,
+      $xargs: this.storeState.$xargs
+    })
+
+    return this.storeLoadList(listParams).then(
       (ret) => {
-        assign(state, { ...ret, loading: false })
+        this.setState({ ...ret, $xargs: { loading: false } })
         return ret
       },
       (err) => {
-        state.loading = false
+        this.setState({ $xargs: { loading: false } })
         throw err
       }
     )
+  }
+
+  @debounce(100)
+  private debounceLoad (params?: Partial<IListParams>): void {
+    this.load(params)
   }
 
   private _setupLoadDaemon () {
@@ -220,8 +250,8 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             run()
           } else {
             // silent mode to prevent spiner
-            this.load({ silent: true }).finally(() => {
-              unset(state, 'silent')
+            this.load({ $xargs: { silent: true } }).finally(() => {
+              unset(state, '$xargs.silent')
               run()
             })
           }

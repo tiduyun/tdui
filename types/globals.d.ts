@@ -17,6 +17,8 @@ declare global {
   interface Window extends Kv {}
   interface Promise<T> extends Kv {}
 
+  type Nil = null | undefined
+
   // i18n helper
   const $t: $T
 
