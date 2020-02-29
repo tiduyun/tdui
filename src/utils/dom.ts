@@ -7,8 +7,6 @@
 
 import { parseHTML } from './parseHTML'
 
-type EventHandler = (this: Node, e: Event) => void
-
 const isStandard = typeof document !== 'undefined' && !!document.addEventListener
 
 // inspired from jquery.init
@@ -146,40 +144,40 @@ export function getStyle (element: Element, styleName: string): string {
 }
 
 /* istanbul ignore next */
-export const on = (function () {
+export const on = (() => {
   if (isStandard) {
-    return (el: Node, event: string, handler: EventHandler) => {
+    return (el: Node, event: string, handler: EventListener) => {
       if (el && event && handler) {
         el.addEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node, event: string, handler: EventHandler) => {
+  return (el: Node, event: string, handler: EventListener) => {
     if (el && event && handler) {
       el.attachEvent(`on${event}`, handler)
     }
   }
-}())
+})()
 
 /* istanbul ignore next */
-export const off = (function () {
+export const off = (() => {
   if (isStandard) {
-    return (el: Node, event: string, handler: EventHandler) => {
+    return (el: Node, event: string, handler: EventListener) => {
       if (el && event) {
         el.removeEventListener(event, handler, false)
       }
     }
   }
-  return (el: Node, event: string, handler: EventHandler) => {
+  return (el: Node, event: string, handler: EventListener) => {
     if (el && event) {
       el.detachEvent(`on${event}`, handler)
     }
   }
-}())
+})()
 
 /* istanbul ignore next */
-export const once = (el: Node, event: string, handler?: EventHandler) => {
-  const listener = function (e: Event) {
+export const once = (el: Node, event: string, handler?: EventListener) => {
+  const listener = (e: Event) => {
     if (handler) {
       handler.bind(el)(e)
     }
