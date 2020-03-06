@@ -1,20 +1,32 @@
 import { CreateElement, VNode } from 'vue'
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+
+interface ViewLoaderResponseArgs {
+  isLoading: boolean;
+}
 
 @Component({
   componentName: 'ViewLoader'
 })
 export class ViewLoader extends Vue {
-  isLoading: boolean = false
+  @Prop(Boolean)
+  loading!: boolean
+
+  isLoading = false
+
+  @Watch('loading')
+  setLoading (state: boolean) {
+    this.isLoading = state
+  }
 
   created () {
     const timer = setTimeout(() => {
-      this.isLoading = true
+      this.setLoading(true)
     }, 10)
 
-    this.$on('response', (resData: { isLoading: boolean; }) => {
+    this.$on('response', ({ isLoading }: ViewLoaderResponseArgs) => {
       clearTimeout(timer)
-      this.isLoading = resData.isLoading || false
+      this.setLoading(!!isLoading)
     })
   }
 
