@@ -1,3 +1,5 @@
+import './packages/styles/index.scss'
+
 // basic
 export * from './packages/Icon'
 export * from './packages/Text'

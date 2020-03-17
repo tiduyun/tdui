@@ -343,7 +343,7 @@
 }
 
 .el-dialog {
-  $header-height: 45px;
+  $header-height: 44px;
   $header-border-bottom-width: 1px;
   $footer-height: 76px;
 
@@ -356,11 +356,14 @@
 
   &__title {
     font-size: $font-size-medium;
+    line-height: 1.3;
     color: $color-text-primary;
   }
 
   &__header {
     height: $header-height;
+    padding: 14px 20px;
+    padding-bottom: 10px;
   }
 
   &__headerbtn {
