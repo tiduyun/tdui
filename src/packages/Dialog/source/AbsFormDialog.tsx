@@ -34,11 +34,12 @@ export default class AbsFormDialog extends MixinDialog {
   form: ElForm | null = null
 
   validate (): Promise<boolean> {
-    return this.form!.validate()
+    const f = this.form
+    return f ? f.validate() : Promise.resolve(true)
   }
 
   async submit (e: Event) {
-    if (!this.skipValidator && this.form!.rules) {
+    if (!this.skipValidator) {
       let valid = false
       try {
         valid = await this.validate()

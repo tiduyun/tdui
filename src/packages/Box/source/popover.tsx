@@ -140,18 +140,22 @@ class Popover<D extends {}> extends Vue {
     if (listeners) {
       Object.keys(listeners).forEach((k) => {
         const fn = listeners[k]
-        if (fn && isFunction(fn)) {
-          this.$on(k, (e: Event, cb: ICallback) => {
-            // pass data to event source
-            e.data = this.model
-            const r: any = fn.call(this, e)
-            if (isPromise(r)) {
-              r.then((a: any) => cb(null, a), cb)
-            } else {
-              this.$nextTick(() => cb(null))
-            }
-          })
+        if (!fn || !isFunction(fn)) {
+          return
         }
+        this.$on(k, (e: Event, cb: ICallback) => {
+          if (!cb) {
+            return fn.call(this, e)
+          }
+          // pass data to event source
+          e.data = this.model
+          const r: any = fn.call(this, e)
+          if (isPromise(r)) {
+            r.then((a: any) => cb(null, a), cb)
+          } else {
+            this.$nextTick(() => cb(null))
+          }
+        })
       })
     }
   }
@@ -165,13 +169,11 @@ class Popover<D extends {}> extends Vue {
   }
 
   validate (): Promise<boolean> {
-    return this.form ? this.form!.validate() : true
+    return this.form ? this.form!.validate() : Promise.resolve(true)
   }
 
   async handleOK (e: Event) {
-    const f = this.form!
-
-    if (!this.skipValidator && f && f!.rules) {
+    if (!this.skipValidator) {
       let valid = false
       try {
         valid = await this.validate()
