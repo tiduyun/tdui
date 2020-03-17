@@ -1,5 +1,9 @@
 import { decode as b64Decode, encode as b64Encode } from '@allex/base64'
 
+export {
+  b64Decode, b64Encode
+}
+
 export function parseBase64 <T = any> (s: string): T {
   return JSON.parse(b64Decode(s))
 }
