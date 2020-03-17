@@ -4,7 +4,7 @@ import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 
 import { TooltipOptions, tooltipProps } from '@/utils/normalize'
-import { findUpward, isVNode } from '@/utils/vue'
+import { findDownward, findUpward, isVNode } from '@/utils/vue'
 
 import { IValidateRuleItem, IValidateRuleObject } from '../../../types/validate'
 
@@ -130,7 +130,7 @@ export default class EditableText extends Vue {
       $scopedSlots
     } = this
     const editorSlot = $scopedSlots.editor || $slots.editor
-    return Popover.create<D>(e.currentTarget as Node, {
+    const popover = Popover.create<D>(e.currentTarget as Node, {
       props: {
         title: label,
         popperClass: 'v-editable__popover'
@@ -141,22 +141,34 @@ export default class EditableText extends Vue {
         h: CreateElement,
         { model, rules }: { model: D; rules?: IValidateRuleObject; }
       ) => (
-        <el-form class="v-form" props={{ model, rules, statusIcon: false }}>
-          <el-form-item prop="text" showMessage={false}>
+        <el-form class="v-form" props={{ model, rules }}>
+          <el-form-item prop="text" showMessage={false} statusTooltip>
             {
               editorSlot
                 ? (isFunction(editorSlot) ? (editorSlot as Function)(model) : editorSlot)
-                : (<el-input v-model={ model.text } props={ this.$attrs }>
-                   { $slots['editor-suffix'] ? <template slot="suffix">{ $slots['editor-suffix'] }</template> : null }
-                </el-input>)
+                : (
+                    <el-input v-model={ model.text } props={ this.$attrs }>
+                      { $slots['editor-suffix'] ? <template slot="suffix">{ $slots['editor-suffix'] }</template> : null }
+                    </el-input>
+                  )
             }
           </el-form-item>
         </el-form>
       ),
       listeners: {
+        opened: () => {
+          // auto focus the popover input element
+          const input = findDownward(popover, 'ElInput')
+          if (input) {
+            try {
+              input.focus()
+            } catch (e) { console.error(e) }
+          }
+        },
         submit: (e: Event) => this.onSubmit(prop!, e.data!.text)
       }
     })
+    return popover
   }
 
   private getFieldScheme (): FieldScheme {
