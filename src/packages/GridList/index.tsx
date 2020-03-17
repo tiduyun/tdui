@@ -15,9 +15,9 @@ interface IQuery extends Kv {}
 
 // pagination
 interface IPagination {
-  page?: number;
-  size?: number;
-  total?: number;
+  page: number;
+  size: number;
+  total: number;
 }
 
 // Data list api params
@@ -79,7 +79,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
   }
 
-  setState (state: Partial<IListParams>, force?: boolean) {
+  setState (state: Partial<IListParams | { pager: Partial<IPagination> | Nil; }>, force?: boolean) {
     const store = this.storeState
     reactSet(
       store,
@@ -209,8 +209,19 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       $xargs: this.storeState.$xargs
     })
 
+    const p0 = listParams.pager!
     return this.storeLoadList(listParams).then(
       (ret) => {
+        // patches page number mismatch with backend response
+        const p1 = get<IPagination>(ret, 'pager')
+        let total = 0
+        if (p0 && p1 && (total = p1.total)) {
+          const { page, size } = p1
+          const rpage = Math.ceil(total / size)
+          if (p0.page > rpage) {
+            return this._load({ ...params, pager: { ...p0, page: rpage } })
+          }
+        }
         this.setState({ ...ret, $xargs: { loading: false } })
         return ret
       },
