@@ -95,6 +95,9 @@ export default class AbsFormDialog extends MixinDialog {
       size ? `v-dialog--${size}` : ''
     ].filter(Boolean)
 
+
+    const isVisible = this.inited && this.isShow
+
     return (
       <el-dialog
         ref="dlg"
@@ -112,24 +115,24 @@ export default class AbsFormDialog extends MixinDialog {
         on-opened={() => this.$emit('opened')}
       >
         {
-          (this.inited && this.isShow) ? (
+          isVisible ? [
             <div class="dialog-body">
               {
                 $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : ''
               }
-            </div>
-          ) : null
+            </div>,
+            <template slot="footer">
+              {
+                $scopedSlots.footer ? $scopedSlots.footer({ $self: entity, $this: this }) : (
+                  <div class="dialog-footer">
+                    <Button onClick={this.close}>{$t('Cancel')}</Button>
+                    <Button type="primary" onClick={this.submit}>{$t('Save')}</Button>
+                  </div>
+                )
+              }
+            </template>
+          ] : null
         }
-        <template slot="footer">
-          {
-            $scopedSlots.footer ? $scopedSlots.footer({ $self: entity, $this: this }) : (
-              <div class="dialog-footer">
-                <Button onClick={this.close}>{$t('Cancel')}</Button>
-                <Button type="primary" onClick={this.submit}>{$t('Save')}</Button>
-              </div>
-            )
-          }
-        </template>
       </el-dialog>
     )
   }
