@@ -1,3 +1,4 @@
+import { CreateElement } from 'vue'
 import { Component, Mixins, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { debounce } from '@/utils/decorators'
@@ -17,7 +18,7 @@ type IOptionsFunc = AsyncOptionFunc | SyncOptionFunc
 type IOptionsType = TOptionEntity[] | IOptionsFunc | null
 
 @Component
-class BaseSelect extends Vue {
+class MixinSelect extends Vue {
   /** @abstract APIs must be implemented */
   keys: string = ''
   options!: IOptionsType
@@ -45,15 +46,61 @@ class BaseSelect extends Vue {
   private _pendingFn: IOptionsFunc | null = null
 
   @Watch('options')
-  handleOptionsChange (v: IOptionsType, p: IOptionsType) {
-    this.setOptions(v)
+  initOptions (options: IOptionsType, p?: IOptionsType) {
+    const { keys } = this
+    const v = options
+
+    if (isFunction(v)) {
+      const f: IOptionsFunc = (v as IOptionsFunc).bind(this)
+      if (this.lock) {
+        this._pendingFn = f
+        return
+      }
+
+      this.setLoading(true)
+
+      const handleCb = (err: Error | null, r?: TOptionEntity[]) => {
+        if (!err) {
+          if (!isEmpty(keys)) {
+            this._inited = true
+          }
+          this.setOptions(r || [])
+        }
+        this.setLoading(false)
+        const pending = this._pendingFn
+        if (pending) {
+          this._pendingFn = null
+          if (!isValueEquals(keys, this.keys)) {
+            this.initOptions(pending)
+          }
+        }
+      }
+
+      const r = f(keys)
+      if (isPromise(r)) {
+        (r as ReturnType<AsyncOptionFunc>).then(
+          arr => handleCb(null, arr),
+          err => handleCb(err)
+        )
+      } else {
+        handleCb(null, r as ReturnType<SyncOptionFunc>)
+      }
+
+    } else if (v !== this.items) {
+      this.setOptions(v as TOptionEntity[])
+    }
+
+    if (this.options !== options) {
+      // cache it
+      this.options = options
+    }
   }
 
   /**
    * API for retrieve select options.
    */
   load () {
-    this.setOptions(this.options)
+    this.initOptions(this.options)
   }
 
   mounted () {
@@ -65,12 +112,12 @@ class BaseSelect extends Vue {
     })
   }
 
-  render (h: any) {
+  render (h: CreateElement) {
     const {
       value,
-      $attrs: attrs
+      items: options,
+      $attrs: attrs,
     } = this
-    const options = this.items.filter(this.optionsFilter)
     return (
       <Select
         {
@@ -92,62 +139,15 @@ class BaseSelect extends Vue {
     )
   }
 
-  private _setLoading (v: boolean) {
+  private setLoading (v: boolean): void {
     this.lock = v
     this.$emit('update:loading', v)
   }
 
-  private setOptions (options: IOptionsType) {
-    const { keys } = this
-    const v = options
-
-    if (isFunction(v)) {
-      const f: IOptionsFunc = (v as IOptionsFunc).bind(this)
-
-      if (this.lock) {
-        this._pendingFn = f
-        return
-      }
-
-      this._setLoading(true)
-
-      const handleCb = (err: Error | null, r?: TOptionEntity[]) => {
-        if (!err) {
-          if (!isEmpty(keys)) {
-            this._inited = true
-          }
-          this.items = isArray(r) ? r : []
-        }
-
-        this._setLoading(false)
-
-        const pending = this._pendingFn
-        if (pending) {
-          this._pendingFn = null
-          if (!isValueEquals(keys, this.keys)) {
-            this.setOptions(pending)
-          }
-        }
-      }
-
-      const r = f(keys)
-      if (isPromise(r)) {
-        (r as ReturnType<AsyncOptionFunc>).then(
-          arr => handleCb(null, arr),
-          err => handleCb(err)
-        )
-      } else {
-        handleCb(null, r as ReturnType<SyncOptionFunc>)
-      }
-    } else if (v !== this.items) {
-      this.items = (isArray(v) ? [...v] : []) as TOptionEntity[]
-    }
-
-    if (this.options !== options) {
-      // cache it
-      this.options = options
-    }
+  private setOptions (items: TOptionEntity[]): void {
+    items = isArray(items) ? items : []
+    this.items = items.filter(this.optionsFilter)
   }
 }
 
-export default Mixins<BaseSelect>(BaseSelect)
+export default Mixins<MixinSelect>(MixinSelect)
