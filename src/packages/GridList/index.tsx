@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, get, identity, isEmpty, pick, unset } from '@tdio/utils'
+import { assign, deepAssign, deferred, DeferredPromise, get, identity, isEmpty, pick, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -73,6 +73,8 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: [Boolean, Object], default: false })
   autoReload!: boolean | ReloadOptions
 
+  debounceRef!: [number, DeferredPromise<Ds<Q, T>>] | null
+
   /* Api for element-ui/pagination implements */
   get internalPageCount (): number {
     const { pager = {} } = this.storeState
@@ -110,11 +112,27 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     this._setupLoadDaemon()
   }
 
-  load (params: Partial<IListParams> = {}): Promise<Ds<Q, T>> {
+  load (params: Partial<IListParams> = {}, opts: { debounce?: number; } = {}): Promise<Ds<Q, T>> {
     const state = this.storeState
 
     if (!isEmpty(params)) {
       this.setState(params)
+    }
+
+    // cleanup previous if deferred
+    const ref = this.debounceRef
+    if (ref) {
+      clearTimeout(ref[0])
+      ref[1].reject('abort')
+      this.debounceRef = null
+    }
+
+    const debounce = opts.debounce || 0
+    if (debounce > 0) {
+      const defer = deferred<Ds<Q, T>>()
+      const timer = setTimeout(() => this.load().then(defer.resolve, defer.reject), debounce)
+      this.debounceRef = [timer, defer]
+      return defer
     }
 
     const apiParams = pick(state, ['query']) as IListParams<Q>
