@@ -55,12 +55,14 @@ export class Icon extends Vue {
       }
     ]
 
+    const listeners = disabled ? {} : this.$listeners
+
     // forward component style
     const style = get(this.$vnode, 'data.style')
 
     const icon = isSVG
-      ? (<SvgIcon iconName={this.iconName} class={iconClass} on={this.$listeners} style={style} />)
-      : (<i class={iconClass} on={this.$listeners} style={style} />)
+      ? (<SvgIcon iconName={this.iconName} class={iconClass} on={listeners} style={style} />)
+      : (<i class={iconClass} on={listeners} style={style} />)
 
     const tooltip = this.normalizeTooltip()
 
