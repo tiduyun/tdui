@@ -63,6 +63,10 @@
     padding: 20px;
     text-align: center;
   }
+
+  &__message > p {
+    word-break: break-word;
+  }
 }
 
 // el message
@@ -72,8 +76,10 @@
   justify-content: center;
   box-shadow: 2px 2px 5px rgba(38, 46, 63, 0.12);
 
+  &--success,
   &--error,
-  &--success {
+  &--info,
+  &--warning {
     background-color: #fff;
     border-color: $border-color-base;
 
@@ -82,15 +88,17 @@
     }
   }
 
-  &__icon {
-    margin-right: 6px;
-    font-size: 16px;
-  }
-
   &__content {
     color: $color-primary;
-    font-size: 13px;
+    font-size: 1.08 * $font-size-normal; // 12px -> 13px
   }
+
+  &__icon { margin-right: 6px; font-size: $font-size-medium; }
+
+  & .el-icon-success { color: $color-success; }
+  & .el-icon-error { color: $color-danger; }
+  & .el-icon-info { color: $color-info; }
+  & .el-icon-warning { color: $color-warning; }
 }
 
 // date-picker
