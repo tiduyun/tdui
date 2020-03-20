@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, deferred, DeferredPromise, get, identity, isEmpty, pick, unset } from '@tdio/utils'
+import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, pick, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -50,16 +50,19 @@ const newPager = (page: number = 1, size: number = 10) => ({ page, size })
 @Component
 export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: Function, required: true })
-  storeLoadList!: IGenericAction<IListParams, Ds<Q, T>>
+  storeLoadList!: IGenericAction<IListParams<Q>, Ds<Q, T>>
 
   @Prop({ type: [Object, Array], default: () => ({}) })
   storeState!: any
 
   @Prop({ type: Object })
-  initialState!: IListResult<Q, T>
+  initialState!: IListResult<Q,   T>
 
   @Prop({ type: Boolean, default: true })
   showPagination!: boolean
+
+  @Prop({ type: Array })
+  pageSizes!: number[]
 
   @Prop({ type: Boolean, default: true })
   loadOnCreated!: boolean
@@ -68,12 +71,16 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   chainQuery!: (query: Q) => Q
 
   @Prop({ type: Function, default: identity })
-  paramsReduce!: (params: IListParams) => IListParams
+  paramsReduce!: (params: IListParams<Q>) => IListParams<Q>
 
   @Prop({ type: [Boolean, Object], default: false })
   autoReload!: boolean | ReloadOptions
 
-  debounceRef!: [number, DeferredPromise<Ds<Q, T>>] | null
+  debounceRef!: [
+    number,
+    Partial<IListParams<Q>>,
+    DeferredPromise<Ds<Q, T>>
+  ] | null
 
   /* Api for element-ui/pagination implements */
   get internalPageCount (): number {
@@ -81,14 +88,16 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
   }
 
-  setState (state: Partial<IListParams | { pager: Partial<IPagination> | Nil; }>, force?: boolean) {
-    const store = this.storeState
-    reactSet(
-      store,
-      force
-        ? state
-        : deepAssign({}, store, state, (r, s, k) => k === 'list' ? s : undefined)
-    )
+  setState (state: Partial<IListParams<Kv> | { pager: Partial<IPagination> | Nil; }>, force?: boolean) {
+    const s0 = this.storeState
+    // ignore list property, and fixup empty string ('') as undefined
+    const newVal = force
+      ? state
+      : deepAssign({}, s0, state, (r, s, k) => k === 'list'
+        ? s === ''
+          ? undefined : s
+        : undefined)
+    reactSet(s0, newVal)
   }
 
   created () {
@@ -112,41 +121,38 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     this._setupLoadDaemon()
   }
 
-  load (params: Partial<IListParams> = {}, opts: { debounce?: number; } = {}): Promise<Ds<Q, T>> {
+  load (params: Partial<IListParams<Q>> = {}, opts: { debounce ?: number; } = {}): Promise<Ds<Q, T>> {
     const state = this.storeState
-
-    if (!isEmpty(params)) {
-      this.setState(params)
-    }
-
-    // cleanup previous if deferred
-    const ref = this.debounceRef
-    if (ref) {
-      clearTimeout(ref[0])
-      ref[1].reject('abort')
-      this.debounceRef = null
-    }
-
     const debounce = opts.debounce || 0
+
     if (debounce > 0) {
+      const ref = this.debounceRef
+      if (ref) {
+        if (ref[0]) {
+          clearTimeout(ref[0])
+          ref[1] = params
+        } else {
+          const isModified = ['query', 'pager'].some(k => !isEqual(state[k], deepAssign({}, state[k], params[k])))
+          return !isModified
+            ? ref[2]
+            : ref[2].then(() => this.load(params, opts))
+        }
+      }
+
       const defer = deferred<Ds<Q, T>>()
-      const timer = setTimeout(() => this.load().then(defer.resolve, defer.reject), debounce)
-      this.debounceRef = [timer, defer]
+      defer.then(() => this.debounceRef = null)
+
+      const timer = setTimeout(() => {
+        const ref = this.debounceRef!
+        ref[0] = 0
+        this._load(ref[1]).then(defer.resolve, defer.reject)
+      }, debounce)
+
+      this.debounceRef = [timer, params, defer]
       return defer
     }
 
-    const apiParams = pick(state, ['query']) as IListParams<Q>
-    if (!this.showPagination) {
-      apiParams.pager = null
-    } else {
-      apiParams.pager = state.pager
-    }
-
-    // Apply custom query
-    const hoist: Q = { ...state.query }
-    apiParams.query = this.chainQuery(hoist) || hoist
-
-    return this._load(apiParams)
+    return this._load(params)
   }
 
   onSizeChange (size: number) {
@@ -176,6 +182,8 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     } = this
 
     const scope = { $ctx: this }
+    const pageSizes = this.pageSizes
+
     return (
       <div class="v-gridlist">
         {
@@ -197,8 +205,8 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
                     <el-pagination
                       total={state.pager.total}
                       layout="total, sizes, prev, pager, next, jumper"
-                      pageSize={Math.max(10, ~~(state.pager.size / 5) * 5)}
-                      pageSizes={[10, 15, 20, 30]}
+                      pageSize={!isEmpty(pageSizes) ? state.pager.size : Math.max(10, ~~(state.pager.size / 5) * 5)}
+                      pageSizes={defaultTo(pageSizes, [10, 15, 20, 30], (o) => !isEmpty(o))}
                       currentPage={state.pager.page}
                       on={{ 'update:currentPage': (e: number) => state.pager.page = e }}
                       on-size-change={this.onSizeChange}
@@ -213,22 +221,28 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     )
   }
 
-  private _load (params: IListParams): Promise<Ds<Q, T>> {
+  private _load (params: Partial<IListParams<Q>>): Promise<Ds<Q, T>> {
+    const state = this.storeState
+
+    let apiParams = pick(state, ['query']) as IListParams<Q>
+    apiParams.pager = this.showPagination ? state.pager : null
+
+    // apply chain query
+    const hoist: Q = { ...state.query }
+    apiParams.query = this.chainQuery(hoist) || hoist
+
+    // override with explicit parameters, and apply to reducer
+    apiParams = this.paramsReduce(deepAssign(apiParams, params))
+
     // update local state
     this.setState({
-      ...params,
       $xargs: {
         loading: true
       }
     })
 
-    const listParams = this.paramsReduce({
-      ...params,
-      $xargs: this.storeState.$xargs
-    })
-
-    const p0 = listParams.pager!
-    return this.storeLoadList(listParams).then(
+    const p0 = apiParams.pager!
+    return this.storeLoadList(apiParams).then(
       (ret) => {
         // patches page number mismatch with backend response
         const p1 = get<IPagination>(ret, 'pager')
@@ -240,18 +254,25 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             return this._load({ ...params, pager: { ...p0, page: rpage } })
           }
         }
-        this.setState({ ...ret, $xargs: { loading: false } })
+        this.setState({
+          ...ret,
+          ...pick(apiParams, ['query']),
+          $xargs: { loading: false }
+        })
         return ret
       },
       (err) => {
-        this.setState({ $xargs: { loading: false } })
+        this.setState({
+          ...pick(apiParams, ['query']),
+          $xargs: { loading: false }
+        })
         throw err
       }
     )
   }
 
   @debounce(100)
-  private debounceLoad (params?: Partial<IListParams>): void {
+  private debounceLoad (params?: Partial<IListParams<Q>>): void {
     this.load(params)
   }
 
@@ -272,6 +293,9 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     if (reloadOptions.enable) {
       let timer = 0
       const run = () => {
+        if (timer) {
+          clearTimeout(timer)
+        }
         timer = setTimeout(() => {
           const state = this.storeState
           if (state.loading) {
