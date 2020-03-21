@@ -172,7 +172,7 @@
 
   .cell {
     line-height: 1.6;
-    .el-tooltip { color: inherit; }
+    &.el-tooltip, .el-tooltip { color: inherit; }
     label { font-weight: normal; }
   }
 
@@ -231,6 +231,10 @@
   &__sizes .el-input .el-input__inner:hover {
     border-color: $color-text-placeholder;
   }
+}
+
+.el-form-item__label {
+  font-weight: normal;
 }
 
 .el-form-item--small {
