@@ -15,7 +15,9 @@ $color-text-primary: #303133 !default;
 $color-text-regular: #606266 !default;
 $color-text-secondary: #909399 !default;
 $color-text-placeholder: #c0c4cc !default;
-$color-text-hover: #2b9dcd !default;
+
+$v-link-color: $color-text-regular !default;
+$v-link-hover-color: #2b9dcd !default;
 
 // fonts
 $font-size-normal: 12px;

@@ -46,5 +46,5 @@ $--datepicker-inrange-background-color: lighten($color-highlight, 34%);
 $--datepicker-inrange-hover-background-color: lighten($color-highlight, 35%);
 
 /* pagination */
-$--pagination-hover-color: $color-text-hover;
-$--pagination-active-color: $color-text-hover;
+$--pagination-hover-color: $v-link-hover-color;
+$--pagination-active-color: $v-link-hover-color;
