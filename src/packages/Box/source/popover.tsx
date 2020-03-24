@@ -10,6 +10,8 @@ import { IValidateRuleObject } from '../../../../types/validate'
 
 import { Button } from '../../Button'
 
+import './popover.scss'
+
 interface PopoverState<D> {
   props: Kv;
   form: ElForm | null;
@@ -62,6 +64,7 @@ class Popover<D extends {}> extends Vue {
 
     return vm
   }
+
   data (): Partial<PopoverState<D>> {
     return {
       form: null,
@@ -79,15 +82,18 @@ class Popover<D extends {}> extends Vue {
   render (h: CreateElement, ...args: any[]): VNode {
     const { reference, props, model, rules, scopedSlots } = this
 
+    const { popperClass, ...rest } = props
     const propsData = {
       hideOnblur: true,
       placement: 'top',
       width: 240,
       trigger: 'manual',
       reference,
-      ...props
+      ...rest,
+      popperClass: [`v-popover`, popperClass].filter(Boolean).join(' ')
     }
 
+    // call prop.render(h, args)
     const body = this.render(h, { model, rules })
 
     // Supports empty fragement
@@ -104,7 +110,7 @@ class Popover<D extends {}> extends Vue {
         { nodes }
         {
           scopedSlots.footer ? scopedSlots.footer(h) : (
-            <div class="v-align-right">
+            <div class="v-popover__footer">
               <Button size="mini" onClick={this.handleCancel}>{$t('Cancel')}</Button>
               <Button size="mini" type="primary" onClick={this.handleOK}>{$t('Submit')}</Button>
             </div>
