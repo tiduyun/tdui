@@ -1,8 +1,9 @@
-import { ElForm } from 'element-ui/types/form'
+import { Form as ElForm, Popover as ElPopover } from 'element-ui/types'
 import { CreateElement, VNode } from 'vue'
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
 import { off, on } from '@/utils/dom'
+import { addResizeListener, removeResizeListener } from '@/utils/resize-event'
 import { findDownward } from '@/utils/vue'
 import { isFunction, isPromise } from '@tdio/utils'
 
@@ -14,6 +15,7 @@ import './popover.scss'
 
 interface PopoverState<D> {
   props: Kv;
+  parent: Vue;
   form: ElForm | null;
   skipValidator: boolean;
   visible: boolean;
@@ -26,7 +28,7 @@ interface PopoverState<D> {
 }
 
 export type PopoverOptions<D> = Pick<
-  PopoverState<D>, 'props' | 'model' | 'rules' | 'listeners' | 'scopedSlots' | 'render'
+  PopoverState<D>, 'props' | 'model' | 'rules' | 'listeners' | 'scopedSlots' | 'render' | 'parent'
 >
 
 const prevent = (e: Event) => e.preventDefault()
@@ -43,11 +45,13 @@ class Popover<D extends {}> extends Vue {
    */
   static create <D = any> (
     reference: { nodeType: number; nodeName: string; popoverVm?: Popover<D> | null }, // duck-like
-    options: Partial<PopoverOptions<D>>
+    options: Partial<PopoverOptions<D>>,
   ): Popover<D> {
     if (reference.popoverVm) {
       return reference.popoverVm
     }
+
+    const { parent, ...rest } = options
 
     const vm = new Popover<D>({
       propsData: {},
@@ -56,7 +60,8 @@ class Popover<D extends {}> extends Vue {
           reference,
           ...options
         }
-      }
+      },
+      parent
     })
 
     vm.$mount(document.body.appendChild(document.createElement('span')))
@@ -64,6 +69,9 @@ class Popover<D extends {}> extends Vue {
 
     return vm
   }
+
+  @Ref()
+  popover!: ElPopover
 
   data (): Partial<PopoverState<D>> {
     return {
@@ -106,7 +114,7 @@ class Popover<D extends {}> extends Vue {
       : [body]
 
     return (
-      <el-popover v-model={this.visible} props={propsData} on-after-enter={this.afterEnter} on-after-leave={this.afterLeave}>
+      <el-popover ref="popover" v-model={this.visible} props={propsData} on-after-enter={this.afterEnter} on-after-leave={this.afterLeave}>
         { nodes }
         {
           scopedSlots.footer ? scopedSlots.footer(h) : (
@@ -120,7 +128,13 @@ class Popover<D extends {}> extends Vue {
     )
   }
 
+  updateUI () {
+    this.popover.updatePopper()
+  }
+
   created () {
+    let popperEl: Element | undefined
+
     this.$on('opened', () => {
       const f = getForm(this)
       let formEl: Element | null
@@ -130,10 +144,23 @@ class Popover<D extends {}> extends Vue {
         this.$on('hook:beforeDestroy', () => off(formEl!, 'submit', prevent))
       }
       this.form = f
+
+      // add resize listener for ui updates
+      popperEl = this.popover.$refs.popper as Element
+      if (popperEl) {
+        addResizeListener(popperEl, this.updateUI)
+      }
     })
+
     this.$on('hide', () => {
+      if (popperEl) {
+        removeResizeListener(popperEl, this.updateUI)
+        popperEl = undefined
+      }
+
       const el = this.$el
       this.$destroy()
+
       if (el.parentNode) el.parentNode.removeChild(el)
       this.reference!.popoverVm = null
     })

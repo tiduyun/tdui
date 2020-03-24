@@ -116,11 +116,7 @@ export default class AbsFormDialog extends MixinDialog {
       >
         {
           isVisible ? [
-            <div class="dialog-body">
-              {
-                $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : ''
-              }
-            </div>,
+            $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : null,
             <template slot="footer">
               {
                 $scopedSlots.footer ? $scopedSlots.footer({ $self: entity, $this: this }) : (
