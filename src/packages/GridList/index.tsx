@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, pick, unset } from '@tdio/utils'
+import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, pick, set, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -56,7 +56,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   storeState!: any
 
   @Prop({ type: Object })
-  initialState!: IListResult<Q,   T>
+  initialState!: IListResult<Q, T>
 
   @Prop({ type: Boolean, default: true })
   showPagination!: boolean
@@ -183,19 +183,12 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
 
     const scope = { $ctx: this }
     const pageSizes = this.pageSizes
+    const $xargs = state.$xargs || {}
 
     return (
       <div class="v-gridlist">
-        {
-          formSlot ? (
-            <div class="v-gridlist__toolbar">{ formSlot({ ...scope, query: state.query }) }</div>
-          ) : null
-        }
-        {
-          gridSlot ? (
-            <div v-loading={ get(state, '$xargs.loading') && !get(state, '$xargs.silent') } class="v-gridlist__grid">{ gridSlot({ ...scope, grid: state }) }</div>
-          ) : null
-        }
+        { formSlot && (<div class="v-gridlist__toolbar">{ formSlot({ ...scope, query: state.query }) }</div>) }
+        { gridSlot && (<div class="v-gridlist__grid" v-loading={ $xargs.loading && !$xargs.silent }>{ gridSlot({ ...scope, grid: state }) }</div>) }
         {
           (this.showPagination && state.pager && !isEmpty(state.list)) ? (
             <div class="v-gridlist__pagination">
@@ -234,18 +227,24 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     // override with explicit parameters, and apply to reducer
     apiParams = this.paramsReduce(deepAssign(apiParams, params))
 
-    // update local state
     this.setState({
       $xargs: {
+        ...get(params, '$xargs'),
         loading: true
       }
     })
 
     const p0 = apiParams.pager!
+    const arg0 = pick(apiParams, ['query'])
+
     return this.storeLoadList(apiParams).then(
       (ret) => {
-        // patches page number mismatch with backend response
         const p1 = get<IPagination>(ret, 'pager')
+
+        // fixup pagination if response w/o pager info
+        if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
+
+        // patches page number mismatch with backend response
         let total = 0
         if (p0 && p1 && (total = p1.total)) {
           const { page, size } = p1
@@ -254,16 +253,17 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             return this._load({ ...params, pager: { ...p0, page: rpage } })
           }
         }
+
         this.setState({
           ...ret,
-          ...pick(apiParams, ['query']),
+          ...arg0,
           $xargs: { loading: false }
         })
         return ret
       },
       (err) => {
         this.setState({
-          ...pick(apiParams, ['query']),
+          ...arg0,
           $xargs: { loading: false }
         })
         throw err
