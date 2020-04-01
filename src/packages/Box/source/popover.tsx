@@ -1,11 +1,11 @@
+import { isFunction, isPromise } from '@tdio/utils'
 import { Form as ElForm, Popover as ElPopover } from 'element-ui/types'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
-import { off, on } from '@/utils/dom'
 import { addResizeListener, removeResizeListener } from '@/utils/resize-event'
 import { findDownward } from '@/utils/vue'
-import { isFunction, isPromise } from '@tdio/utils'
+import { off, on } from '@tdio/dom-utils'
 
 import { IValidateRuleObject } from '../../../../types/validate'
 

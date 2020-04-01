@@ -3,8 +3,8 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { defaultTo, isValue } from '@tdio/utils'
 
-import { addClass, hasClass, removeClass } from '@/utils/dom'
 import { Emittable } from '@/utils/emittable'
+import { addClass, hasClass, removeClass } from '@tdio/dom-utils'
 
 import Button from './Button'
 

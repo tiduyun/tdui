@@ -5,8 +5,8 @@ import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
 import { deepAssign, get, isArray, isValue, valueEquals } from '@tdio/utils'
 
-import { contains, off, on } from '@/utils/dom'
 import { Emittable } from '@/utils/emittable'
+import { contains, off, on } from '@tdio/dom-utils'
 
 import './TreeSelect.scss'
 
