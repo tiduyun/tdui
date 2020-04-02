@@ -1,6 +1,8 @@
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
+import './ViewLoader.scss'
+
 interface ViewLoaderResponseArgs {
   isLoading: boolean;
 }
@@ -12,7 +14,7 @@ export class ViewLoader extends Vue {
   @Prop(Boolean)
   loading!: boolean
 
-  isLoading = false
+  isLoading = true
 
   @Watch('loading')
   setLoading (state: boolean) {
@@ -34,18 +36,29 @@ export class ViewLoader extends Vue {
     const {
       isLoading,
       $slots: {
-        default: contentSlot
+        default: View
       }
     } = this
 
-    const styles = isLoading
-      ? {
-        'min-height': '100px'
-      } : {}
+    const classes: Kv<boolean> = {
+      'v-viewloader': true,
+      loading: isLoading
+    }
+
+    // Restore classes patched by directives, eg. el-loading-parent--relative
+    const $el = this.$el
+    const prevClass = $el && $el.className
+    if (prevClass) {
+      prevClass.split(' ').forEach(k => {
+        if (classes[k] == null) {
+          classes[k] = true
+        }
+      })
+    }
 
     return (
-      <div style={ styles } v-loading={ isLoading }>
-        { contentSlot }
+      <div class={classes} v-loading={isLoading}>
+        { View }
       </div>
     )
   }
