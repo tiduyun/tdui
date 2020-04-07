@@ -489,6 +489,9 @@
   }
 
   &--small {
+    .el-dropdown-menu__item {
+      font-size: $font-size-normal;
+    }
     .el-button--text {
       padding: 2px 0;
     }
