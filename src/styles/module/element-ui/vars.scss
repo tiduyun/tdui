@@ -1,4 +1,7 @@
-@import "./variables.scss";
+@import "../../vars";
+
+/* icon font path, required */
+$--font-path: '~element-ui/lib/theme-chalk/fonts';
 
 /* adapter consts for element-ui themes */
 
@@ -6,8 +9,6 @@
 $--color-white: $color-white;
 $--color-black: #2c3e50;
 $--color-text-primary: $color-text-regular;
-
-$--fill-base: $--color-white;
 
 $--color-primary: $color-primary;
 $--color-success: $color-success;
@@ -18,10 +19,19 @@ $--color-danger: $color-danger;
 $--color-text-secondary: $color-info;
 $--color-text-placeholder: $color-text-placeholder;
 
+$--fill-base: $--color-white;
+$--link-color: $v-link-color;
+
+// Font
+$--font-size-base: $font-size-normal;
+$--input-small-font-size: $font-size-normal;
+$--button-small-font-size: $font-size-normal;
+$--button-mini-font-size: $font-size-normal;
+
 // Border
 $--border-color-base: $border-color-base;
 $--border-color-light: #dfe4ed;
-$--border-color-lighter: #e6ebf5;
+$--border-color-lighter: $border-color-base;
 
 // Disable base
 $--disabled-fill-base: $disabled-fill-base;
@@ -30,6 +40,8 @@ $--disabled-color-base: $disabled-color-base;
 /* button */
 $--button-primary-border-color: $button-primary-border-color;
 $--button-default-border-color: $button-default-border-color;
+$--button-default-background-color: $background-color-base;
+$--button-disabled-background-color: $background-color-base;
 $--button-font-weight: 400;
 
 /* tabel */
@@ -48,3 +60,6 @@ $--datepicker-inrange-hover-background-color: lighten($color-highlight, 35%);
 /* pagination */
 $--pagination-hover-color: $v-link-hover-color;
 $--pagination-active-color: $v-link-hover-color;
+
+/* dropdown */
+$--dropdown-menuItem-hover-color: $v-link-hover-color;

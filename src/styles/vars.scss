@@ -20,16 +20,18 @@ $v-link-color: $color-text-regular !default;
 $v-link-hover-color: #2b9dcd !default;
 
 // fonts
-$font-size-normal: 12px;
-$font-size-extra-large: 28px;
-$font-size-large: 18px;
-$font-size-medium: 16px;
-$font-size-base: 14px;
-$font-size-title: $font-size-base;
+$font-size-normal: 12px !default;
+$font-size-extra-large: 28px !default;
+$font-size-large: 18px !default;
+$font-size-medium: 16px !default;
+$font-size-base: 14px !default;
+$font-size-title: $font-size-base !default;
 
 // border
+$border-color-hover: $color-text-placeholder !default;
 $border-color-base: #e4e7ed !default;
 $border-color-tint: lighten($border-color-base, 4%);
+$border-base: 1px solid $border-color-base !default;
 
 // background
 $background-color-base: #f5f7fa !default;
@@ -40,45 +42,21 @@ $disabled-fill-base: $background-color-base !default;
 $disabled-color-base: $color-text-placeholder !default;
 
 // button
-$button-primary-border-color: #344557;
-$button-default-border-color: $border-color-base;
+$button-primary-border-color: #344557 !default;
+$button-primary-font-color: $color-white !default;
+$button-primary-background-color: $color-primary !default;
+$button-default-border-color: $border-color-base !default;
 $button-hover-tint-percent: 20% !default;
-
-/* --------- globally theme consts (end) ------------ */
-
-// app layout
-$app-navbar-height: 50px;
-$app-main-margin: 20px;
-$app-detail-header-height: 52px;
-
-// topnav
-$top-menu-item-color: $color-text-regular;
-$top-menu-item-active-bg: #f7f4f826;
-$top-menu-item-active-color: $color-highlight;
-$top-menu-icon-color: #9ba6bf;
-$top-menu-icon-active-color: $color-highlight;
-
-// sidebar
-$menuText: $color-text-regular;
-$menuBg: $color-white;
-$menuHoverBg: $color-white;
-$menuHoverText: lighten($color-highlight, 10%);
-$menuActiveBg: lighten($menuBg, 2%);
-$menuActiveText: #2a98fe;
-
-$subMenuBg: $color-white;
-$subMenuHover: $color-white;
-$subMenuActiveText: $color-highlight;
-
-$sidebar-icon-color: #9ba6bf;
-$sidebar-width: 160px;
-$sidebar-width-thin: 54px;
+$button-active-shade-percent: 10% !default;
 
 // form
 $v-form-page-ctl-width: 300px !default;
 $v-form-page-ctl-gap-width: 6px !default;
 $v-form-item-gutter-size: 20px !default;
 
-$v-dialog-size-small: 460px;
-$v-dialog-size-normal: 640px;
-$v-dialog-size-large: 900px;
+$v-dialog-size-small: 460px !default;
+$v-dialog-size-normal: 640px !default;
+$v-dialog-size-large: 900px !default;
+$v-dialog-size-xlarge: 1000px !default;
+
+/* --------- globally theme consts (end) ------------ */

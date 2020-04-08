@@ -13,7 +13,7 @@
     "lint": "tslint -p src/",
     "lint:fix": "tslint -p src/ --fix",
     "test": "jest --coverage --passWithNoTests",
-    "build": "yarn lint && (tsc -p src/utils/ && rb -c)",
+    "build": "yarn lint && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
     "prepare": "yarn build"
   },
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",

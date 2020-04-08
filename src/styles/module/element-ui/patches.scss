@@ -1,9 +1,14 @@
+@import "../../vars";
+
 /* element-ui style overwrite */
+
+$app-navbar-height: 50px !default;
+$menu-item-height: 40px !default;
 
 .el-menu {
   &-item {
-    height: 40px;
-    line-height: 40px;
+    height: $menu-item-height;
+    line-height: $menu-item-height;
   }
 }
 
@@ -12,8 +17,8 @@
   padding: 0 !important;
 
   .el-menu .el-menu-item {
-    height: 50px;
-    line-height: 50px;
+    height: $app-navbar-height;
+    line-height: $app-navbar-height;
   }
 
   .user {
@@ -248,8 +253,6 @@
     }
   }
 
-  .el-button,
-  .el-form-item__label,
   .el-form-item__content {
     font-size: $font-size-normal;
   }
@@ -332,12 +335,8 @@
 }
 
 .el-range-editor--small .el-range-input,
-.el-button--text,
-.el-input--small,
 .el-popper,
 .el-transfer,
-.el-select-dropdown__item,
-.el-select-dropdown__empty,
 .el-step__title,
 [class^=el-alert__] {
   font-size: $font-size-normal;
@@ -501,14 +500,17 @@
 .el-select {
   &-dropdown {
     &__empty { color: #ccc; }
-    &__item { padding: 0 10px; }
     // select selected
     &__item.selected { color: $color-highlight; }
   }
 }
 
-/* input */
+.el-select-dropdown__item,
+.el-autocomplete-suggestion li {
+  padding: 0 10px;
+}
 
+/* input */
 .el-input {
   &.read-only {
     .el-input__inner {
