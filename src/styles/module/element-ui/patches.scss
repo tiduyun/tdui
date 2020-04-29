@@ -13,8 +13,8 @@ $menu-item-height: 40px !default;
 }
 
 .el-header {
-  height: $app-navbar-height !important;
-  padding: 0 !important;
+  height: $app-navbar-height;
+  padding: 0;
 
   .el-menu .el-menu-item {
     height: $app-navbar-height;
