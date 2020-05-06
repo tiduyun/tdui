@@ -23,13 +23,13 @@ interface IPagination {
 // Data list api params
 interface IListParams <Q extends IQuery = IQuery> extends Kv {
   query: Q;
-  pager?: IPagination | Nil;
+  pager?: Nullable<IPagination>;
 
   // Internal config for io
-  $xargs?: {
+  $xargs?: Nullable<{
     silent?: boolean;
     loading?: boolean;
-  }
+  }>
 }
 
 // This interface for store list type data that with pagination info
@@ -88,7 +88,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
   }
 
-  setState (state: Partial<IListParams<Kv> | { pager: Partial<IPagination> | Nil; }>, force?: boolean) {
+  setState (state: Partial<IListParams<Kv> | { pager: Nullable<Partial<IPagination>>; }>, force?: boolean) {
     const s0 = this.storeState
     // ignore list property, and fixup empty string ('') as undefined
     const newVal = force
@@ -237,38 +237,30 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     const p0 = apiParams.pager!
     const arg0 = pick(apiParams, ['query'])
 
-    return this.storeLoadList(apiParams).then(
-      (ret) => {
-        const p1 = get<IPagination>(ret, 'pager')
+    return this.storeLoadList(apiParams)
+      .then(
+        (ret) => {
+          const p1 = get<IPagination>(ret, 'pager')
 
-        // fixup pagination if response w/o pager info
-        if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
+          // fixup pagination if response w/o pager info
+          if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
 
-        // patches page number mismatch with backend response
-        let total = 0
-        if (p0 && p1 && (total = p1.total)) {
-          const { page, size } = p1
-          const rpage = Math.ceil(total / size)
-          if (p0.page > rpage) {
-            return this._load({ ...params, pager: { ...p0, page: rpage } })
+          // patches page number mismatch with backend response
+          let total = 0
+          if (p0 && p1 && (total = p1.total)) {
+            const { page, size } = p1
+            const rpage = Math.ceil(total / size)
+            if (p0.page > rpage) {
+              return this._load({ ...params, pager: { ...p0, page: rpage } })
+            }
           }
-        }
 
-        this.setState({
-          ...ret,
-          ...arg0,
-          $xargs: { loading: false }
-        })
-        return ret
-      },
-      (err) => {
-        this.setState({
-          ...arg0,
-          $xargs: { loading: false }
-        })
-        throw err
-      }
-    )
+          this.setState({ ...ret })
+          return ret
+        }
+      ).finally(() => {
+        this.setState({ ...arg0, $xargs: null })
+      })
   }
 
   @debounce(100)
