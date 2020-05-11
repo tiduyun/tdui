@@ -272,7 +272,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     const reloadOptions: ReloadOptions = ((opts: boolean | ReloadOptions) => {
       const ret: ReloadOptions = {
         enable: false,
-        interval: 30000
+        interval: 5000
       }
       if (typeof opts === 'boolean') {
         ret.enable = opts
