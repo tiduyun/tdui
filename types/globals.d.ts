@@ -18,6 +18,7 @@ declare global {
   interface Promise<T> extends Kv {}
 
   type Nil = null | undefined
+  type Nullable<T> = T | null
 
   // i18n helper
   const $t: $T

@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, pick, set, unset } from '@tdio/utils'
+import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, omit, pick, set, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -23,13 +23,15 @@ interface IPagination {
 // Data list api params
 interface IListParams <Q extends IQuery = IQuery> extends Kv {
   query: Q;
-  pager?: IPagination | Nil;
+  pager?: Nullable<IPagination>;
 
   // Internal config for io
-  $xargs?: {
+  $xargs?: Nullable<{
     silent?: boolean;
     loading?: boolean;
-  }
+  }>;
+
+  lastLoadTime?: number;
 }
 
 // This interface for store list type data that with pagination info
@@ -88,7 +90,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
   }
 
-  setState (state: Partial<IListParams<Kv> | { pager: Partial<IPagination> | Nil; }>, force?: boolean) {
+  setState (state: Partial<IListParams<Kv> | { pager: Nullable<Partial<IPagination>>; }>, force?: boolean) {
     const s0 = this.storeState
     // ignore list property, and fixup empty string ('') as undefined
     const newVal = force
@@ -237,38 +239,30 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     const p0 = apiParams.pager!
     const arg0 = pick(apiParams, ['query'])
 
-    return this.storeLoadList(apiParams).then(
-      (ret) => {
-        const p1 = get<IPagination>(ret, 'pager')
+    return this.storeLoadList(apiParams)
+      .then(
+        (ret) => {
+          const p1 = get<IPagination>(ret, 'pager')
 
-        // fixup pagination if response w/o pager info
-        if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
+          // fixup pagination if response w/o pager info
+          if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
 
-        // patches page number mismatch with backend response
-        let total = 0
-        if (p0 && p1 && (total = p1.total)) {
-          const { page, size } = p1
-          const rpage = Math.ceil(total / size)
-          if (p0.page > rpage) {
-            return this._load({ ...params, pager: { ...p0, page: rpage } })
+          // patches page number mismatch with backend response
+          let total = 0
+          if (p0 && p1 && (total = p1.total)) {
+            const { page, size } = p1
+            const rpage = Math.ceil(total / size)
+            if (p0.page > rpage) {
+              return this._load({ ...params, pager: { ...p0, page: rpage } })
+            }
           }
-        }
 
-        this.setState({
-          ...ret,
-          ...arg0,
-          $xargs: { loading: false }
-        })
-        return ret
-      },
-      (err) => {
-        this.setState({
-          ...arg0,
-          $xargs: { loading: false }
-        })
-        throw err
-      }
-    )
+          this.setState({ ...omit(ret, ['query']) })
+          return ret
+        }
+      ).finally(() => {
+        this.setState({ ...arg0, $xargs: null, lastLoadTime: Date.now() })
+      })
   }
 
   @debounce(100)
@@ -280,7 +274,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     const reloadOptions: ReloadOptions = ((opts: boolean | ReloadOptions) => {
       const ret: ReloadOptions = {
         enable: false,
-        interval: 30000
+        interval: 5000
       }
       if (typeof opts === 'boolean') {
         ret.enable = opts
@@ -292,13 +286,22 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
 
     if (reloadOptions.enable) {
       let timer = 0
+      const interval = reloadOptions.interval
+
       const run = () => {
+        if (timer === -1) { // destroyed
+          return
+        }
         if (timer) {
           clearTimeout(timer)
         }
         timer = setTimeout(() => {
           const state = this.storeState
-          if (state.loading) {
+          const lastLoadTime = state.lastLoadTime
+          if (
+            get(state, '$xargs.loading') ||
+            (lastLoadTime && Date.now() - lastLoadTime < interval)
+          ) {
             // add to next process if loading
             run()
           } else {
@@ -308,11 +311,14 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
               run()
             })
           }
-        }, reloadOptions.interval)
+        }, interval)
       }
+
       run()
+
       this.$on('hook:beforeDestroy', () => {
         clearTimeout(timer)
+        timer = -1 // destroyed
       })
     }
   }
