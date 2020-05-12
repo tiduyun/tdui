@@ -1,6 +1,6 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { get, identity, isEmpty, isPrimitive, isValue, valueEquals } from '@tdio/utils'
+import { get, hasOwn, identity, isEmpty, isPrimitive, isValue, set, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
@@ -44,8 +44,10 @@ export default class AbsSelectView extends Vue {
   handleChange (val: T | undefined, oldVal?: T) {
     val = normalizeValue(val)
 
+    const isModified = val !== this.currentValue
+
     // tslint:disable-next-line
-    if (val !== this.currentValue) {
+    if (isModified) {
       const prev = this.currentValue
       this.currentValue = val
 
@@ -57,13 +59,17 @@ export default class AbsSelectView extends Vue {
       }
     }
 
-    // emit entity
-    const dic = this._kvRefs
-    if (dic) {
-      const o = dic[val]
-      const { entity, propValue } = this
-      if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
-        this.$emit('update:entity', o)
+    // is value changed indeed or initialize lifecycle
+    if (isModified || !hasOwn(this, '_currEntity')) {
+      // emit entity
+      const dic = this._kvRefs
+      if (dic) {
+        const o = dic[val]
+        const { entity, propValue } = this
+        if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
+          set(this, '_currEntity', o)
+          this.$emit('update:entity', o)
+        }
       }
     }
   }
