@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, pick, set, unset } from '@tdio/utils'
+import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, omit, pick, set, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { reactSet } from '@/utils/vue'
@@ -29,7 +29,9 @@ interface IListParams <Q extends IQuery = IQuery> extends Kv {
   $xargs?: Nullable<{
     silent?: boolean;
     loading?: boolean;
-  }>
+  }>;
+
+  lastLoadTime?: number;
 }
 
 // This interface for store list type data that with pagination info
@@ -255,11 +257,11 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             }
           }
 
-          this.setState({ ...ret })
+          this.setState({ ...omit(ret, ['query']) })
           return ret
         }
       ).finally(() => {
-        this.setState({ ...arg0, $xargs: null })
+        this.setState({ ...arg0, $xargs: null, lastLoadTime: Date.now() })
       })
   }
 
@@ -284,13 +286,22 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
 
     if (reloadOptions.enable) {
       let timer = 0
+      const interval = reloadOptions.interval
+
       const run = () => {
+        if (timer === -1) { // destroyed
+          return
+        }
         if (timer) {
           clearTimeout(timer)
         }
         timer = setTimeout(() => {
           const state = this.storeState
-          if (state.loading) {
+          const lastLoadTime = state.lastLoadTime
+          if (
+            get(state, '$xargs.loading') ||
+            (lastLoadTime && Date.now() - lastLoadTime < interval)
+          ) {
             // add to next process if loading
             run()
           } else {
@@ -300,11 +311,14 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
               run()
             })
           }
-        }, reloadOptions.interval)
+        }, interval)
       }
+
       run()
+
       this.$on('hook:beforeDestroy', () => {
         clearTimeout(timer)
+        timer = -1 // destroyed
       })
     }
   }
