@@ -131,6 +131,10 @@ export default class AbsSelectView extends Vue {
       const option: IOption = isPrimitive(o)
         ? { label: o, value: o }
         : { label: get(o, propLabel), value: get(o, propValue) }
+      const disabled = !!get(o, 'disabled')
+      if (disabled) {
+        option.disabled = disabled
+      }
       dic[option.value] = o
       r.push(option)
       return r

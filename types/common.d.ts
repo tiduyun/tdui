@@ -5,6 +5,7 @@ import Vue from 'vue'
 export interface IOption<T = any> extends Kv {
   label: string;
   value: T;
+  disabled?: boolean;
 }
 
 export interface ITextOption extends Kv {
