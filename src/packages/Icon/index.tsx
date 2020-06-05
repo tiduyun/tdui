@@ -1,7 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { get } from '@tdio/utils'
+import { get, isEmpty } from '@tdio/utils'
 
 import './Icon.scss'
 import SvgIcon from './Svg'
@@ -46,16 +46,18 @@ export class Icon extends Vue {
       disabled
     } = this
 
+    const listeners = disabled ? {} : this.$listeners
+    const isBtnStyle = !isEmpty(this.tooltip) || !isEmpty(listeners.click)
     const isSVG = this.isSVG()
+
     const iconClass = [
       this.iconClass(isSVG),
       {
         'is-light': light && !disabled,
-        'is-disabled': disabled
+        'is-disabled': disabled,
+        'is-button': isBtnStyle
       }
     ]
-
-    const listeners = disabled ? {} : this.$listeners
 
     // forward component style
     const style = get(this.$vnode, 'data.style')

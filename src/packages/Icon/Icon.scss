@@ -2,13 +2,25 @@
 
 .v-icon {
   display: inline-block;
-  cursor: pointer;
   font-size: 1.16em;
 
-  @include link($color-info, $color-primary);
+  &.is-button {
+    cursor: pointer;
+    color: $color-info;
+
+    &:hover {
+      color: $color-primary
+    }
+  }
 
   &.is-light {
-   @include link(lighten($color-highlight, 2%), lighten($color-highlight, 15%));
+    color: lighten($color-highlight, 2%);
+
+    &.is-button {
+      &:hover {
+        color: lighten($color-highlight, 15%)
+      }
+    }
   }
 
   &.is-disabled {
