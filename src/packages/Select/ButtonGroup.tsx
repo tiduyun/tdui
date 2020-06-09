@@ -14,7 +14,7 @@ export default class ButtonGroup extends Mixins(AbsSelectView) {
     return (
       <ButtonGroupInter value={this.currentValue} props={this.$attrs} onInput={this.handleChange}>
         {
-          this.currentOptions.map(({ value, label }) => <Button key={value} value={value}>{$t(label)}</Button>)
+          this.currentOptions.map(({ value, label }) => <Button key={value} value={value}>{label}</Button>)
         }
       </ButtonGroupInter>
     )

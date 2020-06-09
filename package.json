@@ -20,6 +20,7 @@
   "dependencies": {
     "@allex/base64": "^1.0.2",
     "@tdio/dom-utils": "^1.0.0",
+    "@tdio/locale": "^1.0.0",
     "@tdio/utils": "^1",
     "resize-observer-polyfill": "^1.5.1"
   },

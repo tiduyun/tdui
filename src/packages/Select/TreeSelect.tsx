@@ -3,6 +3,7 @@ import { ElSelect } from 'element-ui/types/select'
 import { ElTree, TreeData, TreeNode } from 'element-ui/types/tree'
 import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
+import { $t } from '@tdio/locale'
 import { deepAssign, get, isArray, isValue, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'

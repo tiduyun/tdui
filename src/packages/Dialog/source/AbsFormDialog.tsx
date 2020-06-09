@@ -4,6 +4,7 @@ import { CreateElement } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { findDownward, reactSet } from '@/utils/vue'
+import { $t } from '@tdio/locale'
 import { deepClone } from '@tdio/utils'
 
 import MixinDialog from './MixinDialog'

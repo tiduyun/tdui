@@ -1,6 +1,7 @@
 import { CreateElement } from 'vue'
 import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 
+import { $t } from '@tdio/locale'
 import { isValue } from '@tdio/utils'
 
 import { tooltipProps } from '@/utils/normalize'

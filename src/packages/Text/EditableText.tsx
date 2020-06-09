@@ -1,6 +1,7 @@
 import { CreateElement, VNode } from 'vue'
 import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 
+import { $t } from '@tdio/locale'
 import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 
 import { TooltipOptions, tooltipProps } from '@/utils/normalize'

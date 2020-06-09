@@ -6,6 +6,7 @@ import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 import { addResizeListener, removeResizeListener } from '@/utils/resize-event'
 import { findDownward } from '@/utils/vue'
 import { off, on } from '@tdio/dom-utils'
+import { $t } from '@tdio/locale'
 
 import { IValidateRuleObject } from '../../../../types/validate'
 

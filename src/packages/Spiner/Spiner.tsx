@@ -1,3 +1,4 @@
+import { $t } from '@tdio/locale'
 import { Loading } from 'element-ui'
 import { ElLoadingComponent } from 'element-ui/types/loading'
 
