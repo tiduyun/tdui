@@ -113,11 +113,13 @@ class MixinSelect extends Vue {
   }
 
   render (h: CreateElement) {
+    const { $slots, $scopedSlots } = this
     const {
       value,
       items: options,
       $attrs: attrs,
     } = this
+    const children = Object.keys($slots).map(slot => <template slot={slot}>{ $slots[slot] }</template>)
     return (
       <Select
         {
@@ -135,7 +137,11 @@ class MixinSelect extends Vue {
         value={value}
         entity={this.entity}
         on={this.$listeners}
-      />
+        slots={$slots}
+        scopedSlots={$scopedSlots}
+      >
+        { children }
+      </Select>
     )
   }
 

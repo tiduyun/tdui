@@ -65,10 +65,13 @@ export default class Select extends Mixins(AbsSelectView) {
         {
           $slots.default
             ? $slots.default
-            : this.currentOptions.map((o, i) => (
-              $scopedSlots.option
-                ? $scopedSlots.option({ ...o })
-                : renderOption(o, this.options[i])))
+            : this.currentOptions.map((o, i) => {
+              const entity = this.getEntity(o.value)
+              return (
+                $scopedSlots.option
+                  ? $scopedSlots.option({ ...o, entity })
+                  : renderOption(o, this.options[i]))
+            })
         }
       </el-select>
     )

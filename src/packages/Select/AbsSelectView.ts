@@ -120,7 +120,11 @@ export default class AbsSelectView extends Vue {
     } else if (!isEmpty(options)) {
       this.handleOptionsChange(options)
     }
- }
+  }
+
+  getEntity (k: string) {
+    return this._kvRefs[k]
+  }
 
   private parseOptions (items: T[]): void {
     const dic: Kv<T> = {}
