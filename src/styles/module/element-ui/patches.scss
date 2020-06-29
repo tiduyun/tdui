@@ -522,6 +522,10 @@ $menu-item-height: 40px !default;
   &__inner {
     padding: 0 8px;
   }
+
+  #{&}__inner {
+    line-height: initial;
+  }
 }
 
 .el-input-number--small {
