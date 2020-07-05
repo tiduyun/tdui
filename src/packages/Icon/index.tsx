@@ -35,6 +35,9 @@ export class Icon extends Vue {
   disabled!: boolean
 
   @Prop(Boolean)
+  active!: boolean
+
+  @Prop(Boolean)
   light!: boolean
 
   @Prop({ type: [Object, String], default: null })
@@ -43,11 +46,15 @@ export class Icon extends Vue {
   render (h: CreateElement) {
     const {
       light,
-      disabled
+      active,
+      disabled,
+      $slots: {
+        tooltip: tooltipSlot // custom tooltip vnode <div slot="tooltip">tips contents</div>
+      }
     } = this
 
     const listeners = disabled ? {} : this.$listeners
-    const isBtnStyle = !isEmpty(this.tooltip) || !isEmpty(listeners.click)
+    const isBtnStyle = !isEmpty(tooltipSlot || this.tooltip) || !isEmpty(listeners.click)
     const isSVG = this.isSVG()
 
     const iconClass = [
@@ -55,6 +62,7 @@ export class Icon extends Vue {
       {
         'is-light': light && !disabled,
         'is-disabled': disabled,
+        'is-active': active && !disabled,
         'is-button': isBtnStyle
       }
     ]
@@ -66,11 +74,35 @@ export class Icon extends Vue {
       ? (<SvgIcon iconName={this.iconName} class={iconClass} on={listeners} style={style} />)
       : (<i class={iconClass} on={listeners} style={style} />)
 
-    const tooltip = this.normalizeTooltip()
+    const tooltipProps = this.normalizeTooltip()
 
-    return tooltip
-      ? (<el-tooltip props={{ placement: 'top', ...tooltip, disabled }}>{ icon }</el-tooltip>)
+    // Provide tooltip prop configs or tooltip slot impls
+    return tooltipProps
+      ? (<el-tooltip props={{ placement: 'top', ...tooltipProps, disabled }}>
+          { icon }
+          { tooltipSlot && (<template slot="content">{ tooltipSlot }</template>) }
+        </el-tooltip>)
       : icon
+  }
+
+  private isSVG (): boolean {
+    const name = this.iconName
+    return /.svg$/.test(name) || !iconfontRe.test(name)
+  }
+
+  private iconClass (svg: boolean): string {
+    const classBase = 'v-icon'
+    const { iconName, className } = this
+    const classNames = [classBase]
+    if (className) {
+      classNames.push(className)
+    }
+    if (svg) {
+      classNames.push(`${classBase}--${iconName}`)
+    } else {
+      classNames.push(getIconfontBaseClass(iconName), iconName)
+    }
+    return classNames.filter(Boolean).join(' ')
   }
 
   private normalizeTooltip (): Kv | null {
@@ -82,21 +114,5 @@ export class Icon extends Vue {
       return tooltip as Kv
     }
     return null
-  }
-
-  private isSVG (): boolean {
-    const name = this.iconName
-    return /.svg$/.test(name) || !iconfontRe.test(name)
-  }
-
-  private iconClass (svg: boolean): string {
-    let cls = 'v-icon'
-    if (this.className) {
-      cls += ` ${this.className}`
-    }
-    if (!svg) {
-      cls = [cls, getIconfontBaseClass(this.iconName), this.iconName].filter(Boolean).join(' ')
-    }
-    return cls
   }
 }

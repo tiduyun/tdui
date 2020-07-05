@@ -84,14 +84,19 @@ type FunctionalComponentRender<T> = (this: RenderContext<T>, h: CreateElement, p
  * @param {Function} A plain vue render function. with args of the props, @see <FunctionalComponentRender>
  */
 export const functionalComponent = <Props = Kv> (render: FunctionalComponentRender<Props>) => ({
+  inheritAttrs: false,
   functional: true,
   render (h: CreateElement, ctx: RenderContext<Props>) {
+    const props = {
+      on: ctx.listeners,
+      ...ctx.props
+    }
     return render.apply({
       $slots: ctx.children,
       $scopedSlots: ctx.scopedSlots,
       $listeners: ctx.listeners,
       ...ctx
-    }, [h, ctx.props])
+    }, [h, props])
   }
 })
 
@@ -104,4 +109,19 @@ export const isVNode = (o: any): boolean => {
     arr = [ o as VNode ]
   }
   return !arr.some(o => !o || !hasOwn(o, 'tag'))
+}
+
+/**
+ * Find vue components deeply by a specified predicate
+ *
+ * @param content {Vue} The root context
+ */
+export const findVueComponents = (o: Vue, predicate: (o: Vue) => boolean) => {
+  const walk = (o: Vue, arr: Vue[]): Vue[] => o.$children.reduce((arr, n) => {
+    if (predicate(n)) {
+      arr.push(n)
+    }
+    return (walk(n, arr), arr)
+  }, arr)
+  return walk(o, [] as Vue[])
 }
