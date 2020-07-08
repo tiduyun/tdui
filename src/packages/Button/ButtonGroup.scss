@@ -1,14 +1,16 @@
 @import "../../styles/inc.scss";
 
 .v-button-group {
-
   .v-button--active:not(.el-button--text) {
     $bgcolor: $color-primary;
     $active-bgcolor: mix($color-white, $color-primary, $button-hover-tint-percent);
+
     color: #fff;
     background-color: $bgcolor;
     border-color: $bgcolor;
-    &:hover, &:focus {
+
+    &:hover,
+    &:focus {
       background: $active-bgcolor;
       border-color: $active-bgcolor;
       color: #fff;
@@ -29,7 +31,7 @@
     }
 
     .v-button--active {
-      @include link($color-highlight)
+      @include link($color-highlight);
     }
   }
 }

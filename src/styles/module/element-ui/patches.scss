@@ -254,9 +254,6 @@ $menu-item-height: 40px !default;
 
   .el-form-item__content {
     font-size: $font-size-normal;
-  }
-
-  .el-form-item__content {
     vertical-align: middle;
 
     .el-alert {
@@ -490,6 +487,7 @@ $menu-item-height: 40px !default;
     .el-dropdown-menu__item {
       font-size: $font-size-normal;
     }
+
     .el-button--text {
       padding: 2px 0;
     }

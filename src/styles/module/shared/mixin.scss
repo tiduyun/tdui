@@ -1,11 +1,12 @@
 @function empty($value) {
   @if not $value
-      or $value == ""
-      or $value == 0
-      or $value == ()
-      or length($value) == 0 {
+    or $value == ""
+    or $value == 0
+    or $value == ()
+    or length($value) == 0 {
     @return true;
   }
+
   @return false;
 }
 

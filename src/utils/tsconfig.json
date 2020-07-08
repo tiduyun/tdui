@@ -1,44 +1,11 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "../",
-    "outDir": "../../lib",
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["dom", "es6", "es2017"],
-    "importHelpers": true,
-    "strict": true,
-    "jsx": "preserve",
-    "jsxFactory": "h",
-    "moduleResolution": "node",
-    "declaration": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "strictNullChecks": true,
-    "diagnostics": true,
-    "listFiles": true,
-    "pretty": true,
-    "noEmitOnError": false,
-    "strictNullChecks": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "experimentalDecorators": true,
-    "sourceMap": true,
-    "removeComments": true,
-    "typeRoots": ["../../node_modules/@types", "./types"],
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable"
-    ]
+    "noUnusedParameters": true
   },
-  "compileOnSave": true,
   "include": [
     "../../types/*.d.ts",
     "./*.ts"
-  ],
-  "exclude": []
+  ]
 }

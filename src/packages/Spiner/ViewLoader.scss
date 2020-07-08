@@ -1,6 +1,7 @@
 .v-viewloader {
   &.loading {
     min-height: 100px;
+
     > :not(.el-loading-mask) {
       visibility: hidden;
     }

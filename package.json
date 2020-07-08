@@ -10,8 +10,10 @@
   "repository": "allex/tdui",
   "scripts": {
     "precommit": "yarn lint && yarn test",
-    "lint": "tslint -p src/",
-    "lint:fix": "tslint -p src/ --fix",
+    "lint:ts": "tslint -p src/",
+    "lint:style": "stylelint --syntax=scss 'src/**/*.scss'",
+    "lint": "yarn lint:ts && yarn lint:style",
+    "lint:fix": "yarn lint:ts --fix && yarn lint:style --fix",
     "test": "jest --coverage --passWithNoTests",
     "build": "yarn lint && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
     "prepare": "yarn build"
@@ -47,6 +49,9 @@
     "husky": "^1.3.1",
     "jest": "^23.6.0",
     "lint-staged": "^8.1.5",
+    "stylelint": "^9.10.1",
+    "stylelint-config-standard": "^18.2.0",
+    "stylelint-scss": "^3.6.0",
     "ts-mockito": "^2.3.0",
     "ts-node": "^7.0.0",
     "tslint": "^5",
@@ -67,7 +72,11 @@
   },
   "lint-staged": {
     "*.{jsx,ts,tsx,vue}": [
-      "yarn lint --",
+      "yarn lint:ts --",
+      "git add"
+    ],
+    "*.scss": [
+      "stylelint --syntax=scss --fix",
       "git add"
     ]
   },

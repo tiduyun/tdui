@@ -1,0 +1,15 @@
+{
+  "extends": "stylelint-config-standard",
+  "plugins": [
+    "stylelint-scss"
+  ],
+  "rules": {
+    "selector-pseudo-class-no-unknown": [true, {
+      ignorePseudoClasses: ["export"]
+    }],
+    "declaration-block-single-line-max-declarations": 5,
+    "no-descending-specificity": null,
+    "at-rule-no-unknown": null,
+    "scss/at-rule-no-unknown": null
+  }
+}

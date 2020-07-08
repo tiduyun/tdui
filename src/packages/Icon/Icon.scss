@@ -9,7 +9,7 @@
     color: $color-info;
 
     &:hover {
-      color: $color-primary
+      color: $color-primary;
     }
   }
 
@@ -18,7 +18,7 @@
 
     &.is-button {
       &:hover {
-        color: lighten($color-highlight, 15%)
+        color: lighten($color-highlight, 15%);
       }
     }
   }
@@ -30,6 +30,7 @@
 
 .v-svg-icon {
   @include size(1em);
+
   fill: currentColor;
   overflow: hidden;
 }
