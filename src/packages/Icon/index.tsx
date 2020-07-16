@@ -3,6 +3,8 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { get, isEmpty } from '@tdio/utils'
 
+import { extractTooltip } from '@/utils/normalize'
+
 import './Icon.scss'
 import SvgIcon from './Svg'
 
@@ -74,11 +76,11 @@ export class Icon extends Vue {
       ? (<SvgIcon iconName={this.iconName} class={iconClass} on={listeners} style={style} />)
       : (<i class={iconClass} on={listeners} style={style} />)
 
-    const tooltipProps = this.normalizeTooltip()
+    const tooltip = extractTooltip({ ...this.$props, ...this.$attrs })
 
     // Provide tooltip prop configs or tooltip slot impls
-    return tooltipProps
-      ? (<el-tooltip props={{ placement: 'top', ...tooltipProps, disabled }}>
+    return tooltip.content
+      ? (<el-tooltip props={{ ...tooltip, disabled }}>
           { icon }
           { tooltipSlot && (<template slot="content">{ tooltipSlot }</template>) }
         </el-tooltip>)
@@ -103,16 +105,5 @@ export class Icon extends Vue {
       classNames.push(getIconfontBaseClass(iconName), iconName)
     }
     return classNames.filter(Boolean).join(' ')
-  }
-
-  private normalizeTooltip (): Kv | null {
-    const tooltip = this.tooltip
-    if (tooltip) {
-      if (typeof tooltip === 'string') {
-        return { content: tooltip }
-      }
-      return tooltip as Kv
-    }
-    return null
   }
 }
