@@ -266,7 +266,7 @@ $menu-item-height: 40px !default;
   color: $color-info;
 
   & + span {
-    margin-left: 6px;
+    margin-left: 4px;
     vertical-align: middle;
   }
 }
@@ -284,8 +284,8 @@ $menu-item-height: 40px !default;
 
   & + span,
   & + i {
-    margin-left: 6px;
-    margin-right: 6px;
+    margin-left: 4px;
+    margin-right: 4px;
   }
 }
 

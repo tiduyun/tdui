@@ -1,4 +1,4 @@
-import { CreateElement } from 'vue'
+import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { get, isEmpty } from '@tdio/utils'
@@ -22,6 +22,8 @@ const getIconfontBaseClass = (s: string): string => {
       return ''
   }
 }
+
+const result = (o: any, ...args: any[]) => (typeof o === 'function' ? o(...args) : o)
 
 @Component
 export class Icon extends Vue {
@@ -52,11 +54,20 @@ export class Icon extends Vue {
       disabled,
       $slots: {
         tooltip: tooltipSlot // custom tooltip vnode <div slot="tooltip">tips contents</div>
+      },
+      $scopedSlots: {
+        tooltip: tooltipScopedSlot
       }
     } = this
 
+    const tooltip = extractTooltip({ ...this.$props, ...this.$attrs })
+    const tooltipNode: VNode[] | undefined = tooltipScopedSlot
+      ? result(tooltipScopedSlot, this.$props)
+      : tooltipSlot
+    const hasTooltip = tooltipNode || (tooltip && tooltip.content)
+
     const listeners = disabled ? {} : this.$listeners
-    const isBtnStyle = !isEmpty(tooltipSlot || this.tooltip) || !isEmpty(listeners.click)
+    const isBtnStyle = hasTooltip || !isEmpty(listeners.click)
     const isSVG = this.isSVG()
 
     const iconClass = [
@@ -76,13 +87,11 @@ export class Icon extends Vue {
       ? (<SvgIcon iconName={this.iconName} class={iconClass} on={listeners} style={style} />)
       : (<i class={iconClass} on={listeners} style={style} />)
 
-    const tooltip = extractTooltip({ ...this.$props, ...this.$attrs })
-
     // Provide tooltip prop configs or tooltip slot impls
-    return tooltip.content
+    return hasTooltip
       ? (<el-tooltip props={{ ...tooltip, disabled }}>
           { icon }
-          { tooltipSlot && (<template slot="content">{ tooltipSlot }</template>) }
+          { tooltipNode && (<template slot="content">{ tooltipNode }</template>) }
         </el-tooltip>)
       : icon
   }

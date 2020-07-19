@@ -66,7 +66,7 @@ export const createStore = <S = any, R = any>(Ctor: VuexStore<S>, options: Creat
     }
 
     // reset to original state
-    proto.reset = function (options: Kv) {
+    proto.reset = function (options?: Kv) {
       const originalState = getOriginalState(this._modules.root, deepClone(this._vm._data.$$state), options)
       this.replaceState(deepClone(originalState))
     }
