@@ -1,13 +1,12 @@
 {
   "name": "@tdio/tdui",
-  "version": "1.0.5-dev.20200713",
+  "version": "1.0.5",
   "description": "Tiduyun.com Front-End UI",
   "module": "lib/tdui.esm.js",
   "types": "lib/index.d.ts",
   "keywords": [
     "ui"
   ],
-  "repository": "allex/tdui",
   "scripts": {
     "precommit": "yarn lint && yarn test",
     "lint:ts": "tslint -p src/",
@@ -16,7 +15,8 @@
     "lint:fix": "yarn lint:ts --fix && yarn lint:style --fix",
     "test": "jest --coverage --passWithNoTests",
     "build": "(test -n \"$CI\" || yarn lint) && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
-    "prepare": "test -n \"$CI\" || yarn build"
+    "prepare": "test -n \"$CI\" || yarn build",
+    "prerelease": "standard-version --release-as patch --prerelease"
   },
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
   "dependencies": {
