@@ -2,7 +2,7 @@
 
 import { deepClone } from '@tdio/utils'
 import { Module, ModuleOptions, Store, StoreOptions } from 'vuex'
-import { VuexStore } from './types'
+import { IModule, VuexStore } from './types'
 
 type CreateContextOptions<S, R> = (StoreOptions<S> | Module<S, R>) & {
   mixins?: Kv;
@@ -31,7 +31,7 @@ function injectModule <S, R> (m: Module<S, R>, mixins: any = {}) {
   }
 }
 
-function getOriginalState <S, R> (module: Module<S, R>, moduleVueState: Kv, options: Kv = {}, defaultReset = true) {
+function getOriginalState <S, R> (module: IModule<S, R>, moduleVueState: Kv, options: Kv = {}, defaultReset = true) {
   if (options.self === undefined) {
     options.self = defaultReset
   }
@@ -66,7 +66,7 @@ export const createStore = <S = any, R = any>(Ctor: VuexStore<S>, options: Creat
     }
 
     // reset to original state
-    proto.reset = function (options: Kv) {
+    proto.reset = function (options?: Kv) {
       const originalState = getOriginalState(this._modules.root, deepClone(this._vm._data.$$state), options)
       this.replaceState(deepClone(originalState))
     }

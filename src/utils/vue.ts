@@ -88,7 +88,7 @@ export const functionalComponent = <Props = Kv> (render: FunctionalComponentRend
   functional: true,
   render (h: CreateElement, ctx: RenderContext<Props>) {
     const props = {
-      on: ctx.listeners,
+      ...ctx.data, // { on, attrs, staticClass }
       ...ctx.props
     }
     return render.apply({

@@ -4,7 +4,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { truncate } from '@/utils'
 import { isEmpty, isObject, pick } from '@tdio/utils'
 
-import { TooltipOptions, tooltipProps } from '@/utils/normalize'
+import { extractTooltip, TooltipOptions } from '@/utils/normalize'
 
 const renderTextWithTooltip = (h: CreateElement, context: RenderContext, text: string, tooltip: Partial<TooltipOptions>) => {
   const textNode = (<span class="v-text" { ...context.data }>{ text }</span>)
@@ -53,7 +53,7 @@ export default class RichText extends Vue {
     }
 
     let text = getText()
-    const tooltip = tooltipProps(context.props)
+    const tooltip = extractTooltip(context.props)
     const { isUnicodeLength } = props
     const truncateLength = parseInt(props.truncateLength, 10)
 

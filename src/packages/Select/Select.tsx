@@ -4,7 +4,7 @@ import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 import { $t } from '@tdio/locale'
 import { isValue } from '@tdio/utils'
 
-import { tooltipProps } from '@/utils/normalize'
+import { extractTooltip } from '@/utils/normalize'
 
 import { IOption } from '../../../types/common'
 import { Icon } from '../Icon'
@@ -76,7 +76,7 @@ export default class Select extends Mixins(AbsSelectView) {
       </el-select>
     )
 
-    const tooltip = tooltipProps({ ...this.$props, ...this.$attr })
+    const tooltip = extractTooltip({ ...this.$props, ...this.$attr })
     return tooltip.content
       ? (<el-tooltip props={tooltip}>{ selectNode }</el-tooltip>)
       : selectNode

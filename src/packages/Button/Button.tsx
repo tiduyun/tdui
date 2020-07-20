@@ -3,7 +3,7 @@ import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { Emittable } from '@/utils/emittable'
-import { tooltipProps } from '@/utils/normalize'
+import { extractTooltip } from '@/utils/normalize'
 
 const prefixCls = `v-button`
 
@@ -148,7 +148,7 @@ export default class Button extends Vue {
       </el-button>
     )
 
-    const tooltip = tooltipProps({ ...this.$props, ...$attrs })
+    const tooltip = extractTooltip({ ...this.$props, ...$attrs })
     return tooltip.content
       ? (<el-tooltip props={tooltip}>{ btn }</el-tooltip>)
       : btn

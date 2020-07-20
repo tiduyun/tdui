@@ -4,7 +4,7 @@ import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 import { $t } from '@tdio/locale'
 import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 
-import { TooltipOptions, tooltipProps } from '@/utils/normalize'
+import { extractTooltip, TooltipOptions } from '@/utils/normalize'
 import { findDownward, findUpward, isVNode } from '@/utils/vue'
 
 import { IValidateRuleItem, IValidateRuleObject } from '../../../types/validate'

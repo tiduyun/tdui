@@ -51,8 +51,9 @@ const cleanup = <T extends Kv> (o: T): Partial<T> => Object.keys(o).reduce((r, k
   return r
 }, {} as T)
 
-export const tooltipProps = (props: Kv): Partial<TooltipOptions> => {
+export const extractTooltip = (props: Kv): Partial<TooltipOptions> => {
   let tooltip: Partial<TooltipOptions> = props.tooltip || {}
+
   if (typeof tooltip === 'string') {
     tooltip = { content: tooltip }
   } else {
@@ -60,9 +61,12 @@ export const tooltipProps = (props: Kv): Partial<TooltipOptions> => {
       tooltip = {}
     }
   }
-  return {
+
+  tooltip = {
     placement: 'top',
     ...tooltip,
     ...cleanup(pick(props, ['tooltipClass', 'popperClass', 'placement']))
   }
+
+  return tooltip
 }

@@ -15,8 +15,8 @@
     "lint": "yarn lint:ts && yarn lint:style",
     "lint:fix": "yarn lint:ts --fix && yarn lint:style --fix",
     "test": "jest --coverage --passWithNoTests",
-    "build": "yarn lint && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
-    "prepare": "yarn build"
+    "build": "(test -n \"$CI\" || yarn lint) && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
+    "prepare": "test -n \"$CI\" || yarn build"
   },
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
   "dependencies": {
