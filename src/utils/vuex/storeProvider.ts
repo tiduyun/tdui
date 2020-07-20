@@ -2,7 +2,7 @@ import Vue, { VueConstructor } from 'vue'
 import { Module, Store } from 'vuex'
 
 import { isArray } from '@tdio/utils'
-import { StoreProvideItem, StoreProvideOption, VuexStoreImpl } from './types'
+import { IModule, StoreProvideItem, StoreProvideOption, VuexStoreImpl } from './types'
 
 const isStore = (v: any): boolean => ['state', 'actions', 'mutations', 'getters'].some(k => v[k])
 
@@ -33,9 +33,9 @@ const parseStoreOptions = <S> (options: StoreProvideOption<S>): Array<StoreProvi
 
 const isStoreEmptyState = <S, R>(o: Module<S, R>): boolean => !!(o.state && (o.state as any).__empty__) // eslint-disable-line no-underscore-dangle
 
-const lsStoreModule = <S, R>(path: string[], o: Module<S, any>) => {
+const lsStoreModule = <S, R>(path: string[], o: IModule<S, any>) => {
   const list: Array<[string[], Module<S, any>]> = []
-  const f = (path: string[], o: Module<S, R>, level: number = 0) => {
+  const f = (path: string[], o: IModule<S, R>, level: number = 0) => {
     const children = o._children // eslint-disable-line no-underscore-dangle
     if (level++ > 0) {
       list.push([path, o._rawModule]) // eslint-disable-line no-underscore-dangle

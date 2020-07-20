@@ -1,5 +1,12 @@
 import { Module, Store } from 'vuex'
 
+export interface IModule<S, R> extends Module<S, R> {
+  _children: Kv<IModule<S, R>>;
+  _originalState: Kv;
+  _rawModule: IModule<S, R>;
+  forEachChild (iterator: (childModule: IModule<S, R>, key: string) => void): void;
+}
+
 declare module 'vuex' {
   interface StoreOptions<S> {
     mixins?: Module<S, any>;
@@ -7,16 +14,14 @@ declare module 'vuex' {
 
   interface Store<S> {
     _modules: {
-      get (path: string[]): Module<S, any>;
+      root: IModule<S, any>;
+      get (path: string[]): IModule<S, any>;
     }
     _modulesNamespaceMap: any;
   }
 
   interface Module<S, R> {
-    _children: Kv<Module<S, R>>;
-    _originalState: Kv;
-    _rawModule: Module<S, R>;
-    forEachChild (iterator: (childModule: Module<S, R>, key: string) => void): void;
+    _originalState?: Kv;
   }
 }
 
@@ -35,9 +40,4 @@ export type StoreProvideOption<S> = StoreProvideItem<S>
   | StoreProvideItem<S>
   | Array<VuexStoreImpl<any>>
 
-export type VuexStore<S> = Store<S> & {
-  _modules: {
-    get (path: string[]): Module<S, any>
-  }
-  _modulesNamespaceMap: any;
-} & (new <S> (...args: any[]) => Store<S>)
+export type VuexStore<S> = Store<S> & (new <S> (...args: any[]) => Store<S>)
