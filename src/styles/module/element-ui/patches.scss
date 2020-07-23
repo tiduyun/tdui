@@ -96,6 +96,7 @@ $menu-item-height: 40px !default;
   &__content {
     color: $color-primary;
     font-size: 1.08 * $font-size-normal; // 12px -> 13px
+    line-height: initial;
   }
 
   &__icon { margin-right: 6px; font-size: $font-size-medium; }
