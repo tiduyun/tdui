@@ -149,7 +149,7 @@ export default class Button extends Vue {
     )
 
     const tooltip = extractTooltip({ ...this.$props, ...$attrs })
-    return tooltip.content
+    return tooltip && tooltip.content
       ? (<el-tooltip props={tooltip}>{ btn }</el-tooltip>)
       : btn
   }

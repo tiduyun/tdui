@@ -77,7 +77,7 @@ export default class Select extends Mixins(AbsSelectView) {
     )
 
     const tooltip = extractTooltip({ ...this.$props, ...this.$attr })
-    return tooltip.content
+    return tooltip && tooltip.content
       ? (<el-tooltip props={tooltip}>{ selectNode }</el-tooltip>)
       : selectNode
   }

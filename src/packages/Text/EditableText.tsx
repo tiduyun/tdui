@@ -4,7 +4,7 @@ import { Component, Emit, Prop, Vue, Watch } from 'vue-property-decorator'
 import { $t } from '@tdio/locale'
 import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 
-import { extractTooltip, TooltipOptions } from '@/utils/normalize'
+import { TooltipOptions } from '@/utils/normalize'
 import { findDownward, findUpward, isVNode } from '@/utils/vue'
 
 import { IValidateRuleItem, IValidateRuleObject } from '../../../types/validate'
@@ -39,7 +39,7 @@ export default class EditableText extends Vue {
   isUnicodeLength!: boolean
 
   @Prop({ type: [String, Object, Boolean] })
-  tooltip!: Partial<TooltipOptions> | string | boolean
+  tooltip!: TooltipOptions | string | boolean
 
   @Prop({ type: String, default: 'v-text' })
   tooltipClass!: string

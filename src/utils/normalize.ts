@@ -1,4 +1,4 @@
-import { pick } from '@tdio/utils'
+import { isObject, pick } from '@tdio/utils'
 
 export type PopoverPlacement = 'top' | 'top-start' | 'top-end' | 'bottom' | 'bottom-start' | 'bottom-end' | 'left' | 'left-start' | 'left-end' | 'right' | 'right-start' | 'right-end'
 
@@ -11,37 +11,37 @@ export interface TooltipOptions {
   placement: PopoverPlacement;
 
   /** Whether Tooltip is disabled */
-  disabled: boolean;
+  disabled?: boolean;
 
   /** Offset of the Tooltip */
-  offset: number;
+  offset?: number;
 
   /** Animation name */
-  transition: string;
+  transition?: string;
 
   /** Whether an arrow is displayed. For more information, check Vue-popper page */
-  visibleArrow: boolean;
+  visibleArrow?: boolean;
 
   /** Popper.js parameters */
-  popperOptions: object;
+  popperOptions?: object;
 
   /** Delay of appearance, in millisecond */
-  openDelay: number;
+  openDelay?: number;
 
   /** Whether to control Tooltip manually. mouseenter and mouseleave won't have effects if set to true */
-  manual: boolean;
+  manual?: boolean;
 
   /** Custom class name for Tooltip's popper */
-  popperClass: string;
+  popperClass?: string;
 
   /** Whether the mouse can enter the tooltip	 */
-  enterable: string;
+  enterable?: string;
 
   /** Timeout in milliseconds to hide tooltip */
-  hideAfter: string;
+  hideAfter?: string;
 
   /** Tooltip tabindex */
-  tabindex: number;
+  tabindex?: number;
 }
 
 const cleanup = <T extends Kv> (o: T): Partial<T> => Object.keys(o).reduce((r, k) => {
@@ -51,22 +51,28 @@ const cleanup = <T extends Kv> (o: T): Partial<T> => Object.keys(o).reduce((r, k
   return r
 }, {} as T)
 
-export const extractTooltip = (props: Kv): Partial<TooltipOptions> => {
-  let tooltip: Partial<TooltipOptions> = props.tooltip || {}
+export const extractTooltip = (props: Kv): TooltipOptions | null => {
+  const tooltipProp = props.tooltip
 
-  if (typeof tooltip === 'string') {
-    tooltip = { content: tooltip }
-  } else {
-    if (typeof tooltip !== 'object') {
-      tooltip = {}
+  // tooltip is disabled manually
+  if (tooltipProp === false) {
+    return null
+  }
+
+  let tooltip: TooltipOptions = tooltipProp
+
+  if (!isObject(tooltip)) {
+    tooltip = {
+      content: '',
+      placement: 'top'
+    }
+    if (typeof tooltipProp === 'string') {
+      tooltip.content = tooltipProp as string
     }
   }
 
-  tooltip = {
-    placement: 'top',
-    ...tooltip,
-    ...cleanup(pick(props, ['tooltipClass', 'popperClass', 'placement']))
-  }
-
-  return tooltip
+  return Object.assign(
+    tooltip,
+    cleanup(pick(props, ['tooltipClass', 'popperClass', 'placement']))
+  )
 }
