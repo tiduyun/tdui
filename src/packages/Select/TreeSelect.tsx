@@ -196,7 +196,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
     this.data = data.length > 0 ? [...data] : []
 
-    this.$nextTick(() => {
+    this.nextTick(() => {
       this.labels = multiple ? [] : ''
       // optional select the first item
       this.ids = (this.defaultFirstOption && data.length)
@@ -207,7 +207,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   mounted () {
     this.syncPopperUI()
-    this.$nextTick(() => { on(document, 'mouseup', this.popoverHideFun) })
+    this.nextTick(() => { on(document, 'mouseup', this.popoverHideFun) })
   }
 
   beforeDestroy () {
@@ -325,9 +325,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   updatePopper () {
-    setTimeout(() => {
-      this.$popover.updatePopper()
-    }, 50)
+    this.$popover.updatePopper()
   }
 
   // @see element-ui/types/tree#ElTree.filterNodeMethod
@@ -437,8 +435,15 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.updatePopper()
   }
 
-  syncPopperUI () {
+  nextTick (fn: () => void) {
     this.$nextTick(() => {
+      if (this._isDestroyed) return
+      fn()
+    })
+  }
+
+  syncPopperUI () {
+    this.nextTick(() => {
       this.state.width = this.$select.$el.getBoundingClientRect().width
     })
   }
