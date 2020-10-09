@@ -1,0 +1,35 @@
+@import "../../styles/inc.scss";
+
+.v-stateful-tag {
+  display: inline-block;
+
+  &.no-border {
+    height: auto;
+    padding: 0;
+    border-color: transparent;
+    line-height: initial;
+
+    &[class*="--plain "] {
+      background: none;
+    }
+  }
+
+  &.is-button {
+    cursor: pointer;
+  }
+
+  .icon,
+  .text {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .icon {
+    font-size: 1.1em;
+    margin: 0 2px 0 0;
+
+    &.is-button {
+      color: inherit;
+    }
+  }
+}
