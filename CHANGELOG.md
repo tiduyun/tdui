@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.0.5...1.1.0) (2020-10-09)
+
+
+### Features
+
+* add stateful tag component ([1872b2d](https://git.tiduyun.com/f2e-modules/tdui/commit/1872b2d11981334c36b7cde26bfeb743d6b84eb0))
+
+
+### Bug Fixes
+
+* **tooltip:** normalize tooltip extraction ([fad6239](https://git.tiduyun.com/f2e-modules/tdui/commit/fad623936593c5d2c55f77246da549b073f5735c))
+* **TreeSelect:** bump $nextTick when instance been destroyed ([2073555](https://git.tiduyun.com/f2e-modules/tdui/commit/20735554df1eac6047198bbc2b2f8fc48e7bbbfa))
+
 ### [1.0.5](https://git.tiduyun.com/f2e-modules/tdui/compare/1.0.3...1.0.5) (2020-07-24)
 
 
