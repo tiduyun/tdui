@@ -34,7 +34,8 @@ export default class AbsSelectView extends Vue {
   @Prop({ type: Function, default: identity })
   optionMapper!: (o: T) => any
 
-  currentValue: T | Nil = undefined
+  isValInvalid?: boolean
+  currentValue?: T | Nil = undefined
   currentOptions: IOption[] = []
 
   private _initialValue: T | Nil
@@ -42,20 +43,31 @@ export default class AbsSelectView extends Vue {
 
   @Watch('value')
   handleChange (val: T | undefined, oldVal?: T) {
-    val = normalizeValue(val)
+    oldVal = this.currentValue
+    if (val !== oldVal) {
+      this.setSelectedValue(val)
+    }
+  }
 
-    const isModified = val !== this.currentValue
+  handleSelect (val: T | undefined) {
+    this.isValInvalid = false
+    this.setSelectedValue(val)
+  }
+
+  setSelectedValue (val: T | undefined) {
+    const v = normalizeValue(val)
+    const isModified = v !== this.currentValue
 
     // tslint:disable-next-line
     if (isModified) {
       const prev = this.currentValue
-      this.currentValue = val
+      this.currentValue = v
 
       // tslint:disable-next-line
-      if (val != this.value) { // prevent cycle rollback emits
-        this.$emit('input', val)
-        this.$emit('change', val, prev)
-        this.dispatch('ElFormItem', 'el.form.change', val)
+      if (val !== this.value) { // prevent cycle rollback emits
+        this.$emit('input', v)
+        this.$emit('change', v, prev)
+        this.dispatch('ElFormItem', 'el.form.change', v)
       }
     }
 
@@ -64,7 +76,7 @@ export default class AbsSelectView extends Vue {
       // emit entity
       const dic = this._kvRefs
       if (dic) {
-        const o = dic[val]
+        const o = dic[v]
         const { entity, propValue } = this
         if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
           set(this, '_currEntity', o)
@@ -84,8 +96,9 @@ export default class AbsSelectView extends Vue {
 
     const options = this.currentOptions
     const { currentValue, defaultFirstOption } = this
-    let v = isValue(currentValue) ? currentValue : this._initialValue
+    const initial = isValue(currentValue) ? currentValue : this._initialValue
 
+    let v = initial
     if (options.length) {
       // Keep previous value if exists in new options (implicit match)
       // or else select first item when `defaultFirstOption`
@@ -103,7 +116,10 @@ export default class AbsSelectView extends Vue {
       v = undefined
     }
 
-    this.handleChange(v)
+    // not a valid value (not exists in options)
+    this.isValInvalid = initial !== v && options.length > 0
+
+    this.setSelectedValue(v)
   }
 
   created () {
@@ -116,7 +132,7 @@ export default class AbsSelectView extends Vue {
     // Get options by mockup slots
     if (defaultFirstOption && !isEmpty($slots.default) && isEmpty(value)) {
       const v = get($slots, 'default[0].componentInstance.currentValue') // It's should be a ElOption instance
-      this.handleChange(v)
+      this.setSelectedValue(v)
     } else if (!isEmpty(options)) {
       this.handleOptionsChange(options)
     }

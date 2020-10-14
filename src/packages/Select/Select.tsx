@@ -13,6 +13,7 @@ import AbsSelectView from './AbsSelectView'
 import './Select.scss'
 
 @Component({
+  name: 'Select',
   inheritAttrs: false
 })
 export default class Select extends Mixins(AbsSelectView) {
@@ -21,6 +22,9 @@ export default class Select extends Mixins(AbsSelectView) {
 
   @Prop({ type: String, default: $t('Select...') })
   placeholder!: string
+
+  @Prop({ type: String, default: '' })
+  initialLabel!: string
 
   @Prop({ type: Boolean, default: null })
   disabled!: boolean
@@ -47,6 +51,11 @@ export default class Select extends Mixins(AbsSelectView) {
         )
     )
 
+    let placeholder = this.placeholder
+    if (this.isValInvalid && this.initialLabel) {
+      placeholder = this.initialLabel
+    }
+
     const selectNode = (
       <el-select
         ref="select"
@@ -57,8 +66,8 @@ export default class Select extends Mixins(AbsSelectView) {
         clearable={this.clearable}
         disabled={calcDisabled}
         props={this.$attrs}
-        placeholder={this.placeholder}
-        onInput={this.handleChange}
+        placeholder={placeholder}
+        onInput={this.handleSelect}
       >
         { $slots.prefix ? (<template slot="prefix">{ $slots.prefix }</template>) : null }
         { $slots.suffix ? (<template slot="suffix">{ $slots.suffix }</template>) : null }
