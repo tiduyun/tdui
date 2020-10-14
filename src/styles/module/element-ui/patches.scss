@@ -334,8 +334,7 @@ $menu-item-height: 40px !default;
 .el-range-editor--small .el-range-input,
 .el-popper,
 .el-transfer,
-.el-step__title,
-[class^=el-alert__] {
+.el-step__title {
   font-size: $font-size-normal;
 }
 

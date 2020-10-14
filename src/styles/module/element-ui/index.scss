@@ -1,2 +1,6 @@
 @import "./vars";
+
+// reset some vars
+$--alert-title-font-size: $font-size-normal !default;
+
 @import "~element-ui/packages/theme-chalk/src/index";
