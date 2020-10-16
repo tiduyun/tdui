@@ -25,6 +25,11 @@ const getIconfontBaseClass = (s: string): string => {
 
 const result = (o: any, ...args: any[]) => (typeof o === 'function' ? o(...args) : o)
 
+const stripClassNames = (classNames: string): string => {
+  // remove dot tailings
+  return classNames.split(' ').map(s => s.replace(/\..*$/, '')).join(' ')
+}
+
 @Component
 export class Icon extends Vue {
   name: string = 'Icon'
@@ -113,6 +118,6 @@ export class Icon extends Vue {
     } else {
       classNames.push(getIconfontBaseClass(iconName), iconName)
     }
-    return classNames.filter(Boolean).join(' ')
+    return stripClassNames(classNames.filter(Boolean).join(' '))
   }
 }
