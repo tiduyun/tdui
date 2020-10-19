@@ -92,14 +92,18 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
 
   setState (state: Partial<IListParams<Kv> | { pager: Nullable<Partial<IPagination>>; }>, force?: boolean) {
     const s0 = this.storeState
+
     // ignore list property, and fixup empty string ('') as undefined
-    const newVal = force
+    const s1 = force
       ? state
-      : deepAssign({}, s0, state, (r, s, k) => k === 'list'
-        ? s === ''
-          ? undefined : s
-        : undefined)
-    reactSet(s0, newVal)
+      : deepAssign(
+          {},
+          s0,
+          state,
+          (r, s, k) => k === 'list' && s !== '' ?  s : undefined
+        )
+
+    reactSet(s0, s1)
   }
 
   created () {
