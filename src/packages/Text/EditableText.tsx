@@ -38,7 +38,7 @@ export default class EditableText extends Vue {
   @Prop({ type: Boolean, default: false })
   isUnicodeLength!: boolean
 
-  @Prop({ type: [String, Object, Boolean] })
+  @Prop()
   tooltip!: TooltipOptions | string | boolean
 
   @Prop({ type: String, default: 'v-text' })
