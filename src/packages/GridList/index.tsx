@@ -4,7 +4,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, omit, pick, set, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
-import { reactSet } from '@/utils/vue'
+import { findDownward, reactSet } from '@/utils/vue'
 
 import './style.scss'
 
@@ -78,6 +78,9 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: [Boolean, Object], default: false })
   autoReload!: boolean | ReloadOptions
 
+  @Prop({ type: Boolean, default: true })
+  clearSelectionOnLoad!: boolean
+
   debounceRef!: [
     number,
     Partial<IListParams<Q>>,
@@ -120,7 +123,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     this.setState(initialState)
 
     if (this.loadOnCreated) {
-      this.load()
+      this._load()
     }
 
     // setup auto reload daemon
@@ -128,37 +131,19 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   }
 
   load (params: Partial<IListParams<Q>> = {}, opts: { debounce ?: number; } = {}): Promise<Ds<Q, T>> {
-    const state = this.storeState
-    const debounce = opts.debounce || 0
-
-    if (debounce > 0) {
-      const ref = this.debounceRef
-      if (ref) {
-        if (ref[0]) {
-          clearTimeout(ref[0])
-          ref[1] = params
-        } else {
-          const isModified = ['query', 'pager'].some(k => !isEqual(state[k], deepAssign({}, state[k], params[k])))
-          return !isModified
-            ? ref[2]
-            : ref[2].then(() => this.load(params, opts))
+    return this._load(params, opts).finally(() => {
+      if (this.clearSelectionOnLoad) {
+        // try to clear table selections when call load manually
+        const table = findDownward(this, 'ElTable')
+        if (table) {
+          try {
+            table.clearSelection()
+          } catch (e) {
+            console.error(e)
+          }
         }
       }
-
-      const defer = deferred<Ds<Q, T>>()
-      defer.then(() => this.debounceRef = null)
-
-      const timer = setTimeout(() => {
-        const ref = this.debounceRef!
-        ref[0] = 0
-        this._load(ref[1]).then(defer.resolve, defer.reject)
-      }, debounce)
-
-      this.debounceRef = [timer, params, defer]
-      return defer
-    }
-
-    return this._load(params)
+    })
   }
 
   onSizeChange (size: number) {
@@ -220,7 +205,49 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     )
   }
 
-  private _load (params: Partial<IListParams<Q>>): Promise<Ds<Q, T>> {
+  @debounce(100)
+  private debounceLoad (params?: Partial<IListParams<Q>>): void {
+    this._load(params)
+  }
+
+  private _load (params: Partial<IListParams<Q>> = {}, opts: { debounce ?: number; } = {}): Promise<Ds<Q, T>> {
+    // Internal core load with debounce featured
+
+    const state = this.storeState
+    const debounce = opts.debounce || 0
+
+    // debounce controller
+    if (debounce > 0) {
+      const ref = this.debounceRef
+      if (ref) {
+        if (ref[0]) {
+          clearTimeout(ref[0])
+          ref[1] = params
+        } else {
+          const isModified = ['query', 'pager'].some(k => !isEqual(state[k], deepAssign({}, state[k], params[k])))
+          return !isModified
+            ? ref[2]
+            : ref[2].then(() => this._load(params, opts))
+        }
+      }
+
+      const defer = deferred<Ds<Q, T>>()
+      defer.then(() => this.debounceRef = null)
+
+      const timer = setTimeout(() => {
+        const ref = this.debounceRef!
+        ref[0] = 0
+        this._requestData(ref[1]).then(defer.resolve, defer.reject)
+      }, debounce)
+
+      this.debounceRef = [timer, params, defer]
+      return defer
+    }
+
+    return this._requestData(params)
+  }
+
+  private _requestData (params: Partial<IListParams<Q>>): Promise<Ds<Q, T>> {
     const state = this.storeState
 
     let apiParams = pick(state, ['query']) as IListParams<Q>
@@ -257,7 +284,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             const { page, size } = p1
             const rpage = Math.ceil(total / size)
             if (p0.page > rpage) {
-              return this._load({ ...params, pager: { ...p0, page: rpage } })
+              return this._requestData({ ...params, pager: { ...p0, page: rpage } })
             }
           }
 
@@ -267,11 +294,6 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       ).finally(() => {
         this.setState({ ...arg0, $xargs: null, lastLoadTime: Date.now() })
       })
-  }
-
-  @debounce(100)
-  private debounceLoad (params?: Partial<IListParams<Q>>): void {
-    this.load(params)
   }
 
   private _setupLoadDaemon () {
@@ -310,7 +332,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
             run()
           } else {
             // silent mode to prevent spiner
-            this.load({ $xargs: { silent: true } }).finally(() => {
+            this._load({ $xargs: { silent: true } }).finally(() => {
               unset(state, '$xargs.silent')
               run()
             })
