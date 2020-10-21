@@ -63,3 +63,11 @@ $--pagination-active-color: $v-link-hover-color;
 
 /* dropdown */
 $--dropdown-menuItem-hover-color: $v-link-hover-color;
+
+/* tooltip */
+$--tooltip-color: $color-white !default;
+$--tooltip-fill: mix($color-primary, $color-black, 35%) !default;
+$--tooltip-border-color: $--tooltip-fill;
+
+/* alert */
+$--alert-title-font-size: $font-size-normal !default;
