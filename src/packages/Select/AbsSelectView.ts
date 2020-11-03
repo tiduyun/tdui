@@ -13,7 +13,7 @@ const normalizeValue = (v: any) => v === '' ? undefined : v
 @Component
 @Emittable
 export default class AbsSelectView extends Vue {
-  @Prop({ type: [String, Number, Array] })
+  @Prop()
   value!: T | undefined
 
   @Prop({ type: Array, default: () => ([]) })
@@ -103,7 +103,7 @@ export default class AbsSelectView extends Vue {
       // Keep previous value if exists in new options (implicit match)
       // or else select first item when `defaultFirstOption`
       // tslint:disable-next-line
-      const item = options.find(o => o.value == v)
+      const item = options.find(o => o.value === v)
       if (!item) {
         v = defaultFirstOption
           ? options[0].value
@@ -130,7 +130,7 @@ export default class AbsSelectView extends Vue {
     const { value, $slots, defaultFirstOption, options } = this
 
     // Get options by mockup slots
-    if (defaultFirstOption && !isEmpty($slots.default) && isEmpty(value)) {
+    if (defaultFirstOption && !isEmpty($slots.default) && !isValue(value)) {
       const v = get($slots, 'default[0].componentInstance.currentValue') // It's should be a ElOption instance
       this.setSelectedValue(v)
     } else if (!isEmpty(options)) {

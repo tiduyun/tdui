@@ -9,57 +9,51 @@ import Select from './Select'
 const values = (o: any) => (isObject(o) ? Object.values(o) : o)
 const isValueEquals = (o: any, p: any) => valueEquals(values(o), values(p))
 
-type TValue = any
-type TOptionEntity = object
-
-type AsyncOptionFunc = (this: any, args: Kv | string) => Promise<TOptionEntity[]>
-type SyncOptionFunc = (this: any, args: Kv | string) => TOptionEntity[]
-type IOptionsFunc = AsyncOptionFunc | SyncOptionFunc
-type IOptionsType = TOptionEntity[] | IOptionsFunc | null
+type IOptionEntity = any // object
+type IOptionsLoader = (...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[]
+type OptionsImpl = IOptionEntity | IOptionsLoader
 
 @Component
 class MixinSelect extends Vue {
-  /** @abstract APIs must be implemented */
+  /** @abstract */
   keys: string = ''
-  options!: IOptionsType
   props: Kv = {}
 
   propLabel: string = 'label'
   propValue: string = 'value'
 
   @Prop()
-  value!: TValue
+  value!: any
 
   @Prop()
-  entity!: TOptionEntity
+  entity!: IOptionEntity
 
   @Prop({ type: Function, default: constant(true) })
-  optionsFilter!: (o: TOptionEntity) => boolean
+  optionsFilter!: (o: IOptionEntity) => boolean
 
   @Prop(Boolean)
   loading!: boolean
 
   lock: boolean = this.loading
-  items: TOptionEntity[] = []
+  items: IOptionEntity[] = []
 
-  private _inited: boolean = false // duplicate initialize fetching locker
-  private _pendingFn: IOptionsFunc | null = null
+  private _inited?: boolean // duplicate initialize fetching locker
+  private _pending?: IOptionsLoader
 
-  @Watch('options')
-  initOptions (options: IOptionsType, p?: IOptionsType) {
+  initOptions <T> (options: OptionsImpl, p?: OptionsImpl) {
     const { keys } = this
     const v = options
 
     if (isFunction(v)) {
-      const f: IOptionsFunc = (v as IOptionsFunc).bind(this)
+      const f: IOptionsLoader = (v as IOptionsLoader).bind(this)
       if (this.lock) {
-        this._pendingFn = f
+        this._pending = f
         return
       }
 
       this.setLoading(true)
 
-      const handleCb = (err: Error | null, r?: TOptionEntity[]) => {
+      const handleCb = (err: Error | null, r?: IOptionEntity[]) => {
         if (!err) {
           if (!isEmpty(keys)) {
             this._inited = true
@@ -67,9 +61,9 @@ class MixinSelect extends Vue {
           this.setOptions(r || [])
         }
         this.setLoading(false)
-        const pending = this._pendingFn
+        const pending = this._pending
         if (pending) {
-          this._pendingFn = null
+          this._pending = undefined
           if (!isValueEquals(keys, this.keys)) {
             this.initOptions(pending)
           }
@@ -78,21 +72,16 @@ class MixinSelect extends Vue {
 
       const r = f(keys)
       if (isPromise(r)) {
-        (r as ReturnType<AsyncOptionFunc>).then(
+        (r as Promise<IOptionEntity[]>).then(
           arr => handleCb(null, arr),
           err => handleCb(err)
         )
       } else {
-        handleCb(null, r as ReturnType<SyncOptionFunc>)
+        handleCb(null, r as IOptionEntity[])
       }
 
     } else if (v !== this.items) {
-      this.setOptions(v as TOptionEntity[])
-    }
-
-    if (this.options !== options) {
-      // cache it
-      this.options = options
+      this.setOptions(v as IOptionEntity[])
     }
   }
 
@@ -108,6 +97,9 @@ class MixinSelect extends Vue {
     // Add a watcher to assert auto reload options
     this.$watch('keys', (v: string | Kv, p: string | Kv) => {
       if (!isEmpty(p) && this._inited && isValueEquals(v, p)) return
+      this.load()
+    })
+    this.$watch('options', () => {
       this.load()
     })
   }
@@ -150,7 +142,7 @@ class MixinSelect extends Vue {
     this.$emit('update:loading', v)
   }
 
-  private setOptions (items: TOptionEntity[]): void {
+  private setOptions (items: IOptionEntity[]): void {
     items = isArray(items) ? items : []
     this.items = items.filter(this.optionsFilter)
   }
