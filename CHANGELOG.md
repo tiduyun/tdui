@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.1.2](https://git.tiduyun.com/f2e-modules/tdui/compare/1.1.2-dev.1...1.1.2) (2020-11-03)
+
+
+### Features
+
+* **GridList:** clean selections when load grid manually ([acc1f08](https://git.tiduyun.com/f2e-modules/tdui/commit/acc1f080311acc7bd0e38a247bd720eb5d013feb))
+
+
+### Bug Fixes
+
+* enhance common mixins ([8a1944d](https://git.tiduyun.com/f2e-modules/tdui/commit/8a1944d4218fafd4e34b476c5c2dba75a795e085))
+
 ## [1.1.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.0.5...1.1.0) (2020-10-09)
 
 
