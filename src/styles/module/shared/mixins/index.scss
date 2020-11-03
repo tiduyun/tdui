@@ -1,7 +1,6 @@
 @function empty($value) {
   @if not $value
     or $value == ""
-    or $value == 0
     or $value == ()
     or length($value) == 0 {
     @return true;
@@ -111,5 +110,42 @@
 @mixin variant($selector) {
   @at-root #{$selector}#{&} {
     @content;
+  }
+}
+
+@mixin color-hover($color, $color-hover: null) {
+  color: $color;
+
+  &:hover {
+    color: if($color-hover, $color-hover, mix($color-white, $color, $button-hover-tint-percent));
+  }
+}
+
+@function invert-color($color) {
+  $r: red($color);
+  $g: green($color);
+  $b: blue($color);
+
+  @if ($r*0.299 + $g*0.587 + $b*0.114 > 186) {
+    @return $color-black;
+  }
+
+  @else {
+    @return $color-white;
+  }
+}
+
+// Helper for render abbreviations,
+// eg. .mb2 => { margin-bottom: 0.5rem; } .mb3 => { margin-bottom: 1rem; } .mt2, .mr3 etc,.
+@mixin render-abbr($prefix, $abbr: null, $attrs: ('top', 'right', 'bottom', 'left')) {
+  @if (empty($abbr)) {
+    $abbr: str-slice($prefix, 0, 1);
+  }
+
+  @each $k in $attrs {
+    $cls: "#{$abbr}#{str-slice($k, 0, 1)}";
+    $prefix: "margin";
+    #{$cls}2 { #{$prefix}-#{$k}: 0.5rem; }
+    #{$cls}3 { #{$prefix}-#{$k}: 1rem; }
   }
 }
