@@ -1,12 +1,14 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, deepAssign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, omit, pick, set, unset } from '@tdio/utils'
+import { assign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, isObject, merge, omit, pick, set, unset } from '@tdio/utils'
 
 import { debounce } from '@/utils/decorators'
 import { findDownward, reactSet } from '@/utils/vue'
 
 import './style.scss'
+
+const deepAssign = merge
 
 type IGenericAction<A, T> = (arg1?: A) => Promise<T>
 
@@ -99,12 +101,14 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     // ignore list property, and fixup empty string ('') as undefined
     const s1 = force
       ? state
-      : deepAssign(
-          {},
-          s0,
-          state,
-          (r, s, k) => k === 'list' && s !== '' ?  s : undefined
-        )
+      : Object.keys(state).reduce((p, k) => {
+          const v = get(state, k)
+          // deep merge by whitelist
+          p[k] = (isObject(v) && ['query', 'pager', '$xargs'].includes(k))
+            ? deepAssign({}, p[k], v)
+            : v
+          return p
+        }, { ...s0 })
 
     reactSet(s0, s1)
   }
