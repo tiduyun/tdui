@@ -51,7 +51,7 @@ interface SelectParams extends Kv {
   clearable?: boolean;
 }
 
-interface TreeCheckArgs<K, D> {
+interface TreeCheckEventArgs<K, D> {
   checkedNodes: D[]; // @see element-ui/packages/tree/store/getCheckedNodes()
   checkedKeys: K[];
   halfCheckedNodes: D[];
@@ -160,18 +160,10 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   @Watch('value')
   watchValue (val: any, oldVal: any) {
-    if (!valueEquals(this.ids, val)) {
-      this.ids = ensureArray(val)
-    }
-    if (!valueEquals(val, oldVal)) {
-      this.dispatch('ElFormItem', 'el.form.change', val)
-    }
-  }
-
-  @Watch('ids')
-  watchIds (v: K[]) {
-    if (v !== undefined) {
-      this.setTreeCheckedKeys(v)
+    const ids = ensureArray(val)
+    if (!valueEquals(this.ids, ids)) {
+      this.ids = ids
+      this.emitModel()
     }
   }
 
@@ -202,6 +194,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       this.ids = (this.defaultFirstOption && data.length)
         ? [data[0]![props.value]]
         : ensureArray(this.value)
+      this.emitModel()
     })
   }
 
@@ -293,7 +286,9 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.$emit('search', this.keywords)
   }
 
-  // Set tree checked items by ids
+  /**
+   * Update select label view and sync tree checked items
+   */
   setTreeCheckedKeys (keys: K[]) {
     const el = this.$tree
     if (!el) {
@@ -301,6 +296,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     }
 
     const { multiple } = this.params.select
+
     if (keys.length === 0 || this.data.length === 0) {
       this.labels = multiple ? [] : ''
       if (multiple) {
@@ -308,20 +304,25 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       } else {
         el.setCurrentKey(null)
       }
-      return
-    }
-
-    if (multiple) {
-      el.setCheckedKeys(keys)
-      this.labels = el.getCheckedNodes().map(d => d[this.propsLabel]) || []
-      this.updatePopper()
     } else {
-      el.setCurrentKey(keys[0])
-      const node = el.store.getCurrentNode()
-      const current = node ? node.data : null
-      this.labels = current ? current[this.propsLabel] : ''
-      this.emitModel(node)
+      if (multiple) {
+        el.setCheckedKeys(keys)
+        this.labels = el.getCheckedNodes().map(d => d[this.propsLabel]) || []
+      } else {
+        const key = keys[0]
+        if (el.getCurrentKey() !== key) {
+          el.setCurrentKey(key)
+        }
+        const node = this.getCurrentNode()
+        const current = node ? node.data : null
+        this.labels = current ? current[this.propsLabel] : ''
+      }
     }
+  }
+
+  getCurrentNode (): TreeNode<K, D> | null {
+    const tree = this.$tree
+    return tree && tree.store.getCurrentNode() || null
   }
 
   updatePopper () {
@@ -334,10 +335,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     return data[this.propsLabel].indexOf(value) !== -1
   }
 
-  handleTreeNodeClick (
-    data: D,
-    node: TreeNode<K, D>, vm: ElTree<K, D>
-  ) {
+  handleTreeNodeClick (data: D, node: TreeNode<K, D>, vm: ElTree<K, D>) {
     const { multiple } = this.params.select
     const { clickParent } = this.params.tree
     const { propsValue, propsChildren, propsDisabled } = this
@@ -346,41 +344,38 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       return
     }
 
+    let ids: K[] = []
+
     if (node.checked) {
       const value = data[this.propsValue]
-      this.ids = this.ids.filter(id => id !== value)
+      ids = this.ids.filter(id => id !== value)
     } else if (!multiple) {
       if (!clickParent) {
         const children = data[propsChildren]
         if (!children || children.length === 0) {
-          this.ids = [data[propsValue]]
+          ids = [data[propsValue]]
           this.visible = false
         } else {
           return
         }
       } else {
-        this.ids = [data[propsValue]]
+        ids = [data[propsValue]]
         this.visible = false
       }
     } else {
-      this.ids.push(data[propsValue])
+      ids.push(data[propsValue])
     }
 
+    this.ids = ids
     this.emitModel(node)
     this.$emit('node-click', data, node, vm)
   }
 
-  handleTreeCheck (
-    data: D,
-    args: TreeCheckArgs<K, D>
-  ) {
-    this.ids = []
-
+  handleTreeCheck (data: D, args: TreeCheckEventArgs<K, D>) {
     const { propsValue } = this
-    args.checkedNodes.forEach(n => this.ids.push(n[propsValue]))
-
+    this.ids = args.checkedNodes.reduce((ids, n) => (ids.push(n[propsValue]), ids), [] as K[])
     this.$emit('check', data, args)
-    this.emitModel(args)
+    this.emitModel()
   }
 
   handleTreeCurrentChange (data: D | null, node: TreeNode<K, D>) {
@@ -410,12 +405,12 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.$tree.setCheckedKeys(this.ids)
     this.$emit('removeTag', this.ids, tag)
 
-    this.emitModel({})
+    this.emitModel()
   }
 
   handleSelectClear () {
     this.ids = []
-    this.emitModel(null)
+    this.emitModel()
     this.$emit('clear')
   }
 
@@ -424,14 +419,17 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   // submit current checked values(s), trigger v-model and sync events
-  emitModel (args: TreeCheckArgs<K, D> | TreeNode<K, D> | {} | null) {
+  emitModel (node?: TreeNode<K, D>) {
     const { multiple } = this.params.select
     const v = multiple ? this.ids : this.ids.length > 0 ? this.ids[0] : undefined
-    this.$emit('input', v)
     if (!valueEquals(this.value, v)) {
+      this.setTreeCheckedKeys(this.ids)
+      this.$emit('input', v)
       this.$emit('change', v)
+      this.$emit('select-node', node || this.getCurrentNode())
+      this.dispatch('ElFormItem', 'el.form.change', v)
     }
-    this.$emit('select-node', args)
+
     this.updatePopper()
   }
 
@@ -443,8 +441,9 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   syncPopperUI () {
+    this.state.width = this.$select.$el.getBoundingClientRect().width
     this.nextTick(() => {
-      this.state.width = this.$select.$el.getBoundingClientRect().width
+      this.updatePopper()
     })
   }
 
@@ -459,7 +458,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   /** API: update tree data */
   setTreeData (data: D[]): void {
     this.data = data
-    setTimeout(() => this.setTreeCheckedKeys(this.ids), 300)
+    this.nextTick(() => this.setTreeCheckedKeys(this.ids))
   }
 
   /** API: filter tree */
