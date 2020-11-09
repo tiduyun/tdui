@@ -5,6 +5,7 @@
  */
 
 import Vue, { CreateElement, RenderContext, VNode } from 'vue'
+import { ScopedSlot } from 'vue/types/vnode'
 
 import { hasOwn, isArray } from '@tdio/utils'
 
@@ -76,27 +77,51 @@ export function composeFilter (filters: Array<ComposeFilterOption | any>) {
   return (v: any) => fns.reduce((r, [f, args]) => f(r, ...args), v)
 }
 
-type FunctionalComponentRender<T> = (this: RenderContext<T>, h: CreateElement, props: T) => VNode
+export type FunctionalComponentRenderContext<Props> = Kv & Props & {
+  // ref VNodeData
+  attrs: Kv;
+  props: Props;
+  domProps?: Kv;
+  slot?: string;
+  scopedSlots?: Kv<ScopedSlot | undefined>;
+  staticClass?: string;
+  class?: any;
+  staticStyle?: Kv;
+  style?: string | object[] | object;
+  hook?: Kv<Function>;
+  on?: Kv<Function | Function[]>;
+  nativeOn?: Kv<Function | Function[]>;
+}
+
+export type FunctionalComponentRender<Props> = (
+  this: RenderContext<Props>,
+  h: CreateElement,
+  ctx: FunctionalComponentRenderContext<Props>
+) => VNode
 
 /**
  * Helper for create functional vue component by a plain render function
  *
- * @param {Function} A plain vue render function. with args of the props, @see <FunctionalComponentRender>
+ * @param {Function} A plain vue render function. with context of the props, @see <FunctionalComponentRender>, <FunctionalComponentRenderContext>
  */
 export const functionalComponent = <Props = Kv> (render: FunctionalComponentRender<Props>) => ({
   inheritAttrs: false,
   functional: true,
-  render (h: CreateElement, ctx: RenderContext<Props>) {
-    const props = {
-      ...ctx.data, // { on, attrs, staticClass }
-      ...ctx.props
+  render (h: CreateElement, context: RenderContext<Props>) {
+    const { data, listeners, props, children, scopedSlots } = context
+    const ctx: FunctionalComponentRenderContext<Props> = {
+      ...data, // { on, attrs, staticClass, model }
+      ...props,
+      attrs: data.attrs || {},
+      props
     }
-    return render.apply({
-      $slots: ctx.children,
-      $scopedSlots: ctx.scopedSlots,
-      $listeners: ctx.listeners,
-      ...ctx
-    }, [h, props])
+    const scope = {
+      $slots: children,
+      $scopedSlots: scopedSlots,
+      $listeners: listeners,
+      ...context
+    }
+    return render.call(scope, h, ctx)
   }
 })
 
