@@ -5,7 +5,7 @@ import { get } from '@tdio/utils'
 
 import { ViewLoader } from '../Spiner'
 
-import { ITabComponent } from '../../../types/common'
+import { ITabComponent } from '../../types/common'
 
 @Component
 export class Tabs extends Vue {

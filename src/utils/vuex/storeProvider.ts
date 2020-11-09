@@ -2,6 +2,8 @@ import Vue, { VueConstructor } from 'vue'
 import { Module, Store } from 'vuex'
 
 import { isArray } from '@tdio/utils'
+
+import { VueClass } from '../../types/common'
 import { IModule, StoreProvideItem, StoreProvideOption, VuexStoreImpl } from './types'
 
 const isStore = (v: any): boolean => ['state', 'actions', 'mutations', 'getters'].some(k => v[k])

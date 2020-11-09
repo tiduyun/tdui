@@ -6,6 +6,7 @@
 
 import { isArray, isFunction } from '@tdio/utils'
 import Vue from 'vue'
+import { VueClass } from '../types/common'
 
 declare module 'vue/types/vue' {
   interface Vue {

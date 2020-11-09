@@ -7,7 +7,7 @@
     "noUnusedParameters": true
   },
   "include": [
-    "../../types/*.d.ts",
+    "../types/*.d.ts",
     "./**/*.ts"
   ]
 }

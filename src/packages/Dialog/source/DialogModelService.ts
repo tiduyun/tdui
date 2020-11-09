@@ -2,7 +2,7 @@ import Vue from 'vue'
 
 import { deepClone, isEmpty, isFunction, isString, noop } from '@tdio/utils'
 
-import { IValidateRuleObject } from '../../../../types/validate'
+import { IValidateRuleObject } from '../../../types/validate'
 
 type IGenericAction<A, T> = (arg1: A) => Promise<T>
 

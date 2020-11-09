@@ -27,7 +27,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "removeComments": true,
-    "typeRoots": ["../node_modules/@types", "../types"],
+    "typeRoots": ["../node_modules/@types", "./types"],
     "types" : ["node"],
     "baseUrl": "./",
     "paths": {
@@ -41,7 +41,7 @@
   },
   "compileOnSave": true,
   "include": [
-    "../types/*.d.ts",
+    "./types/*.d.ts",
     "./*.tsx",
     "./**/*.ts"
   ],

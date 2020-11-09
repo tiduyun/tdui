@@ -7,7 +7,7 @@ import { get, isArray, isEmpty, isFunction, pick, template } from '@tdio/utils'
 import { TooltipOptions } from '@/utils/normalize'
 import { findDownward, findUpward, isVNode } from '@/utils/vue'
 
-import { IValidateRuleItem, IValidateRuleObject } from '../../../types/validate'
+import { IValidateRuleItem, IValidateRuleObject } from '../../types/validate'
 
 import { Popover, PopoverOptions } from '../Box'
 import { Icon } from '../Icon'

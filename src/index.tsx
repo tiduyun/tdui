@@ -1,3 +1,6 @@
+import './types/tsx'
+import './types/vue'
+
 // basic
 export * from './packages/Icon'
 export * from './packages/Text'

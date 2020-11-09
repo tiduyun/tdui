@@ -6,7 +6,7 @@ import { isValue } from '@tdio/utils'
 
 import { extractTooltip } from '@/utils/normalize'
 
-import { IOption } from '../../../types/common'
+import { IOption } from '../../types/common'
 import { Icon } from '../Icon'
 
 import AbsSelectView from './AbsSelectView'

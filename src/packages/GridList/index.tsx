@@ -6,6 +6,8 @@ import { assign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, i
 import { debounce } from '@/utils/decorators'
 import { findDownward, reactSet } from '@/utils/vue'
 
+import { Nullable } from '../../types/common'
+
 import './style.scss'
 
 const deepAssign = merge

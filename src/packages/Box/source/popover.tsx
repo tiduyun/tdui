@@ -8,7 +8,7 @@ import { findDownward } from '@/utils/vue'
 import { off, on } from '@tdio/dom-utils'
 import { $t } from '@tdio/locale'
 
-import { IValidateRuleObject } from '../../../../types/validate'
+import { IValidateRuleObject } from '../../../types/validate'
 
 import { Button } from '../../Button'
 

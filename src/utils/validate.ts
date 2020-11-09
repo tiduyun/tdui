@@ -2,7 +2,7 @@ import {
   get, hasOwn, isEmpty, isFunction, isObject, isValue, set
 } from '@tdio/utils'
 
-import { IValidateRuleItem } from '../../types/validate'
+import { IValidateRuleItem } from '../types/validate'
 
 export type IValidatePredicate = (v: any) => boolean
 

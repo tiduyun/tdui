@@ -15,6 +15,8 @@ declare module 'vue/types/options' {
   type ScopedSlotChildren = VNode[] | VNode | undefined
 
   interface ComponentOptions<V extends Vue> {
+    [propName: string]: any;
+    ref?: string;
     scopedSlots?: Kv<NormalizedScopedSlot>;
   }
 }

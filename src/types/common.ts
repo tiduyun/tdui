@@ -1,6 +1,8 @@
-/// <reference types="@tdio/utils" />
-
 import Vue from 'vue'
+
+export type Nil = null | undefined
+export type Nullable<T> = T | null
+export type VueClass<V> = (new (...args: any[]) => V & Vue) & typeof Vue
 
 export interface IOption<T = any> extends Kv {
   label: string;
