@@ -93,18 +93,16 @@ export type FunctionalComponentRenderContext<Props> = Kv & Props & {
   nativeOn?: Kv<Function | Function[]>;
 }
 
-export type FunctionalComponentRender<Props> = (
-  this: RenderContext<Props>,
-  h: CreateElement,
-  ctx: FunctionalComponentRenderContext<Props>
-) => VNode
+type T1<Props> = (this: RenderContext<Props>, ctx: FunctionalComponentRenderContext<Props>) => VNode
+type T2<Props> = (this: RenderContext<Props>, h: CreateElement, ctx: FunctionalComponentRenderContext<Props>) => VNode
+type FunctionalComponentRender<Props> = T1<Props> | T2<Props>
 
 /**
  * Helper for create functional vue component by a plain render function
  *
  * @param {Function} A plain vue render function. with context of the props, @see <FunctionalComponentRender>, <FunctionalComponentRenderContext>
  */
-export const functionalComponent = <Props = Kv> (render: FunctionalComponentRender<Props>) => ({
+export const functionalComponent = <Props> (render: FunctionalComponentRender<Props>) => ({
   inheritAttrs: false,
   functional: true,
   render (h: CreateElement, context: RenderContext<Props>) {
@@ -121,7 +119,7 @@ export const functionalComponent = <Props = Kv> (render: FunctionalComponentRend
       $listeners: listeners,
       ...context
     }
-    return render.call(scope, h, ctx)
+    return (render as T2<Props>).call(scope, h, ctx)
   }
 })
 

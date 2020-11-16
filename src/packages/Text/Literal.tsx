@@ -6,7 +6,7 @@ export default class Literal extends Vue {
   @Prop({ type: String, default: '' })
   text!: string
 
-  render (h: CreateElement) {
+  render () {
     return (this.text)
   }
 }

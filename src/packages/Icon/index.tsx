@@ -52,7 +52,7 @@ export class Icon extends Vue {
   @Prop({ type: [Object, String], default: null })
   tooltip!: Kv | string | null
 
-  render (h: CreateElement) {
+  render () {
     const {
       light,
       active,

@@ -10,7 +10,7 @@ import AbsSelectView from './AbsSelectView'
   components: { ButtonGroupInter, Button }
 })
 export default class ButtonGroup extends Mixins(AbsSelectView) {
-  render (h: CreateElement) {
+  render () {
     return (
       <ButtonGroupInter value={this.currentValue} props={this.$attrs} onInput={this.handleSelect}>
         {

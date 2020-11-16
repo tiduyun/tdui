@@ -100,7 +100,7 @@ export class EnumTag extends Vue {
   @Prop()
   uiSpec!: Kv<StatefulUISpec | string> | StatefulUISpecReducer
 
-  render (h: CreateElement) {
+  render () {
     const {
       enumRef, value, enumPattern, $attrs
     } = this

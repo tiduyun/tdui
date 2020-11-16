@@ -67,7 +67,7 @@ export default class EditableText extends Vue {
   @Prop({ type: Function, default: () => {} })
   onSubmit!: (prop: string, value: string) => Promise<any>
 
-  render (h: CreateElement) {
+  render () {
     const {
       value,
       editable,

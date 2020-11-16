@@ -32,7 +32,7 @@ export class ViewLoader extends Vue {
     })
   }
 
-  render (h: CreateElement) {
+  render () {
     const {
       isLoading,
       $slots: {

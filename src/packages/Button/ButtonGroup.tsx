@@ -180,7 +180,7 @@ export default class ButtonGroup extends Vue {
     this.initComponents()
   }
 
-  render (h: CreateElement) {
+  render () {
     const $slots = this.$slots
     return (
       <div class={this.classes}>

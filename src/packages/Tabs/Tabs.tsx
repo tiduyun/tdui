@@ -51,7 +51,7 @@ export class Tabs extends Vue {
     this.defaultTab = this.value || get(this, 'tabs[0].name') || ''
   }
 
-  render (h: CreateElement) {
+  render () {
     const props = (tab: ITabComponent) => ({
       is: tab.impl,
       props: this.compProps(tab.name)

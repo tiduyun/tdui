@@ -104,7 +104,7 @@ class MixinSelect extends Vue {
     })
   }
 
-  render (h: CreateElement) {
+  render () {
     const { $slots, $scopedSlots } = this
     const {
       value,

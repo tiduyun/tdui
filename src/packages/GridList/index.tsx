@@ -167,7 +167,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     this.debounceLoad()
   }
 
-  render (h: CreateElement) {
+  render () {
     const {
       storeState: state,
       $scopedSlots: {

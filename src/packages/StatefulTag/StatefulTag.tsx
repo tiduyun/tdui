@@ -76,7 +76,7 @@ export class StatefulTag extends Vue {
   @Prop({ type: String, default: 'small' })
   size!: 'medium' | 'small' | 'mini'
 
-  renderBadge (h: CreateElement, tooltip: boolean) {
+  renderBadge (tooltip: boolean) {
     const {
       theme, variant, text, border, showIcon, showText, disabled, size
     } = this
@@ -106,7 +106,7 @@ export class StatefulTag extends Vue {
     )
   }
 
-  render (h: CreateElement) {
+  render () {
     const {
       disabled,
       $slots: {
@@ -123,7 +123,7 @@ export class StatefulTag extends Vue {
       : tooltipSlot
     const hasTooltip = !!(tooltipNode || tooltip && tooltip.content)
 
-    const inter = this.renderBadge(h, hasTooltip)
+    const inter = this.renderBadge(hasTooltip)
 
     // Provide tooltip prop configs
     return hasTooltip

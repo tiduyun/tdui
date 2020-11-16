@@ -113,7 +113,7 @@ export default class Button extends Vue {
     })
   }
 
-  render (h: CreateElement) {
+  render () {
     const {
       $slots,
       $attrs,

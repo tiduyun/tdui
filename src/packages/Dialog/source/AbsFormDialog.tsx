@@ -80,7 +80,7 @@ export default class AbsFormDialog extends MixinDialog {
     })
   }
 
-  render (h: CreateElement) {
+  render () {
     const {
       $scopedSlots,
       className,

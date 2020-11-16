@@ -32,7 +32,7 @@ export default class Select extends Mixins(AbsSelectView) {
   @Prop()
   tooltip!: string | {}
 
-  render (h: CreateElement) {
+  render () {
     const { $slots, $scopedSlots, disabled } = this
     const calcDisabled = isValue(disabled) ? disabled : false
 
