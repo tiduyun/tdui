@@ -45,6 +45,15 @@ code {
   /* stylelint-enable */
 }
 
+hr {
+  display: block;
+  height: 1px;
+  border: 0;
+  border-top: 1px solid #e0e4e7;
+  margin: 1em 0;
+  padding: 0;
+}
+
 div:focus { outline: none; }
 
 p,
@@ -68,4 +77,5 @@ li { list-style: none; }
 .block { display: block; }
 
 .hide,
+.hidden,
 [hidden] { display: none; }

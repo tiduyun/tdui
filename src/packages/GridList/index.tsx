@@ -1,16 +1,20 @@
+import { decode as d64, encode as b64 } from '@allex/base64'
+import qs from 'querystring'
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { assign, defaultTo, deferred, DeferredPromise, get, identity, isEmpty, isEqual, isObject, merge, omit, pick, set, unset } from '@tdio/utils'
+import {
+  assign, cleanup, debounce, deepClone, defaultTo, deferred, DeferredPromise, get, guid, hasOwn, identity, isEmpty,
+  isEqual, isObject, merge, omit, pick, set, unset
+} from '@tdio/utils'
 
-import { debounce } from '@/utils/decorators'
+import { debounce as Debounce } from '@/utils/decorators'
+import { createState, IStateService } from '@/utils/state-factory'
 import { findDownward, reactSet } from '@/utils/vue'
 
 import { Nullable } from '../../types/common'
 
 import './style.scss'
-
-const deepAssign = merge
 
 type IGenericAction<A, T> = (arg1?: A) => Promise<T>
 
@@ -21,11 +25,11 @@ interface IQuery extends Kv {}
 interface IPagination {
   page: number;
   size: number;
-  total: number;
+  total?: number;
 }
 
 // Data list api params
-interface IListParams <Q extends IQuery = IQuery> extends Kv {
+interface IListParams <Q extends IQuery = IQuery> {
   query: Q;
   pager?: Nullable<IPagination>;
 
@@ -33,36 +37,87 @@ interface IListParams <Q extends IQuery = IQuery> extends Kv {
   $xargs?: Nullable<{
     silent?: boolean;
     loading?: boolean;
+    seqId?: string;
   }>;
 
   lastLoadTime?: number;
 }
 
 // This interface for store list type data that with pagination info
-interface IListResult<T, Q> extends IListParams<Q> {
+interface IListResult<Q, T> extends IListParams<Q> {
   list: T[];
 }
-
-type Ds<Q, T> = IListResult<T, Q> | T[]
 
 interface ReloadOptions {
   enable: boolean;
   interval: number;
 }
 
+interface PrimaryState<Q = IQuery> {
+  query: Q;
+  pager?: Nullable<IPagination>;
+}
+
+interface SetStateOpts {
+  force?: boolean;
+}
+
 const { setTimeout, clearTimeout } = window
-const newPager = (page: number = 1, size: number = 10) => ({ page, size })
+
+const parseQuery = (query: string): Kv => {
+  const res: Kv = {}
+
+  query = query.trim().replace(/^(\?|#|&)/, '')
+  if (!query) {
+    return res
+  }
+
+  return qs.decode(query)
+}
+
+const diff = (object: any, base: any): Kv => {
+  return Object.keys(object).reduce((r, k) => {
+    const v = object[k]
+    if (!isEqual(v, base[k])) {
+      r[k] = isObject(v) && isObject(base[k]) ? diff(v, base[k]) : v
+    }
+    return r
+  },
+  {} as Kv)
+}
+
+/**
+ * Return a new reduced object for mutates (optional deep cloned)
+ */
+function updateState <T> (oldState: T, newState: Partial<T>): Partial<T> {
+  return Object.keys(newState).reduce((p: any, k) => {
+    const v = get<{}>(newState, k)
+    // deep copy condition parameters
+    p[k] = (isObject(v) && ['query', 'pager', '$xargs'].includes(k))
+      ? merge({}, p[k], v)
+      : v
+    return p
+  }, { ...oldState })
+}
+
+function assertInitialState (listParams: IListParams) {
+  const keys = Object.keys(listParams)
+  if (keys.indexOf('list') !== -1) {
+    console.error('Invalid `initialState` ref, `.list` is reserved. see IListParams for more details')
+    unset(listParams, 'list')
+  }
+}
 
 @Component
-export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
+export class GridList <Q extends IQuery = IQuery,  T = any> extends Vue {
   @Prop({ type: Function, required: true })
-  storeLoadList!: IGenericAction<IListParams<Q>, Ds<Q, T>>
+  storeLoadList!: IGenericAction<IListParams<Q>, IListResult<Q, T>>
 
   @Prop({ type: [Object, Array], default: () => ({}) })
   storeState!: any
 
   @Prop({ type: Object })
-  initialState!: IListResult<Q, T>
+  initialState!: IListParams<Q>
 
   @Prop({ type: Boolean, default: true })
   showPagination!: boolean
@@ -85,48 +140,92 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   @Prop({ type: Boolean, default: true })
   clearSelectionOnLoad!: boolean
 
-  debounceRef!: [
+  /**
+   * Set true to enable sync url state plugin
+   */
+  @Prop(Boolean)
+  syncUrlState!: boolean
+
+  /**
+   * Query state identify key name. (used for sync state plugin)
+   */
+  @Prop({ type: String, default: '_sts' })
+  queryStateKey!: string
+
+  private debounceRef!: [
     number,
-    Partial<IListParams<Q>>,
-    DeferredPromise<Ds<Q, T>>
+    IListParams<Q>,
+    DeferredPromise<IListResult<Q, T>>
   ] | null
+
+  // state store
+  private st!: IStateService<IListResult<Q, T>>
+
+  // cache the initialize PST
+  private initPST!: PrimaryState<Q>
+
+  // cache the last PST
+  private lastPST!: PrimaryState<Q>
 
   /* Api for element-ui/pagination implements */
   get internalPageCount (): number {
-    const { pager = {} } = this.storeState
+    const pager = this.st.get('pager') || {}
     return Math.ceil(get(pager, 'total', 0)! / get(pager, 'size', 10)!)
   }
 
-  setState (state: Partial<IListParams<Kv> | { pager: Nullable<Partial<IPagination>>; }>, force?: boolean) {
-    const s0 = this.storeState
-
-    // ignore list property, and fixup empty string ('') as undefined
-    const s1 = force
-      ? state
-      : Object.keys(state).reduce((p, k) => {
-          const v = get(state, k)
-          // deep merge by whitelist
-          p[k] = (isObject(v) && ['query', 'pager', '$xargs'].includes(k))
-            ? deepAssign({}, p[k], v)
-            : v
-          return p
-        }, { ...s0 })
-
-    reactSet(s0, s1)
+  /**
+   * Cherry pick primary state.
+   *
+   * @return Returns a copy of the state
+   */
+  getPST (): PrimaryState<Q> {
+    const { query, pager } = deepClone(this.st.pick(['query', 'pager']))
+    if (pager) {
+      unset(pager, 'total')
+    }
+    return { query, pager }
   }
 
   created () {
-    // set initialize state optionally
-    const initialState = deepAssign({
-      query: {},
-      pager: newPager(),
-      list: [],
-      $xargs: {
-        loading: false
-      }
-    }, this.initialState)
+    // init state store
+    this.st = createState<IListResult<Q, T>>(this.storeState, {
+      reducer: updateState
+    })
 
-    this.setState(initialState)
+    this.$on('hook:beforeDestroy', () => {
+      this.st.destroy()
+    })
+
+    const initialState = this.initialState
+    if (initialState) {
+      // verify `initialState`
+      assertInitialState(initialState)
+    }
+
+    // assign initialize state with defaults
+    const initial: IListResult<Q, T> = merge(
+      {
+        query: {},
+        pager: null,
+        list: [],
+        $xargs: {
+          loading: false
+        }
+      },
+      initialState
+    )
+    if (this.showPagination) {
+      initial.pager = { page: 1, size: 10, ...initial.pager }
+    }
+    this.st.hmset(initial)
+
+    // cache the initial state
+    this.initPST = this.getPST()
+
+    // init sync state plugin
+    if (this.syncUrlState) {
+      this._initStateSync()
+    }
 
     if (this.loadOnCreated) {
       this._load()
@@ -136,7 +235,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     this._setupLoadDaemon()
   }
 
-  load (params: Partial<IListParams<Q>> = {}, opts: { debounce ?: number; } = {}): Promise<Ds<Q, T>> {
+  load (params: Partial<IListParams<Q>> = {}, opts: { debounce?: number; } = {}): Promise<IListResult<Q, T>> {
     return this._load(params, opts).finally(() => {
       if (this.clearSelectionOnLoad) {
         // try to clear table selections when call load manually
@@ -153,23 +252,25 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
   }
 
   onSizeChange (size: number) {
-    this.setState({ pager: { size } })
+    this.st.set('pager.size', size)
     this.debounceLoad()
   }
 
   onPageChange (page: number) {
-    this.setState({ pager: { page } })
+    this.st.set('pager.page', page)
     this.debounceLoad()
   }
 
   onSortChange ({ column, prop, order }: any) {
-    this.setState({ query: { sortProp: prop, sortOrder: order } })
+    const sortOrder = order || undefined
+    const sortProp = sortOrder ? prop : undefined
+    this.st.set('query', { sortProp, sortOrder })
     this.debounceLoad()
   }
 
   render () {
+    const state = this.st.get<IListResult<Q, T>>()!
     const {
-      storeState: state,
       $scopedSlots: {
         default: defaultSlot,
         form: formSlot,
@@ -198,7 +299,7 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
                       pageSize={!isEmpty(pageSizes) ? state.pager.size : Math.max(10, ~~(state.pager.size / 5) * 5)}
                       pageSizes={defaultTo(pageSizes, [10, 15, 20, 30], (o) => !isEmpty(o))}
                       currentPage={state.pager.page}
-                      on={{ 'update:currentPage': (e: number) => state.pager.page = e }}
+                      on={{ 'update:currentPage': (e: number) => state.pager!.page = e }}
                       on-size-change={this.onSizeChange}
                       on-current-change={this.onPageChange}
                     />
@@ -211,16 +312,23 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
     )
   }
 
-  @debounce(100)
-  private debounceLoad (params?: Partial<IListParams<Q>>): void {
-    this._load(params)
+  @Debounce(100)
+  private debounceLoad (): void {
+    this._load()
   }
 
-  private _load (params: Partial<IListParams<Q>> = {}, opts: { debounce ?: number; } = {}): Promise<Ds<Q, T>> {
-    // Internal core load with debounce featured
-
-    const state = this.storeState
+  /**
+   * Internal load with debounce supports
+   * @private
+   */
+  private _load (params: Partial<IListParams<Q>> = {}, opts: { debounce?: number; } = {}): Promise<IListResult<Q, T>> {
     const debounce = opts.debounce || 0
+    const pst = this.getPST()
+
+    const merged: IListParams<Q> = merge({}, pst, params)
+    if (!this.showPagination) {
+      merged.pager = undefined
+    }
 
     // debounce controller
     if (debounce > 0) {
@@ -228,77 +336,105 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       if (ref) {
         if (ref[0]) {
           clearTimeout(ref[0])
-          ref[1] = params
+          ref[1] = merged
         } else {
-          const isModified = ['query', 'pager'].some(k => !isEqual(state[k], deepAssign({}, state[k], params[k])))
+          const isModified = !isEqual(this.lastPST, pst)
           return !isModified
             ? ref[2]
-            : ref[2].then(() => this._load(params, opts))
+            : ref[2].finally(() => this._load(params, opts))
         }
       }
 
-      const defer = deferred<Ds<Q, T>>()
-      defer.then(() => this.debounceRef = null)
+      const defer = deferred<IListResult<Q, T>>()
+      defer.finally(() => this.debounceRef = null)
 
       const timer = setTimeout(() => {
         const ref = this.debounceRef!
         ref[0] = 0
-        this._requestData(ref[1]).then(defer.resolve, defer.reject)
+        this._fetchApi(ref[1]).then(defer.resolve, defer.reject)
       }, debounce)
 
-      this.debounceRef = [timer, params, defer]
+      this.debounceRef = [timer, merged, defer]
       return defer
     }
 
-    return this._requestData(params)
+    return this._fetchApi(merged)
   }
 
-  private _requestData (params: Partial<IListParams<Q>>): Promise<Ds<Q, T>> {
-    const state = this.storeState
+  private _fetchApi (params: IListParams<Q>): Promise<IListResult<Q, T>> {
+    const state = this.st
 
-    let apiParams = pick(state, ['query']) as IListParams<Q>
-    apiParams.pager = this.showPagination ? state.pager : null
+    params = params && deepClone(params) || {}
+
+    // set `pager` property for standard api spec
+    if (!this.showPagination) {
+      unset(params, 'pager')
+    } else {
+      params.pager = {
+        ...state.get<IPagination>('pager'),
+        ...params.pager!
+      }
+    }
 
     // apply chain query
-    const hoist: Q = { ...state.query }
-    apiParams.query = this.chainQuery(hoist) || hoist
+    const hoist: Q = { ...params.query }
+    params.query = defaultTo(this.chainQuery(hoist), hoist, v => v !== undefined)
 
     // override with explicit parameters, and apply to reducer
-    apiParams = this.paramsReduce(deepAssign(apiParams, params))
+    params = this.paramsReduce(params)
 
-    this.setState({
-      $xargs: {
-        ...get(params, '$xargs'),
-        loading: true
-      }
-    })
+    // sequences id, used for api sequence valid
+    let isRequestValid = true
+    const seqId = guid()
 
-    const p0 = apiParams.pager!
-    const arg0 = pick(apiParams, ['query'])
+    // write query state
+    state
+      .hmset(params, true)
+      .set('$xargs', { loading: true, seqId })
 
-    return this.storeLoadList(apiParams)
-      .then(
-        (ret) => {
-          const p1 = get<IPagination>(ret, 'pager')
+    this.lastPST = this.getPST()
+    this.$emit('beforeLoad', params)
 
-          // fixup pagination if response w/o pager info
-          if (p0 && !p1 && get(ret, 'list')) set(ret, 'pager', p0)
-
-          // patches page number mismatch with backend response
-          let total = 0
-          if (p0 && p1 && (total = p1.total)) {
-            const { page, size } = p1
-            const rpage = Math.ceil(total / size)
-            if (p0.page > rpage) {
-              return this._requestData({ ...params, pager: { ...p0, page: rpage } })
-            }
-          }
-
-          this.setState({ ...omit(ret, ['query']) })
-          return ret
+    return this.storeLoadList(params)
+      .then(res => {
+        // verify checksum
+        isRequestValid = state.get('$xargs.seqId') === seqId
+        if (!isRequestValid) {
+          throw new Error('Invalid parallel request (aborted)')
         }
-      ).finally(() => {
-        this.setState({ ...arg0, $xargs: null, lastLoadTime: Date.now() })
+
+        const p0: IPagination | undefined = get(params, 'pager')
+        const p1: IPagination | undefined = get(res, 'pager')
+
+        // fixup pagination if response w/o pager info
+        if (p0 && !p1 && get(res, 'list')) set(res, 'pager', p0)
+
+        // patches page number mismatch with backend response
+        let total = 0
+        if (p0 && p1 && (total = p1.total!)) {
+          const { page, size } = p1
+          const rpage = Math.ceil(total / size)
+          if (p0.page > rpage) {
+            // retry for last page
+            return this._fetchApi({
+              ...params,
+              pager: { ...p0, page: rpage }
+            })
+          }
+        }
+
+        if (res.pager) {
+          params.pager = res.pager
+        }
+
+        return state
+          .hmset({ ...omit(res, ['query']), ...params })
+          .get<IListResult<Q, T>>()!
+      })
+      .finally(() => {
+        if (isRequestValid) {
+          state.hmset({ $xargs: null, lastLoadTime: Date.now() })
+        }
       })
   }
 
@@ -316,10 +452,11 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       return ret
     })(this.autoReload)
 
-    if (reloadOptions.enable) {
-      let timer = 0
-      const interval = reloadOptions.interval
+    const { enable, interval } = reloadOptions
 
+    if (enable) {
+      // throttle implemention, prevent load trigger frequently
+      let timer = 0
       const run = () => {
         if (timer === -1) { // destroyed
           return
@@ -327,19 +464,18 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
         if (timer) {
           clearTimeout(timer)
         }
+
         timer = setTimeout(() => {
-          const state = this.storeState
-          const lastLoadTime = state.lastLoadTime
-          if (
-            get(state, '$xargs.loading') ||
-            (lastLoadTime && Date.now() - lastLoadTime < interval)
-          ) {
-            // add to next process if loading
+          const state = this.st
+          const isLoading = state.get('$xargs.loading')
+          const lastLoadTime = state.get<number>('lastLoadTime')
+          if (isLoading || (lastLoadTime && Date.now() - lastLoadTime < interval)) {
+            // waiting next
             run()
           } else {
             // silent mode to prevent spiner
             this._load({ $xargs: { silent: true } }).finally(() => {
-              unset(state, '$xargs.silent')
+              state.del('$xargs.silent')
               run()
             })
           }
@@ -354,4 +490,70 @@ export class GridList <Q extends IQuery = IQuery, T = any> extends Vue {
       })
     }
   }
+
+  /**
+   * Install state query sync plugin
+   */
+  private _initStateSync () {
+    const loc = location
+
+    const deserializeState = (qs: string): PrimaryState<Q> | null => {
+      const s: string | undefined = get(parseQuery(qs), this.queryStateKey)
+      if (s) {
+        try {
+          return JSON.parse(d64(s))
+        } catch (e) {
+          console.error('Parse query state error', e)
+        }
+      }
+      return null
+    }
+
+    // build patches and serialize
+    const serializeState = (pst: PrimaryState): string =>
+      b64(JSON.stringify(diff(pst, this.initPST)))
+
+    const qsKey = this.queryStateKey
+    const sts = deserializeState(loc.search)
+    if (sts) {
+      this.st.hmset(sts)
+    }
+
+    // catch last PST key
+    let lastQs: string | undefined
+
+    this.$on('beforeLoad', (params: IListParams<Q>) => {
+      if (this._isDestroyed || get(params, '$xargs.silent')) {
+        return
+      }
+
+      const newQs = serializeState(this.lastPST)
+
+      // prevent construct-load phase when `loadOnCreated` is `true`
+      if (lastQs === undefined && this.loadOnCreated) {
+        lastQs = newQs
+      }
+
+      if (lastQs !== newQs) {
+        lastQs = newQs
+        const currQs = parseQuery(loc.search)
+        this.$router[currQs[qsKey] != null ? 'replace' : 'push']({ query: { ...currQs, [qsKey]: newQs } })
+      }
+    })
+
+    const unwatch = this.$watch('$route', (to: { path: string; query: Kv; }) => {
+      if (lastQs === to.query[qsKey]) {
+        return
+      }
+
+      // restore initial if no query state
+      const sts = deserializeState(loc.search) || this.initPST!
+
+      lastQs = serializeState(sts)
+      this._fetchApi(sts)
+    })
+
+    this.$once('hook:beforeDestroy', () => { unwatch() })
+  }
+
 }

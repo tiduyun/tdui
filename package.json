@@ -14,7 +14,7 @@
     "lint": "yarn lint:ts && yarn lint:style",
     "lint:fix": "yarn lint:ts --fix && yarn lint:style --fix",
     "test": "jest --coverage --passWithNoTests",
-    "build": "(test -n \"$CI\" || yarn lint) && (tsc -p src/utils/ && rb -c && cp -rf src/styles lib/)",
+    "build": "(test -n \"$CI\" || yarn lint) && (tsc -p src/utils/ >/dev/null && rb -c && cp -rf src/styles lib/)",
     "prepare": "test -n \"$CI\" || yarn build",
     "prerelease": "standard-version --release-as patch --prerelease --skip.changelog=true"
   },
@@ -24,6 +24,7 @@
     "@tdio/dom-utils": "^1.0.0",
     "@tdio/locale": "^1.0.0",
     "@tdio/utils": "^1 || next",
+    "querystring": "^0.2.0",
     "resize-observer-polyfill": "^1.5.1"
   },
   "peerDependencies": {
