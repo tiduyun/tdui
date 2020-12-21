@@ -1,4 +1,4 @@
-import { isObject, pick } from '@tdio/utils'
+import { cleanup, isObject, pick } from '@tdio/utils'
 
 export type PopoverPlacement = 'top' | 'top-start' | 'top-end' | 'bottom' | 'bottom-start' | 'bottom-end' | 'left' | 'left-start' | 'left-end' | 'right' | 'right-start' | 'right-end'
 
@@ -43,13 +43,6 @@ export interface TooltipOptions {
   /** Tooltip tabindex */
   tabindex?: number;
 }
-
-const cleanup = <T extends Kv> (o: T): Partial<T> => Object.keys(o).reduce((r, k) => {
-  if (o[k] != null) {
-    r[k] = o[k]
-  }
-  return r
-}, {} as T)
 
 export const extractTooltip = (props: Kv): TooltipOptions | null => {
   const tooltipProp = props.tooltip
