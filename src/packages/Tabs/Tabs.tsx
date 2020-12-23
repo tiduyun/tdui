@@ -56,8 +56,12 @@ export class Tabs extends Vue {
       is: tab.impl,
       props: this.compProps(tab.name)
     })
+    const {
+      click,
+      ...$listeners
+    } = this.$listeners
     return (
-      <el-tabs v-model={this.activeTab}>
+      <el-tabs v-model={this.activeTab} on={$listeners}>
         {
           this.tabs.map(t => {
             return (
