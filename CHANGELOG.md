@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.1.2...1.2.0) (2020-12-30)
+
+
+### Features
+
+* **GridList:** add grid state sync with router query ([18eb6fa](https://git.tiduyun.com/f2e-modules/tdui/commit/18eb6face94264e9023e5c73d7d97832bc2f4eda))
+
+
+### Bug Fixes
+
+* **Tabs:** forward tabs events ([8f0783b](https://git.tiduyun.com/f2e-modules/tdui/commit/8f0783bcecaa710a9e433efe4efe8c81c24cb180))
+* **TreeSelect:** improve and prevent emit model duplicate ([ace356f](https://git.tiduyun.com/f2e-modules/tdui/commit/ace356fc7b4f344ed842d0add8ab10f2f463950f))
+
 ### [1.1.2](https://git.tiduyun.com/f2e-modules/tdui/compare/1.1.2-dev.1...1.1.2) (2020-11-03)
 
 
