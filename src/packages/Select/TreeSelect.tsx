@@ -29,6 +29,8 @@ declare module 'element-ui/types/popover' {
   }
 }
 
+type Many<T> = T | ReadonlyArray<T>
+
 interface ITreeData extends TreeData {
 }
 
@@ -73,11 +75,8 @@ const getVuePropDefault = (o: Vue, prop: string) => {
 @Emittable
 export default class TreeSelect <K = string | number, D extends ITreeData = ITreeData> extends Vue {
 
-  get popperClass () {
-    return ['el-tree-select-popper', 'el-select-dropdown', this.disabled ? 'disabled' : ''].filter(Boolean).join(' ')
-  }
-  @Prop({ type: [Number, String, Array], default: '' })
-  value!: any
+  @Prop({ default: undefined })
+  value!: Many<string | number>
 
   @Prop({ type: String, default: 'bottom' })
   placement!: string
@@ -233,13 +232,15 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     }
     treeProps.defaultExpandedKeys = ensureArray(this.ids)
 
+    const popperClass = ['el-tree-select-popper', 'el-select-dropdown', this.disabled ? 'disabled' : ''].filter(Boolean).join(' ')
+
     return (
       <div class="el-tree-select" style={{ ...this.styles, width: normalizeCssWidth(this.width) }}>
         <el-popover
           ref="popover"
           v-model={this.visible}
           placement={this.placement}
-          popperClass={this.popperClass}
+          popperClass={popperClass}
           width={this.state.width}
           trigger="click"
         >
