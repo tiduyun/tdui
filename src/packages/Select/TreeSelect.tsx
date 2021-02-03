@@ -214,7 +214,8 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       filterable: false,
       disabled: this.disabled,
       popperClass: 'select-option',
-      popperAppendToBody: false
+      popperAppendToBody: false,
+      hideOnClickOutside: false
     }
 
     const treeProps = {
@@ -242,7 +243,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
           placement={this.placement}
           popperClass={popperClass}
           width={this.state.width}
-          trigger="click"
+          trigger="manual"
         >
           <el-select
             slot="reference"
@@ -252,7 +253,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
             accordion={this.accordion}
             class="el-tree-select-input"
             on-clear={this.handleSelectClear}
-            on-focus={this.handleSelectFocus}
+            on-visible-change={this.togglePopper}
             on-remove-tag={this.handleSelectRemoveTag}
           />
           {
@@ -326,10 +327,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     return tree && tree.store.getCurrentNode() || null
   }
 
-  updatePopper () {
-    this.$popover.updatePopper()
-  }
-
   // @see element-ui/types/tree#ElTree.filterNodeMethod
   filterNodeMethod (value: string, data: D, node: TreeNode<K, D>): boolean {
     if (!value) return true
@@ -355,13 +352,13 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
         const children = data[propsChildren]
         if (!children || children.length === 0) {
           ids = [data[propsValue]]
-          this.visible = false
+          this.hidePopper()
         } else {
           return
         }
       } else {
         ids = [data[propsValue]]
-        this.visible = false
+        this.hidePopper()
       }
     } else {
       ids.push(data[propsValue])
@@ -415,8 +412,28 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.$emit('clear')
   }
 
-  handleSelectFocus (e: Event) {
+  updatePopper () {
+    this.$popover.updatePopper()
+  }
+
+  hidePopper (trigger: boolean = true) {
+    this.visible = false
+    if (trigger) {
+      this.$select.toggleMenu()
+    }
+  }
+
+  showPopper () {
     this.syncPopperUI()
+    this.visible = true
+  }
+
+  togglePopper (visible: boolean) {
+    if (visible) {
+      this.showPopper()
+    } else {
+      this.hidePopper(false)
+    }
   }
 
   // submit current checked values(s), trigger v-model and sync events
@@ -430,8 +447,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       this.$emit('select-node', node || this.getCurrentNode())
       this.dispatch('ElFormItem', 'el.form.change', v)
     }
-
-    this.updatePopper()
   }
 
   nextTick (fn: () => void) {
@@ -443,16 +458,13 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   syncPopperUI () {
     this.state.width = this.$select.$el.getBoundingClientRect().width
-    this.nextTick(() => {
-      this.updatePopper()
-    })
   }
 
   popoverHideFun (e: Event) {
     const sender = e.target as Element
     const isInter = [this.$el, ...Object.values((this.$refs as any) as Vue[]).map(o => o.$el)].some(c => contains(c, sender))
-    if (!isInter) {
-      this.visible = false
+    if (!isInter && this.visible) {
+      this.hidePopper()
     }
   }
 
