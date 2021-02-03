@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.2.1](https://git.tiduyun.com/f2e-modules/tdui/compare/1.2.0...1.2.1) (2021-02-03)
+
+
+### Bug Fixes
+
+* **element-ui/patches:** override select stuff variables ([ed0679a](https://git.tiduyun.com/f2e-modules/tdui/commit/ed0679ab8df7a8c1f462a8aee522a8e3dcc17066))
+* **TreeSelect:** bump spec of v-model defaults to undefined ([38cf314](https://git.tiduyun.com/f2e-modules/tdui/commit/38cf31462e9a6a434e1084216eeae9121bd9170f))
+
 ## [1.2.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.1.2...1.2.0) (2020-12-30)
 
 
