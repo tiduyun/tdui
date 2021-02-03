@@ -494,14 +494,6 @@ $menu-item-height: 40px !default;
   }
 }
 
-.el-select {
-  &-dropdown {
-    &__empty { color: #ccc; }
-    // select selected
-    &__item.selected { color: $color-highlight; }
-  }
-}
-
 .el-select-dropdown__item,
 .el-autocomplete-suggestion li {
   padding: 0 10px;

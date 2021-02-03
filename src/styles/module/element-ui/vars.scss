@@ -17,7 +17,7 @@ $--color-warning: $color-warning;
 $--color-danger: $color-danger;
 
 $--color-text-secondary: $color-info;
-$--color-text-placeholder: $color-text-placeholder;
+$--color-text-placeholder: $color-text-placeholder; // will be applied to input-placeholder
 
 $--fill-base: $--color-white;
 $--link-color: $v-link-color;
@@ -63,6 +63,10 @@ $--pagination-active-color: $v-link-hover-color;
 
 /* dropdown */
 $--dropdown-menuItem-hover-color: $v-link-hover-color;
+
+/* select */
+$--select-option-selected-font-color: $color-highlight !default;
+$--select-dropdown-empty-color: $disabled-color-base !default;
 
 /* tooltip */
 $--tooltip-color: $color-white !default;
