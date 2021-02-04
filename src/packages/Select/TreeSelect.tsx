@@ -4,7 +4,7 @@ import { ElTree, TreeData, TreeNode } from 'element-ui/types/tree'
 import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
 import { $t } from '@tdio/locale'
-import { deepAssign, get, isArray, isValue, unset, valueEquals } from '@tdio/utils'
+import { deepAssign, get, isArray, isValue, noop, unset, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 import { contains, off, on } from '@tdio/dom-utils'
@@ -131,9 +131,8 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   data: any[] = []
   keywords: string = ''
-  labels: string | string[] = '' // cache all of the option label text
+  labels: string | string[] = '' // aspect for fake select v-model bindings
   ids: K[] = [] // selected option id list (indexes)
-  selectNodes: any[] = [] // selected entity list
   visible: boolean = false // popover v-model
 
   params: {
@@ -161,8 +160,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   watchValue (val: any, oldVal: any) {
     const ids = ensureArray(val)
     if (!valueEquals(this.ids, ids)) {
-      this.ids = ids
-      this.emitModel()
+      this.emitModel(ids)
     }
   }
 
@@ -188,25 +186,27 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.data = data.length > 0 ? [...data] : []
 
     this.nextTick(() => {
+      this.ids = []
       this.labels = multiple ? [] : ''
-      // optional select the first item
-      this.ids = (this.defaultFirstOption && data.length)
-        ? [data[0]![props.value]]
-        : ensureArray(this.value)
-      this.emitModel()
+
+      if (data.length > 0) {
+        // initial the checked item and sync fake select label text
+        // optional select the first item
+        const ids = (this.defaultFirstOption && data.length)
+          ? [data[0]![props.value]]
+          : ensureArray(this.value)
+
+        this.emitModel(ids)
+      }
     })
   }
 
   mounted () {
     this.syncPopperUI()
-    this.nextTick(() => { on(document, 'mouseup', this.popoverHideFun) })
+    this.nextTick(() => this.initClickOutside())
   }
 
-  beforeDestroy () {
-    off(document, 'mouseup', this.popoverHideFun)
-  }
-
-  render (h: any) {
+  render () {
     const selectProps = {
       width: this.width,
       placeholder: $t('Select...'),
@@ -309,15 +309,14 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     } else {
       if (multiple) {
         el.setCheckedKeys(keys)
-        this.labels = el.getCheckedNodes().map(d => d[this.propsLabel]) || []
+        this.labels = this.parseTextModel(el.getCheckedNodes())
       } else {
         const key = keys[0]
         if (el.getCurrentKey() !== key) {
           el.setCurrentKey(key)
         }
         const node = this.getCurrentNode()
-        const current = node ? node.data : null
-        this.labels = current ? current[this.propsLabel] : ''
+        this.labels = this.parseTextModel(node ? node.data : null)
       }
     }
   }
@@ -343,7 +342,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     }
 
     let ids: K[] = []
-
     if (node.checked) {
       const value = data[this.propsValue]
       ids = this.ids.filter(id => id !== value)
@@ -364,16 +362,15 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       ids.push(data[propsValue])
     }
 
-    this.ids = ids
-    this.emitModel(node)
+    this.emitModel(ids)
     this.$emit('node-click', data, node, vm)
   }
 
   handleTreeCheck (data: D, args: TreeCheckEventArgs<K, D>) {
     const { propsValue } = this
-    this.ids = args.checkedNodes.reduce((ids, n) => (ids.push(n[propsValue]), ids), [] as K[])
+    const ids = args.checkedNodes.reduce((ids, n) => (ids.push(n[propsValue]), ids), [] as K[])
     this.$emit('check', data, args)
-    this.emitModel()
+    this.emitModel(ids)
   }
 
   handleTreeCurrentChange (data: D | null, node: TreeNode<K, D>) {
@@ -384,6 +381,9 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   handleSelectRemoveTag (tag: string) {
     const { data, propsValue, propsLabel, propsChildren } = this
 
+    // remaining indexes
+    let ids = this.ids
+
     const iterate = (d: D) => {
       let children = []
       if (d[propsChildren] && d[propsChildren].length > 0) {
@@ -391,7 +391,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       }
       if (d[propsLabel] === tag) {
         const value = d[propsValue]
-        this.ids = this.ids.filter(id => id !== value)
+        ids = ids.filter(id => id !== value)
       }
       if (children.length) {
         children.forEach(iterate)
@@ -400,15 +400,14 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
     data.forEach(iterate)
 
-    this.$tree.setCheckedKeys(this.ids)
-    this.$emit('removeTag', this.ids, tag)
+    this.$tree.setCheckedKeys(ids)
+    this.$emit('removeTag', tag, ids)
 
-    this.emitModel()
+    this.emitModel(ids)
   }
 
   handleSelectClear () {
-    this.ids = []
-    this.emitModel()
+    this.emitModel([])
     this.$emit('clear')
   }
 
@@ -421,11 +420,13 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     if (trigger) {
       this.$select.toggleMenu()
     }
+    this.$emit('collapse')
   }
 
   showPopper () {
     this.syncPopperUI()
     this.visible = true
+    this.$emit('expand')
   }
 
   togglePopper (visible: boolean) {
@@ -437,14 +438,18 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   // submit current checked values(s), trigger v-model and sync events
-  emitModel (node?: TreeNode<K, D>) {
+  emitModel (indexes: K[]) {
+    if (!valueEquals(this.ids, indexes)) {
+      this.ids = indexes
+      this.setTreeCheckedKeys(indexes)
+    }
+
     const { multiple } = this.params.select
-    const v = multiple ? this.ids : this.ids.length > 0 ? this.ids[0] : undefined
+    const v = multiple ? indexes : indexes.length > 0 ? indexes[0] : undefined
     if (!valueEquals(this.value, v)) {
-      this.setTreeCheckedKeys(this.ids)
       this.$emit('input', v)
       this.$emit('change', v)
-      this.$emit('select-node', node || this.getCurrentNode())
+      this.$emit('select-node', this.getCurrentNode())
       this.dispatch('ElFormItem', 'el.form.change', v)
     }
   }
@@ -460,14 +465,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     this.state.width = this.$select.$el.getBoundingClientRect().width
   }
 
-  popoverHideFun (e: Event) {
-    const sender = e.target as Element
-    const isInter = [this.$el, ...Object.values((this.$refs as any) as Vue[]).map(o => o.$el)].some(c => contains(c, sender))
-    if (!isInter && this.visible) {
-      this.hidePopper()
-    }
-  }
-
   /** API: update tree data */
   setTreeData (data: D[]): void {
     this.data = data
@@ -477,5 +474,41 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   /** API: filter tree */
   filterTree (val: any): void {
     this.$tree.filter(val)
+  }
+
+  private initClickOutside () {
+    const handleClick = (e: Event) => {
+      const sender = e.target as Element
+      const isInter = [this.$el, ...Object.values((this.$refs as any) as Vue[]).map(o => o.$el)].some(c => contains(c, sender))
+      if (!isInter && this.visible) {
+        this.hidePopper()
+      }
+    }
+
+    const releaseEvents = ['collapse', 'hook:beforeDestroy']
+    let teardown = noop
+
+    // bind out side click handle lazy
+    this.$on('expand', () => {
+      teardown()
+
+      teardown = () => {
+        off(document, 'mouseup', handleClick)
+        this.$off(releaseEvents, teardown)
+        teardown = noop
+      }
+
+      on(document, 'mouseup', handleClick)
+      this.$once(releaseEvents, teardown)
+    })
+  }
+
+  private parseTextModel (entity: D | D[] | null) {
+    const multiple = this.params.select.multiple
+    const { propsLabel } = this
+    const getLabel = (o: D): string => o && get(o, propsLabel) || ''
+    return !multiple
+      ? entity && getLabel(entity as D) || ''
+      : ((entity || []) as D[]).map(getLabel)
   }
 }
