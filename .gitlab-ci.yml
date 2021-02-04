@@ -2,17 +2,19 @@ cache:
   paths:
     - node_modules/
 
+variables:
+  NODE_ENV: 'production'
+  DEVTOOL: 'source-map'
+
 before_script:
   - npm config get registry
   - yarn --production=false
 
 stages:
  - build
+ - release
 
 deployment:
-  variables:
-    NODE_ENV: 'production'
-    DEVTOOL: 'source-map'
   tags:
     - development
   script:
@@ -23,3 +25,13 @@ deployment:
   only:
     - branches
     - triggers
+
+release:
+  tags:
+    - development
+  script:
+    - yarn build
+    - git release-npm -t next -f
+  stage: release
+  only:
+    - tags
