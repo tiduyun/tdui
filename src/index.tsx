@@ -6,6 +6,7 @@ export * from './packages/Icon'
 export * from './packages/Text'
 export * from './packages/Button'
 export * from './packages/Select'
+export * from './packages/Draggable'
 
 // enhances
 export * from './packages/Box'
