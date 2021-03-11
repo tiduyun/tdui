@@ -1,13 +1,13 @@
 // @flow
-import { isEmpty, pick } from '@tdio/utils'
+import { pick } from '@tdio/utils'
 import { CreateElement } from 'vue'
 import { Component, Mixins } from 'vue-property-decorator'
-import {addEvent, addUserSelectStyles, getTouchIdentifier, matchesSelectorAndParentsTo, removeEvent,
-        removeUserSelectStyles} from './utils/domFns'
+import { addEvent, addUserSelectStyles, getTouchIdentifier, matchesSelectorAndParentsTo, removeEvent,
+        removeUserSelectStyles } from './utils/domFns'
+import log from './utils/log'
 import { PropsMixins } from './utils/mixins'
-import {createCoreData, getControlPosition, snapToGrid} from './utils/positionFns'
-// import log from './utils/log';
-import type {DraggableEventHandler, MouseTouchEvent} from './utils/types'
+import { createCoreData, getControlPosition, snapToGrid } from './utils/positionFns'
+import { DraggableEventHandler, MouseTouchEvent } from './utils/types'
 
 // Simple abstraction for dragging events names.
 const eventsFor = {
@@ -79,9 +79,18 @@ export class DraggableCore extends Mixins(PropsMixins) {
   mounted () {
     this.isMounted = true
     // Touch handlers must be added with {passive: false} to be cancelable.
-    // https://developers.google.com/web/updates/2017/01/scrolling-intervention
     const thisNode = this.findDOMNode()
     if (thisNode) {
+      // Reuse the child provided
+      // This makes it flexible to use whatever element is wanted (div, ul, etc)
+      const ElSlots: HTMLElement = this.$slots!.default?.[0].elm as HTMLElement
+      // Note: mouseMove handler is attached to document so it will still function
+      // when the user drags quickly and leaves the bounds of the element.
+      ElSlots.addEventListener(eventsFor.mouse.start, this.onMoueDown as EventListener, false)
+      ElSlots.addEventListener(eventsFor.mouse.stop, this.onMouseUp as EventListener, false)
+      // onTouchStart is added on `mounted` so they can be added with
+      // {passive: false}, which allows it to cancel. See
+      ElSlots.addEventListener(eventsFor.touch.stop, this.onTouchEnd as EventListener, false)
       addEvent(thisNode, eventsFor.touch.start, this.onTouchStart, {passive: false})
     }
   }
@@ -105,8 +114,6 @@ export class DraggableCore extends Mixins(PropsMixins) {
   // React Strict Mode compatibility: if `nodeRef` is passed, we will use it instead of trying to find
   // the underlying DOM node ourselves. See the README for more information.
   findDOMNode (): HTMLElement {
-    // return this.props.nodeRef ? this.props.nodeRef.current : ReactDOM.findDOMNode(this)
-    /* tslint:disable: no-console */
     return (this.$el.querySelector('[node-ref="nodeRef"]') || this.$el) as HTMLElement
   }
 
@@ -150,10 +157,10 @@ export class DraggableCore extends Mixins(PropsMixins) {
     // Create an event object with all the data parents need to make a decision here.
     const coreEvent = createCoreData(this, x, y)
 
-    // log('DraggableCore: handleDragStart: %j', coreEvent);
+    log('DraggableCore: handleDragStart: %j', coreEvent)
 
     // Call event handler. If it returns explicit false, cancel.
-    // log('calling', this.props.fnStart);
+    log('calling', this.props.fnStart)
     const shouldUpdate = this.props.fnStart(e, coreEvent)
     if (shouldUpdate === false || this.isMounted === false) return
 
@@ -177,6 +184,7 @@ export class DraggableCore extends Mixins(PropsMixins) {
     addEvent(ownerDocument, dragEventFor.stop, this.handleDragStop)
     return
   }
+
   handleDrag (e: MouseTouchEvent) {
 
     // Get the current drag point from the event. This is used as the offset.
@@ -194,7 +202,7 @@ export class DraggableCore extends Mixins(PropsMixins) {
 
     const coreEvent = createCoreData(this, x, y)
 
-    // log('DraggableCore: handleDrag: %j', coreEvent);
+    log('DraggableCore: handleDrag: %j', coreEvent)
 
     // Call event handler. If it returns explicit false, trigger end.
     const shouldUpdate = this.props.fnDrag(e, coreEvent)
@@ -218,6 +226,7 @@ export class DraggableCore extends Mixins(PropsMixins) {
       lastY: y
     })
   }
+
   // EventHandler<MouseTouchEvent>
   handleDragStop (e: MouseTouchEvent) {
     if (!this.state.dragging) return
@@ -237,7 +246,7 @@ export class DraggableCore extends Mixins(PropsMixins) {
       if (this.props.enableUserSelectHack) removeUserSelectStyles(thisNode.ownerDocument)
     }
 
-    // log('DraggableCore: handleDragStop: %j', coreEvent);
+    log('DraggableCore: handleDragStop: %j', coreEvent)
 
     // Reset the el.
     this.setState({
@@ -248,14 +257,14 @@ export class DraggableCore extends Mixins(PropsMixins) {
 
     if (thisNode) {
       // Remove event handlers
-      // log('DraggableCore: Removing handlers');
+      log('DraggableCore: Removing handlers')
       removeEvent(thisNode.ownerDocument, dragEventFor.move, this.handleDrag)
       removeEvent(thisNode.ownerDocument, dragEventFor.stop, this.handleDragStop)
     }
     return
   }
 
-  mouseDown (e: MouseTouchEvent) {
+  onMoueDown (e: MouseTouchEvent) {
     dragEventFor = eventsFor.mouse // on touchscreen laptops we could switch back to mouse
     return this.handleDragStart(e)
   }
@@ -275,26 +284,10 @@ export class DraggableCore extends Mixins(PropsMixins) {
   onTouchEnd (e: MouseTouchEvent) {
     // We're on a touch device now, so change the event handlers
     dragEventFor = eventsFor.touch
-
     return this.handleDragStop(e)
   }
   render (h: CreateElement) {
     // Reuse the child provided
-    this.$nextTick(() => {
-      if (this.$slots.default) {
-        // Reuse the child provided
-        // This makes it flexible to use whatever element is wanted (div, ul, etc)
-        const ElSlots: HTMLElement = this.$slots.default[0].elm as HTMLElement
-        // Note: mouseMove handler is attached to document so it will still function
-        // when the user drags quickly and leaves the bounds of the element.
-        ElSlots.addEventListener('mousedown', this.mouseDown as EventListener, false)
-        ElSlots.addEventListener('mouseup', this.onMouseUp as EventListener, false)
-        // onTouchStart is added on `mounted` so they can be added with
-        // {passive: false}, which allows it to cancel. See
-        ElSlots.addEventListener('touchend', this.onTouchEnd as EventListener, false)
-      }
-    })
-
     return this.$slots.default
   }
 

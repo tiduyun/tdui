@@ -1,7 +1,7 @@
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 
-import type {DraggableData, DraggableEventHandler} from './types'
+import { DraggableData, DraggableEventHandler } from './types'
 
 export const defaultDraggableEventHandler = (e: MouseEvent, data: DraggableData): void | boolean => true
 
@@ -91,6 +91,7 @@ export class PropsMixins extends Vue {
    */
   @Prop({ ...VueTypes.string, default: null })
   cancel!: string
+
   /**
    * Called when dragging starts.
    * If this function returns the boolean false, dragging will be canceled.

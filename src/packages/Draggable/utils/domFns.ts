@@ -1,8 +1,8 @@
 // @flow
 import browserPrefix, {browserPrefixToKey} from './getPrefix'
-import {findInArray, int, isFunction} from './shims'
+import { findInArray, int, isFunction } from './shims'
 
-import type {ControlPosition, MouseTouchEvent, PositionOffsetControlPosition} from './types'
+import { ControlPosition, MouseTouchEvent, PositionOffsetControlPosition } from './types'
 
 let matchesSelectorFunc = ''
 export function matchesSelector (el: Node, selector: string): boolean {

@@ -1,10 +1,10 @@
 // @flow
-import {getTouch, innerHeight, innerWidth, offsetXYFromParent, outerHeight, outerWidth} from './domFns'
-import {int, isNum} from './shims'
+import { getTouch, innerHeight, innerWidth, offsetXYFromParent, outerHeight, outerWidth } from './domFns'
+import { int, isNum } from './shims'
 
-import type { Draggable } from '../Draggable'
+import { Draggable } from '../Draggable'
 import { DraggableCore } from '../DraggableCore'
-import type {Bounds, ControlPosition, DraggableData, MouseTouchEvent} from './types'
+import { Bounds, ControlPosition, DraggableData, MouseTouchEvent } from './types'
 
 export function getBoundPosition (draggable: Draggable, x: number, y: number): [number, number] {
   // If no bounds, short-circuit and move on

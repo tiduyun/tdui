@@ -26,4 +26,3 @@ export class TouchEvent2 extends TouchEvent {
 }
 
 export type MouseTouchEvent = MouseEvent & TouchEvent2
-
