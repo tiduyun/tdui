@@ -5,12 +5,12 @@ import { CreateElement, VNode } from 'vue'
 import { Component, Mixins, Prop } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 import { DraggableCore } from './DraggableCore'
-import type {ControlPosition, DraggableCoreProps, PositionOffsetControlPosition} from './DraggableCore'
-import {createCSSTransform, createSVGTransform} from './utils/domFns'
+import { ControlPosition, DraggableCoreProps, PositionOffsetControlPosition } from './DraggableCore'
+import { createCSSTransform, createSVGTransform } from './utils/domFns'
+import log from './utils/log'
 import { PropsMixins } from './utils/mixins'
-// import log from './utils/log'
-import {canDragX, canDragY, createDraggableData, getBoundPosition} from './utils/positionFns'
-import type {Bounds, DraggableData} from './utils/types'
+import { canDragX, canDragY, createDraggableData, getBoundPosition } from './utils/positionFns'
+import { Bounds, DraggableData } from './utils/types'
 
 interface DraggableState {
   dragging: boolean,
@@ -64,7 +64,7 @@ export class Draggable extends Mixins(PropsMixins) {
         position.x !== prevPropsPosition.x || position.y !== prevPropsPosition.y
       )
     ) {
-      // log('Draggable: getDerivedStateFromProps %j', {position, prevPropsPosition})
+      log('Draggable: getDerivedStateFromProps %j', {position, prevPropsPosition})
       return {
         x: position.x,
         y: position.y,
@@ -73,6 +73,7 @@ export class Draggable extends Mixins(PropsMixins) {
     }
     return null
   }
+
   /**
    * `axis` determines which axis the draggable can move.
    *
@@ -88,6 +89,7 @@ export class Draggable extends Mixins(PropsMixins) {
    */
   @Prop({ ...VueTypes.oneOf(['both', 'x', 'y', 'none']), default: 'both' })
   axis!: 'both' | 'x' | 'y' | 'none'
+
   /**
    * `bounds` determines the range of movement available to the element.
    * Available values are:
@@ -187,8 +189,6 @@ export class Draggable extends Mixins(PropsMixins) {
   }), default: null })
   position!: PositionOffsetControlPosition
 
-
-// class Draggable extends React.Component<DraggableProps, DraggableState> {
   state = {
     // Whether or not we are currently dragging.
     dragging: false,
@@ -212,7 +212,7 @@ export class Draggable extends Mixins(PropsMixins) {
   created () {
     const { props } = this
     if (props.position && !(props.fnDrag || props.fnStop)) {
-        /* tslint:disable: no-console */
+      /* tslint:disable: no-console */
       console.warn('A `position` was applied to this <Draggable>, without drag handlers. This will make this ' +
         'component effectively undraggable. Please attach `fnDrag` or `fnStop` handlers so you can adjust the ' +
         '`position` of this element.')
@@ -233,12 +233,11 @@ export class Draggable extends Mixins(PropsMixins) {
   // React Strict Mode compatibility: if `nodeRef` is passed, we will use it instead of trying to find
   // the underlying DOM node ourselves. See the README for more information.
   findDOMNode (): HTMLElement {
-    /* tslint:disable: no-console */
     return (this.$el.querySelector('[node-ref="nodeRef"]') || this.$el) as HTMLElement
   }
 
   onDragStart (e: MouseEvent, coreData: DraggableData) {
-    // log('Draggable: onDragStart: %j', coreData)
+    log('Draggable: onDragStart: %j', coreData)
 
     // Short-circuit if user's callback killed it.
     const shouldStart = this.props.fnStart(e, createDraggableData(this, coreData))
@@ -251,7 +250,7 @@ export class Draggable extends Mixins(PropsMixins) {
   // DraggableEventHandler
   onDrag (e: MouseEvent, coreData: DraggableData) {
     if (!this.state.dragging) return false
-    // log('Draggable: fnDrag: %j', coreData)
+    log('Draggable: fnDrag: %j', coreData)
 
     const uiData = createDraggableData(this, coreData)
 
@@ -303,7 +302,7 @@ export class Draggable extends Mixins(PropsMixins) {
     const shouldContinue = this.props.fnStop(e, createDraggableData(this, coreData))
     if (shouldContinue === false) return false
 
-    // log('Draggable: onDragStop: %j', coreData)
+    log('Draggable: onDragStop: %j', coreData)
 
     const newState: any = {
       dragging: false,
@@ -389,7 +388,7 @@ export class Draggable extends Mixins(PropsMixins) {
     // This makes it flexible to use whatever element is wanted (div, ul, etc)
     return (
       <DraggableCore props={{...draggableCoreProps, fnStart: this.onDragStart, fnDrag: this.onDrag, fnStop: this.onDragStop}}>
-          { this.$slots.default }
+        { this.$slots.default }
       </DraggableCore>
     )
   }

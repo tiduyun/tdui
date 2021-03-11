@@ -1,5 +1,7 @@
 import VueTypes, { VueTypeDef } from 'vue-types'
+
 type ValidatorFunction<T> = (value: T) => boolean
+
 // @flow
 export function findInArray (array: any[] | TouchList, callback: Function): any {
   for (let i = 0, length = array.length; i < length; i++) {
