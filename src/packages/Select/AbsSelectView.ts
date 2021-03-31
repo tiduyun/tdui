@@ -57,6 +57,7 @@ export default class AbsSelectView extends Vue {
   setSelectedValue (val: T | undefined) {
     const v = normalizeValue(val)
     const isModified = v !== this.currentValue
+    const dic = this._kvRefs
 
     // tslint:disable-next-line
     if (isModified) {
@@ -74,15 +75,13 @@ export default class AbsSelectView extends Vue {
     // is value changed indeed or initialize lifecycle
     if (isModified || !hasOwn(this, '_currEntity')) {
       // emit entity
-      const dic = this._kvRefs
-      if (dic) {
-        const o = dic[v]
-        const { entity, propValue } = this
-        if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
-          set(this, '_currEntity', o)
-          this.$emit('update:entity', o)
-        }
+      const o = dic[v]
+      const { entity, propValue } = this
+      if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
+        set(this, '_currEntity', o)
+        this.$emit('update:entity', o)
       }
+      this.$emit('entity', o)
     }
   }
 
