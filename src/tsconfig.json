@@ -26,6 +26,7 @@
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
     "sourceMap": true,
+    "skipLibCheck": false,
     "removeComments": true,
     "typeRoots": ["../node_modules/@types", "./types"],
     "types" : ["node"],
