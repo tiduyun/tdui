@@ -61,3 +61,16 @@ export function truncate (s: string, option: ITruncateOption = {}) {
   }
   return truncateStr
 }
+
+export const eventsFor = {
+  touch: {
+    start: 'touchstart',
+    move: 'touchmove',
+    stop: 'touchend'
+  },
+  mouse: {
+    start: 'mousedown',
+    move: 'mousemove',
+    stop: 'mouseup'
+  }
+}
