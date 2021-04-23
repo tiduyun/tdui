@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.0-1](https://git.tiduyun.com/f2e-modules/tdui/compare/1.3.0-0...1.3.0-1) (2021-04-23)
+
+
+### Features
+
+* **rich-text:** add RichText with quick copy (show-copy="true") ([7feb57f](https://git.tiduyun.com/f2e-modules/tdui/commit/7feb57fb92491e2b76fceb3c06138cd929082552))
+
 ## [1.3.0-0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.2.3-0...1.3.0-0) (2021-04-23)
 
 
