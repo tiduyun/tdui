@@ -2,9 +2,10 @@ import { CreateElement, RenderContext, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { truncate } from '@/utils'
-import { isEmpty, isObject, pick } from '@tdio/utils'
+import { doCopy } from '@/utils/copyText'
 
 import { extractTooltip, TooltipOptions } from '@/utils/normalize'
+import { Icon } from '../Icon'
 
 const renderTextWithTooltip = (h: CreateElement, context: RenderContext, text: string, tooltip: TooltipOptions | null) => {
   const textNode = (<span class="v-text" { ...context.data }>{ text }</span>)
@@ -40,6 +41,9 @@ export default class RichText extends Vue {
   @Prop({ type: String, default: 'v-text--tooltip' })
   popperClass!: string
 
+  @Prop({ type: Boolean, default: false })
+  showCopy!: boolean
+
   render (h: CreateElement, context: RenderContext) {
     const { props, slots } = context
 
@@ -53,7 +57,7 @@ export default class RichText extends Vue {
     }
 
     let text = getText()
-    const { isUnicodeLength } = props
+    const { isUnicodeLength, showCopy } = props
     const truncateLength = parseInt(props.truncateLength, 10)
 
     const tooltip = extractTooltip(context.props)
@@ -74,6 +78,14 @@ export default class RichText extends Vue {
       tooltip.content = tip
     }
 
-    return renderTextWithTooltip(h, context, text, tooltip)
+    return <span>
+      {renderTextWithTooltip(h, context, text, tooltip)}
+      {showCopy
+        ? <el-tooltip content="复制" placement="top">
+            <Icon iconName="el-icon-copy-document" class="copyBtn" style="margin-left:4px;" data-clipboard-text={tip} onClick={() => doCopy('.copyBtn')} />
+          </el-tooltip>
+        : null
+      }
+    </span>
   }
 }
