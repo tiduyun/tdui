@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.0-0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.2.3-0...1.3.0-0) (2021-04-23)
+
+
+### Features
+
+* vue-draggable ([6b965b3](https://git.tiduyun.com/f2e-modules/tdui/commit/6b965b39de51547ddcaff4661e3afecf6b16a145))
+* vue-resizable ([1dd0b82](https://git.tiduyun.com/f2e-modules/tdui/commit/1dd0b828c26d4a45e321adc281e3cf952633945b))
+* vue-split-pane ([27f498d](https://git.tiduyun.com/f2e-modules/tdui/commit/27f498d97486dc0263fe9969b396ec3b12e3c97d))
+
+
+### Bug Fixes
+
+* draggableCore 优化& lint fixes ([cad1668](https://git.tiduyun.com/f2e-modules/tdui/commit/cad16682fb0d21670b53b702b2ff9aa9beaeff62))
+
 ### [1.2.2](https://git.tiduyun.com/f2e-modules/tdui/compare/1.2.1...1.2.2) (2021-02-04)
 
 
