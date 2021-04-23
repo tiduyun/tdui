@@ -8,6 +8,7 @@ export * from './packages/Button'
 export * from './packages/Select'
 export * from './packages/Draggable'
 export * from './packages/Resizable'
+export * from './packages/SplitPane'
 
 // enhances
 export * from './packages/Box'
