@@ -21,6 +21,7 @@
   "author": "allex <allex.wxn@gmail.com> (http://iallex.com/)",
   "dependencies": {
     "@allex/base64": "^1.0.2",
+    "@emotion/css": "^11.1.3",
     "@tdio/dom-utils": "^1.0.0",
     "@tdio/locale": "^1.0.0",
     "@tdio/utils": "^1 || next",

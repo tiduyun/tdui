@@ -10,6 +10,7 @@ export * from './packages/Draggable'
 export * from './packages/Resizable'
 export * from './packages/SplitPane'
 export * from './packages/GridLayout'
+export * from './packages/Skeleton'
 
 // enhances
 export * from './packages/Box'
