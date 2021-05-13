@@ -1,7 +1,7 @@
 import { eventsFor } from '@/utils'
 import { pick } from '@tdio/utils'
-import { CreateElement, VNode } from 'vue'
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { VNode } from 'vue'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 
 import Pane from './Pane'
@@ -156,6 +156,15 @@ export default class SplitPane extends Vue {
   @Prop({ ...VueTypes.oneOf(['vertical', 'horizontal']), default: 'vertical' })
   split!: 'vertical' | 'horizontal'
 
+  @Prop({ ...VueTypes.string })
+  paneClassName!: string
+
+  @Prop({ ...VueTypes.string })
+  pane1ClassName!: string
+
+  @Prop({ ...VueTypes.string })
+  pane2ClassName!: string
+
   @Prop({ type: Object, default: () => ({}) })
   paneStyle!: any
 
@@ -167,6 +176,9 @@ export default class SplitPane extends Vue {
 
   @Prop({ type: Object, default: () => ({}) })
   resizerStyle!: any
+
+  @Prop({ type: String, default: '' })
+  resizerClassName!: string
 
   @Prop({ type: Object, default: () => ({}) })
   styles!: any
@@ -220,7 +232,7 @@ export default class SplitPane extends Vue {
   }
 
   mounted () {
-    this.splitPane = (this.$refs.splitPane as Vue).$el
+    this.splitPane = this.$refs.splitPane as Element
     this.pane1 = (this.$refs.pane1 as Vue).$el
     this.pane2 = (this.$refs.pane2 as Vue).$el
     document.addEventListener(eventsFor.mouse.stop, this.onMouseUp)
@@ -367,7 +379,6 @@ export default class SplitPane extends Vue {
       split,
       styles: styleProps,
     } = this.props
-
     const { pane1Size, pane2Size } = this.state
 
     const disabledClass = allowResize ? '' : 'disabled'
@@ -457,6 +468,11 @@ export default class SplitPane extends Vue {
         </Pane>
       </div>
     )
+  }
+
+  @Watch('size')
+  handleVisible (size: number | string) {
+    this.setState(SplitPane.getSizeUpdate(this.props, this.state))
   }
 
   private setState (item: Kv) {
