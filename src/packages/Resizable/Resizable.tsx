@@ -35,6 +35,7 @@ export class Resizable extends Mixins(ResizableProps) {
   }
 
   mounted () {
+    console.log('进入resizable')
     this.$nextTick(() => {
       this.appendSlotsChild()
     })
