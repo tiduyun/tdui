@@ -4,7 +4,7 @@ const ResizeObserver = require('resize-observer-polyfill')
 
 type ObserverNode = Element & {
   __resizeListeners__: EventListener[];
-  __ro__: ResizeObserver;
+  __ro__: any;
 }
 
 /* istanbul ignore next */

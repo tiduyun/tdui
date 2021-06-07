@@ -9,6 +9,7 @@ export * from './packages/Select'
 export * from './packages/Draggable'
 export * from './packages/Resizable'
 export * from './packages/SplitPane'
+export * from './packages/GridLayout'
 
 // enhances
 export * from './packages/Box'
