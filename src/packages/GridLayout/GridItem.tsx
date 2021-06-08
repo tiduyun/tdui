@@ -360,7 +360,7 @@ export default class GridItem extends Vue {
         fnStop={this.onDragStop}
         handle={this.props.handle}
         cancel={
-          '.vue-resizable-handle' +
+          '.v-resizable-handle' +
           (this.props.cancel ? ',' + this.props.cancel : '')
         }
         scale={this.props.transformScale}
@@ -413,7 +413,7 @@ export default class GridItem extends Vue {
         draggableOpts={{
           disabled: !isResizable,
         }}
-        className={isResizable ? undefined : 'vue-resizable-hide'}
+        className={isResizable ? undefined : 'v-resizable-hide'}
         width={position.width}
         height={position.height}
         minConstraints={minConstraints}
@@ -676,11 +676,11 @@ export default class GridItem extends Vue {
     const propClass = this.transformClass(this.props.className)
     const className = classNames(
       merge(curElClass, propClass, {
-        'vue-grid-item': true,
+        'v-grid-item': true,
         static: this.props.static,
         resizing: Boolean(this.state.resizing),
-        'vue-draggable': isDraggable,
-        'vue-draggable-dragging': Boolean(this.state.dragging),
+        'v-draggable': isDraggable,
+        'v-draggable-dragging': Boolean(this.state.dragging),
         dropping: Boolean(droppingPosition),
         cssTransforms: useCSSTransforms
       })

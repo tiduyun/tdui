@@ -148,22 +148,22 @@ export function getTouchIdentifier (e: MouseTouchEvent): number | undefined {
 // Note we're passing `document` b/c we could be iframed
 export function addUserSelectStyles (doc?: Document) {
   if (!doc) return
-  let styleEl = <HTMLStyleElement> doc.getElementById('vue-draggable-style-el')
+  let styleEl = <HTMLStyleElement> doc.getElementById('v-draggable-style-el')
   if (!styleEl) {
     styleEl = doc.createElement('style')
     styleEl.type = 'text/css'
-    styleEl.id = 'vue-draggable-style-el'
-    styleEl.innerHTML = '.vue-draggable-transparent-selection *::-moz-selection {all: inherit;}\n'
-    styleEl.innerHTML += '.vue-draggable-transparent-selection *::selection {all: inherit;}\n'
+    styleEl.id = 'v-draggable-style-el'
+    styleEl.innerHTML = '.v-draggable-transparent-selection *::-moz-selection {all: inherit;}\n'
+    styleEl.innerHTML += '.v-draggable-transparent-selection *::selection {all: inherit;}\n'
     doc.getElementsByTagName('head')[0].appendChild(styleEl)
   }
-  if (doc.body) addClassName(doc.body, 'vue-draggable-transparent-selection')
+  if (doc.body) addClassName(doc.body, 'v-draggable-transparent-selection')
 }
 
 export function removeUserSelectStyles (doc?: Document) {
   if (!doc) return
   try {
-    if (doc.body) removeClassName(doc.body, 'vue-draggable-transparent-selection')
+    if (doc.body) removeClassName(doc.body, 'v-draggable-transparent-selection')
     // $FlowIgnore: IE
     if ((doc as any).selection) {
       // $FlowIgnore: IE

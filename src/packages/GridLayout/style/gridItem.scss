@@ -1,4 +1,4 @@
-.vue-grid-item {
+.v-grid-item {
   transition: all 200ms ease;
   transition-property: left, top;
 
@@ -7,14 +7,14 @@
     user-select: none;
   }
 
-  &.vue-grid-placeholder,
+  &.v-grid-placeholder,
   &.static {
-    .vue-resizable-handle-wrapper {
+    .v-resizable-handle-wrapper {
       display: none;
     }
   }
 
-  &.vue-resizable-hide .vue-resizable-handle-wrapper {
+  &.v-resizable-hide .v-resizable-handle-wrapper {
     display: none;
   }
 
@@ -24,7 +24,7 @@
     opacity: 0.9;
   }
 
-  &.vue-draggable-dragging {
+  &.v-draggable-dragging {
     transition: none;
     z-index: 3;
     will-change: transform;
@@ -34,14 +34,14 @@
     transition-property: transform;
   }
 
-  &.vue-grid-placeholder {
+  &.v-grid-placeholder {
     opacity: 0.4;
     transition-duration: 100ms;
     z-index: 2;
     user-select: none;
   }
 
-  .vue-resizable-handle-wrapper .vue-resizable-handle {
+  .v-resizable-handle-wrapper .v-resizable-handle {
     position: absolute;
     width: 20px;
     height: 20px;
@@ -57,69 +57,69 @@
       border-bottom: 2px solid rgba(0, 0, 0, 0.4);
     }
 
-    &.vue-resizable-handle-sw {
+    &.v-resizable-handle-sw {
       bottom: 0;
       left: 0;
       cursor: sw-resize;
       transform: rotate(90deg);
     }
 
-    &.vue-resizable-handle-se {
+    &.v-resizable-handle-se {
       bottom: 0;
       right: 0;
       cursor: se-resize;
     }
 
-    &.vue-resizable-handle-nw {
+    &.v-resizable-handle-nw {
       top: 0;
       left: 0;
       cursor: nw-resize;
       transform: rotate(180deg);
     }
 
-    &.vue-resizable-handle-ne {
+    &.v-resizable-handle-ne {
       top: 0;
       right: 0;
       cursor: ne-resize;
       transform: rotate(270deg);
     }
 
-    &.vue-resizable-handle-w,
-    &.vue-resizable-handle-e {
+    &.v-resizable-handle-w,
+    &.v-resizable-handle-e {
       top: 50%;
       margin-top: -10px;
       cursor: ew-resize;
     }
 
-    &.vue-resizable-handle-w {
+    &.v-resizable-handle-w {
       left: 0;
       transform: rotate(135deg);
     }
 
-    &.vue-resizable-handle-e {
+    &.v-resizable-handle-e {
       right: 0;
       transform: rotate(315deg);
     }
 
-    &.vue-resizable-handle-n,
-    &.vue-resizable-handle-s {
+    &.v-resizable-handle-n,
+    &.v-resizable-handle-s {
       left: 50%;
       margin-left: -10px;
       cursor: ns-resize;
     }
 
-    &.vue-resizable-handle-n {
+    &.v-resizable-handle-n {
       top: 0;
       transform: rotate(225deg);
     }
 
-    &.vue-resizable-handle-s {
+    &.v-resizable-handle-s {
       bottom: 0;
       transform: rotate(45deg);
     }
   }
 
-  &.vue-resizable-hide > .vue-resizable-handle {
+  &.v-resizable-hide > .v-resizable-handle {
     display: none;
   }
 }
