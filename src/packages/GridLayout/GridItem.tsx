@@ -1,5 +1,5 @@
 // @flow
-import { isEmpty, pick } from '@tdio/utils'
+import { merge, pick } from '@tdio/utils'
 import classNames from 'classnames'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
@@ -24,9 +24,9 @@ import type {
 } from './utils'
 
 import { PositionParams } from './calculateUtils'
+
 // 引入样式
 import type {
-  // ReactRef,
   ResizeHandle,
   ResizeHandleAxis
 } from './GridLayoutPropTypes'
@@ -74,6 +74,7 @@ interface Props {
 
   className: string,
   styles?: Object,
+
   // Draggability
   cancel: string,
   handle: string,
@@ -197,6 +198,7 @@ export default class GridItem extends Vue {
 
   @Prop(VueTypes.func)
   fnResize!: GridItemCallback<GridDragEvent>
+
   // Flags
   @Prop(VueTypes.bool.isRequired)
   isDraggable!: boolean
@@ -209,6 +211,7 @@ export default class GridItem extends Vue {
 
   @Prop(VueTypes.bool)
   static!: boolean
+
   // Use CSS transforms instead of top/left
   @Prop(VueTypes.bool.isRequired)
   useCSSTransforms!: boolean
@@ -218,18 +221,22 @@ export default class GridItem extends Vue {
 
   @Prop(VueTypes.number.def(1))
   transformScale!: number
+
   // Others
   @Prop(VueTypes.string.def(''))
   className!: string
 
   @Prop()
   styles!: CSSStyleDeclaration
+
   // Selector for draggable handle
   @Prop(VueTypes.string.def(''))
   handle!: string
-   // Selector for draggable cancel (see react-draggable)
+
+  // Selector for draggable cancel (see react-draggable)
   @Prop(VueTypes.string.def(''))
   cancel!: string
+
   // Current position of a dropping element
   @Prop(VueTypes.shape({
     e: VueTypes.object.isRequired,
@@ -251,54 +258,7 @@ export default class GridItem extends Vue {
   gridItemClass: string = ''
 
   mounted () {
-    const {
-      x,
-      y,
-      w,
-      h,
-      isDraggable,
-      isResizable,
-      droppingPosition,
-      useCSSTransforms
-    } = this.props
-    const pos = calcGridItemPosition(
-      this.getPositionParams(),
-      x,
-      y,
-      w,
-      h,
-      this.state
-    )
-    // const child = React.Children.only(this.props.children)
-    const child: VNode[] = this.$slots.default || []
-    this.$nextTick(() => {
-      if (!isEmpty(child)) {
-        const ElSlots: HTMLElement = child[0].elm as HTMLElement
-        // // 清除class
-        const className = classNames(
-          this.props.className,
-          ElSlots.className,
-          'vue-grid-item',
-          {
-            static: this.props.static,
-            // resizing: Boolean(this.state.resizing),
-            'vue-draggable': isDraggable,
-            // 'vue-draggable-dragging': Boolean(this.state.dragging),
-            // dropping: Boolean(droppingPosition),
-            cssTransforms: true
-          }
-        )
-        this.gridItemClass = className
-        ElSlots.setAttribute('class', className)
-        // 先清除样式
-        // ElSlots.setAttribute('style', '')
-        // // add multiple css styles
-        Object.assign(ElSlots.style, {
-          ...this.props.styles,
-          ...this.createStyle(pos)
-        })
-      }
-    })
+    this.$nextTick(this.syncUI)
     this.moveDroppingItem({})
   }
 
@@ -308,8 +268,6 @@ export default class GridItem extends Vue {
     const { droppingPosition } = this.props
     if (!droppingPosition) return
     this.$nextTick(() => {
-      // const node = this.elementRef.current
-      // const node = this.$el.querySelectorAll('[node-ref="nodeRef"]')[0]
       const node = this.$el
 
       // Can't find DOM node (are we unmounted?)
@@ -406,7 +364,6 @@ export default class GridItem extends Vue {
           (this.props.cancel ? ',' + this.props.cancel : '')
         }
         scale={this.props.transformScale}
-        // nodeRef={this.elementRef}
         node-ref="nodeRef"
       >
         {child}
@@ -662,9 +619,7 @@ export default class GridItem extends Vue {
       w,
       h,
       isDraggable,
-      isResizable,
-      droppingPosition,
-      useCSSTransforms
+      isResizable
     } = this.props
     const pos = calcGridItemPosition(
       this.getPositionParams(),
@@ -674,24 +629,35 @@ export default class GridItem extends Vue {
       h,
       this.state
     )
-    // const child = React.Children.only(this.props.children)
+
     const child: VNode[] = this.$slots.default || []
+    const newChild: VNode = this.mixinResizable(child[0], pos, isResizable)
 
-    let newChild: VNode = this.mixinResizable(child[0], pos, isResizable)
-
-    newChild = this.mixinDraggable(newChild, isDraggable)
-
-    return newChild
+    return this.mixinDraggable(newChild, isDraggable)
   }
 
   updated () {
+    this.syncUI()
+  }
+
+  transformClass (str: string): Kv {
+    const classArr = str.trim().split(' ')
+    const classItems = classArr.reduce((item: Kv, val) => {
+      if (val) {
+        item[val] = true
+      }
+      return item
+    }, {})
+    return classItems
+  }
+
+  syncUI () {
     const {
       x,
       y,
       w,
       h,
       isDraggable,
-      isResizable,
       droppingPosition,
       useCSSTransforms
     } = this.props
@@ -703,20 +669,21 @@ export default class GridItem extends Vue {
       h,
       this.state
     )
-    // const child = React.Children.only(this.props.children)
     const child: VNode[] = this.$slots.default || []
 
     const ElSlots: HTMLElement = child[0].elm as HTMLElement
-    const elClass = ElSlots.className
-    // 清除class
-    ElSlots.setAttribute('class', '')
+    const curElClass = this.transformClass(ElSlots.className)
+    const propClass = this.transformClass(this.props.className)
     const className = classNames(
-      this.gridItemClass,
-      {
+      merge(curElClass, propClass, {
+        'vue-grid-item': true,
+        static: this.props.static,
         resizing: Boolean(this.state.resizing),
+        'vue-draggable': isDraggable,
         'vue-draggable-dragging': Boolean(this.state.dragging),
         dropping: Boolean(droppingPosition),
-      }
+        cssTransforms: useCSSTransforms
+      })
     )
     ElSlots.setAttribute('class', className)
     Object.assign(ElSlots.style, {

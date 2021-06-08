@@ -15,7 +15,6 @@ import {
   cloneLayoutItem,
   compact,
   compactType,
-  // fastRGLPropsEqual,
   getAllCollisions,
   getLayoutItem,
   moveElement,
@@ -45,17 +44,18 @@ import type { PositionParams } from './calculateUtils'
 interface State {
   activeDrag?: LayoutItem | null,
   layout: Layout,
-  mounted: boolean,
   oldDragItem?: LayoutItem | null,
   oldLayout?: Layout | null,
   oldResizeItem?: LayoutItem | null,
   droppingDOMNode?: VNode | null,
   droppingPosition?: DroppingPosition,
+
   // Mirrored props
   children: VNode[],
   compactType?: CompactType,
   propsLayout?: Layout
 }
+
 // 引入样式
 import './style/gridLayout.scss'
 // import type { DefaultProps, Props } from './GridLayoutPropTypes'
@@ -85,7 +85,6 @@ const GRID_LAYOUT_PROPS_ARR: any[] = [
  */
 @Component
 export class GridLayout extends Vue {
-
   // TODO publish internal ReactClass displayName transform
   static displayName?: string = 'GridLayout'
 
@@ -152,6 +151,7 @@ export class GridLayout extends Vue {
   // Rows have a static height, but you can change this based on breakpoints if you like
   @Prop(VueTypes.number.def(150))
   rowHeight!: number
+
   // Default Infinity, but you can specify a max here if you like.
   // Note that this isn't fully fleshed out and won't error if you specify a layout that
   // extends beyond the row capacity. It will, however, not allow users to drag/resize
@@ -238,7 +238,6 @@ export class GridLayout extends Vue {
   state: State = {
     activeDrag: null,
     layout: [],
-    mounted: false,
     oldDragItem: null,
     oldLayout: null,
     oldResizeItem: null,
@@ -260,13 +259,6 @@ export class GridLayout extends Vue {
         this.props.allowOverlap
       )
     })
-  }
-
-  mounted () {
-    this.setState({ mounted: true })
-    // Possibly call back with layout on mount. This should be done after correcting the layout width
-    // to ensure we don't rerender with the wrong width.
-    // this.onLayoutMaybeChanged(this.state.layout, this.props.value)
   }
 
   /**
@@ -593,7 +585,7 @@ export class GridLayout extends Vue {
       resizeHandles,
       resizeHandle
     } = this.props
-    const { mounted, droppingPosition } = this.state
+    const { droppingPosition } = this.state
 
     // Determine user manipulations possible.
     // If an item is static, it can't be manipulated by default.
@@ -630,8 +622,8 @@ export class GridLayout extends Vue {
         isDraggable={draggable}
         isResizable={resizable}
         isBounded={bounded}
-        useCSSTransforms={useCSSTransforms && mounted}
-        usePercentages={!mounted}
+        useCSSTransforms={useCSSTransforms && this._isMounted}
+        usePercentages={!this._isMounted}
         transformScale={transformScale}
         w={l.w}
         h={l.h}
@@ -784,7 +776,6 @@ export class GridLayout extends Vue {
   }
 
   render (): VNode {
-    // const { className, style, isDroppable, innerRef } = this.props
     const { className, style, isDroppable } = this.props
 
     const mergedClassName = classNames(layoutClassName, className)
@@ -794,7 +785,6 @@ export class GridLayout extends Vue {
     }
     return (
       <div
-        // ref={innerRef}
         class={mergedClassName}
         style={mergedStyle}
         ondrop={isDroppable ? this.onDrop : noop}
@@ -812,15 +802,6 @@ export class GridLayout extends Vue {
       </div>
     )
   }
-  // @Watch('state')
-  // handleUpdate (prevState: State) {
-  //   if (!this.state.activeDrag) {
-  //     const newLayout = this.state.layout
-  //     const oldLayout = prevState.layout
-
-  //     this.onLayoutMaybeChanged(newLayout, oldLayout)
-  //   }
-  // }
 
   @Watch('value')
   updateLayout (layout: Layout, oldLayout: Layout) {
