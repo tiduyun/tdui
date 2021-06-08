@@ -62,7 +62,7 @@ import './style/gridLayout.scss'
 
 // End Types
 
-const layoutClassName = 'vue-grid-layout'
+const layoutClassName = 'v-grid-layout'
 let isFirefox = false
 // Try...catch will protect from navigator not existing (e.g. node) or a bad implementation of navigator
 try {
@@ -538,7 +538,7 @@ export class GridLayout extends Vue {
         x={activeDrag.x}
         y={activeDrag.y}
         i={activeDrag.i}
-        className="vue-grid-placeholder"
+        className="v-grid-placeholder"
         containerWidth={width}
         cols={cols}
         margin={margin}

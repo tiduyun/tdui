@@ -170,7 +170,7 @@ export class Resizable extends Mixins(ResizableProps) {
       }
       return handle
     }
-    return <span class={`vue-resizable-handle vue-resizable-handle-${resizeHandleAxis}`} />
+    return <span class={`v-resizable-handle v-resizable-handle-${resizeHandleAxis}`} />
   }
 
   appendSlotsChild () {
@@ -178,7 +178,7 @@ export class Resizable extends Mixins(ResizableProps) {
     const el = document.createElement('div')
     if (this.$slots.default) {
       const defaultEl: HTMLElement = this.$slots.default[0].elm as HTMLElement
-      const classNames: string = `${className ? `${className} ` : ''}vue-resizable`
+      const classNames: string = `${className ? `${className} ` : ''}v-resizable`
       defaultEl.setAttribute('class', classNames)
       defaultEl!.appendChild(el)
       const handleVnodes: VNode[] = resizeHandles.map((handleAxis) => (
@@ -195,7 +195,7 @@ export class Resizable extends Mixins(ResizableProps) {
 
       new Vue({
         render: h => (
-          <div class="vue-resizable-handle-wrapper">
+          <div class="v-resizable-handle-wrapper">
             { handleVnodes }
           </div>
         )

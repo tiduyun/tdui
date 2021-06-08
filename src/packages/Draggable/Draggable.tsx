@@ -127,13 +127,13 @@ export class Draggable extends Mixins(PropsMixins) {
     VueTypes.oneOf([false])
   ]), default: false }) bounds!: Bounds | string | false
 
-  @Prop({ ...VueTypes.string, default: 'vue-draggable' })
+  @Prop({ ...VueTypes.string, default: 'v-draggable' })
   defaultClassName!: string
 
-  @Prop({ ...VueTypes.string, default: 'vue-draggable-dragging' })
+  @Prop({ ...VueTypes.string, default: 'v-draggable-dragging' })
   defaultClassNameDragging!: string
 
-  @Prop({ ...VueTypes.string, default: 'vue-draggable-dragged' })
+  @Prop({ ...VueTypes.string, default: 'v-draggable-dragged' })
   defaultClassNameDragged!: string
   /**
    * `defaultPosition` specifies the x and y that the dragged item should start at
