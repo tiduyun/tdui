@@ -35,10 +35,7 @@ export class Resizable extends Mixins(ResizableProps) {
   }
 
   mounted () {
-    console.log('进入resizable')
-    this.$nextTick(() => {
-      this.appendSlotsChild()
-    })
+    this.$nextTick(this.appendSlotsChild)
   }
 
   // lockAspectRatio(width: number, height: number, aspectRatio: number): [number, number] {
