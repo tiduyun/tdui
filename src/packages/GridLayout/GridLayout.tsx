@@ -56,12 +56,6 @@ interface State {
   propsLayout?: Layout
 }
 
-// 引入样式
-import './style/gridLayout.scss'
-// import type { DefaultProps, Props } from './GridLayoutPropTypes'
-
-// End Types
-
 const layoutClassName = 'v-grid-layout'
 let isFirefox = false
 // Try...catch will protect from navigator not existing (e.g. node) or a bad implementation of navigator
@@ -783,6 +777,7 @@ export class GridLayout extends Vue {
       height: this.containerHeight(),
       ...style
     }
+    const children: VNode[] = this.$slots.default || []
     return (
       <div
         class={mergedClassName}
@@ -793,7 +788,7 @@ export class GridLayout extends Vue {
         ondragover={isDroppable ? this.onDragOver : noop}
       >
         {
-          (this.$slots.default as VNode[]).map(child => this.processGridItem(child))
+          children.map(child => this.processGridItem(child))
         }
         { isDroppable &&
           this.state.droppingDOMNode &&

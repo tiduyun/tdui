@@ -4,3 +4,5 @@ export { GridLayout as RGL} from './GridLayout'
 export * from './ResponsiveGridLayout'
 
 export { WidthProvider } from './components/WidthProvider'
+
+import './style.scss'

@@ -1,5 +1,5 @@
 // @flow
-import { isEqual, pick } from '@tdio/utils'
+import { isEmpty, isEqual, pick } from '@tdio/utils'
 import { VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
@@ -56,7 +56,7 @@ interface Props<Breakpoint> {
   breakpoint?: Breakpoint,
   breakpoints: Breakpoints,
   cols: { [key: string]: number },
-  layouts: ResponsiveLayout,
+  value: ResponsiveLayout,
   width: number,
   allowOverlap: boolean,
   margin: { [key: string]: [number, number] } | [number, number],
@@ -76,7 +76,7 @@ interface Props<Breakpoint> {
 
 const RESPONSIVE_GRID_PROPS: any[] = [
   'breakpoint', 'breakpoints', 'allowOverlap', 'cols', 'margin', 'containerPadding',
-  'layouts', 'width', 'fnBreakpointChange', 'fnLayoutChange', 'fnWidthChange', 'verticalCompact',
+  'value', 'width', 'fnBreakpointChange', 'fnLayoutChange', 'fnWidthChange', 'verticalCompact',
   'fnDrop', 'rowHeight', 'useCSSTransforms', 'maxRows', 'isBounded', 'isDraggable',
   'isResizable', 'isDroppable', 'preventCollision', 'transformScale', 'droppingItem'
 ]
@@ -90,21 +90,21 @@ export class ResponsiveReactGridLayout extends Vue {
     nextProps: Props<any>,
     prevState: State
   ) {
-    if (!isEqual(nextProps.layouts, prevState.layouts)) {
+    if (!isEqual(nextProps.value, prevState.layouts)) {
       // Allow parent to set layouts directly.
       const { breakpoint, cols } = prevState
 
       // Since we're setting an entirely new layout object, we must generate a new responsive layout
       // if one does not exist.
       const newLayout = findOrGenerateResponsiveLayout(
-        nextProps.layouts,
+        nextProps.value,
         nextProps.breakpoints,
         breakpoint,
         breakpoint,
         cols,
         nextProps.compactType
       )
-      return { layout: newLayout, layouts: nextProps.layouts }
+      return { layout: newLayout, layouts: nextProps.value }
     }
 
     return null
@@ -183,7 +183,7 @@ export class ResponsiveReactGridLayout extends Vue {
     }
     return true
   }).def({}))
-  layouts!: Object
+  value!: Object
 
   // The width of this component.
   // Required in this propTypes stanza because generateInitialState() will fail without it.
@@ -231,12 +231,8 @@ export class ResponsiveReactGridLayout extends Vue {
 
   state: Kv = {}
 
-  created () {
-    this.state = this.generateInitialState()
-  }
-
   generateInitialState (): State {
-    const { width, breakpoints, layouts, cols } = this.props
+    const { width, breakpoints, value, cols } = this.props
     const breakpoint = getBreakpointFromWidth(breakpoints, width)
     const colNo = getColsFromBreakpoint(breakpoint, cols)
     // verticalCompact compatibility, now deprecated
@@ -245,7 +241,7 @@ export class ResponsiveReactGridLayout extends Vue {
     // Get the initial layout. This can tricky; we try to generate one however possible if one doesn't exist
     // for this layout.
     const initialLayout = findOrGenerateResponsiveLayout(
-      layouts,
+      value,
       breakpoints,
       breakpoint,
       breakpoint,
@@ -267,7 +263,11 @@ export class ResponsiveReactGridLayout extends Vue {
   // wrap layouts so we do not need to pass layouts to child
   onLayoutChange (layout: Layout) {
     this.props.fnLayoutChange(layout, {
-      ...this.props.layouts,
+      ...this.props.value,
+      [this.state.breakpoint]: layout
+    })
+    this.$emit('input', {
+      ...this.props.value,
       [this.state.breakpoint]: layout
     })
   }
@@ -277,14 +277,14 @@ export class ResponsiveReactGridLayout extends Vue {
    * Width changes are necessary to figure out the widget widths.
    */
   onWidthChange (prevProps: Props<any>) {
-    const { breakpoints, cols, layouts, compactType } = this.props
+    const { breakpoints, cols, value, compactType } = this.props
     const newBreakpoint =
       this.props.breakpoint ||
       getBreakpointFromWidth(this.props.breakpoints, this.props.width)
 
     const lastBreakpoint = this.state.breakpoint
     const newCols: number = getColsFromBreakpoint(newBreakpoint, cols)
-    const newLayouts = { ...layouts }
+    const newLayouts = { ...value }
 
     // Breakpoint change
     if (
@@ -322,7 +322,6 @@ export class ResponsiveReactGridLayout extends Vue {
       // callbacks
       this.props.fnLayoutChange(layout, newLayouts)
       this.props.fnBreakpointChange(newBreakpoint, newCols)
-
       this.setState({
         breakpoint: newBreakpoint,
         layout,
@@ -351,7 +350,7 @@ export class ResponsiveReactGridLayout extends Vue {
       breakpoint,
       breakpoints,
       cols,
-      layouts,
+      value,
       margin,
       containerPadding,
       fnBreakpointChange,
@@ -360,7 +359,6 @@ export class ResponsiveReactGridLayout extends Vue {
       ...other
     } = this.props
     /* eslint-enable no-unused-vars */
-
     return (
       <GridLayout
         // $FlowIgnore should allow nullable here due to DefaultProps
@@ -372,7 +370,7 @@ export class ResponsiveReactGridLayout extends Vue {
             this.state.breakpoint
           ),
           fnLayoutChange: this.onLayoutChange,
-          value: this.state.layout,
+          value: [...this.state.layout],
           cols: this.state.cols
         }}
       >{this.$slots.default}</GridLayout>
@@ -380,16 +378,42 @@ export class ResponsiveReactGridLayout extends Vue {
   }
 
   @Watch('props')
-  handleUpdate (prevProps: Props<any>) {
+  handleUpdate (curProps: Props<any>, oldProps: Props<any>) {
     // Allow parent to set width or breakpoint directly.
     if (
-      this.props.width !== prevProps.width ||
-      this.props.breakpoint !== prevProps.breakpoint ||
-      !isEqual(this.props.breakpoints, prevProps.breakpoints) ||
-      !isEqual(this.props.cols, prevProps.cols)
+      curProps.width !== oldProps.width ||
+      curProps.breakpoint !== oldProps.breakpoint ||
+      !isEqual(curProps.breakpoints, oldProps.breakpoints) ||
+      !isEqual(curProps.cols, oldProps.cols)
     ) {
-      this.onWidthChange(prevProps)
+      this.onWidthChange(curProps)
     }
+
+    if (this._isMounted) {
+      this.onWidthChange(curProps)
+    }
+
+    if (!isEqual(curProps.value, this.state.layouts)) {
+      // Allow parent to set layouts directly.
+      const { breakpoint, cols } = this.state
+
+      // Since we're setting an entirely new layout object, we must generate a new responsive layout
+      // if one does not exist.
+      const newLayout = findOrGenerateResponsiveLayout(
+        curProps.value,
+        curProps.breakpoints,
+        breakpoint,
+        breakpoint,
+        cols,
+        curProps.compactType
+      )
+      return { layout: newLayout, layouts: curProps.value }
+    }
+  }
+
+  @Watch('value', { immediate: true })
+  updateLayout () {
+    this.state = this.generateInitialState()
   }
 
   private setState (item: Kv) {

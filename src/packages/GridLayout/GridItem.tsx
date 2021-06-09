@@ -30,7 +30,6 @@ import type {
   ResizeHandle,
   ResizeHandleAxis
 } from './GridLayoutPropTypes'
-import './style/gridItem.scss'
 
 interface PartialPosition { top: number, left: number }
 type GridItemCallback<T> = (
@@ -632,7 +631,6 @@ export default class GridItem extends Vue {
 
     const child: VNode[] = this.$slots.default || []
     const newChild: VNode = this.mixinResizable(child[0], pos, isResizable)
-
     return this.mixinDraggable(newChild, isDraggable)
   }
 
@@ -641,6 +639,7 @@ export default class GridItem extends Vue {
   }
 
   transformClass (str: string): Kv {
+    str = str || ''
     const classArr = str.trim().split(' ')
     const classItems = classArr.reduce((item: Kv, val) => {
       if (val) {
@@ -649,6 +648,10 @@ export default class GridItem extends Vue {
       return item
     }, {})
     return classItems
+  }
+
+  isElement (node: HTMLElement): boolean {
+    return node && node.nodeType !== 8
   }
 
   syncUI () {
@@ -672,6 +675,9 @@ export default class GridItem extends Vue {
     const child: VNode[] = this.$slots.default || []
 
     const ElSlots: HTMLElement = child[0].elm as HTMLElement
+    if (!this.isElement(ElSlots)) {
+      return
+    }
     const curElClass = this.transformClass(ElSlots.className)
     const propClass = this.transformClass(this.props.className)
     const className = classNames(
