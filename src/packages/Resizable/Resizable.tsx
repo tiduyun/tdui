@@ -173,10 +173,15 @@ export class Resizable extends Mixins(ResizableProps) {
     return <span class={`v-resizable-handle v-resizable-handle-${resizeHandleAxis}`} />
   }
 
+  isElement (children: VNode[]): boolean {
+    const node = this.$slots.default?.[0]?.elm
+    return node?.nodeType !== 8
+  }
+
   appendSlotsChild () {
     const { resizeHandles, draggableOpts, className } = this.props
     const el = document.createElement('div')
-    if (this.$slots.default) {
+    if (this.$slots.default && this.isElement(this.$slots.default)) {
       const defaultEl: HTMLElement = this.$slots.default[0].elm as HTMLElement
       const classNames: string = `${className ? `${className} ` : ''}v-resizable`
       defaultEl.setAttribute('class', classNames)

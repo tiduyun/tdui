@@ -1,11 +1,12 @@
 // @flow
 import { pick } from '@tdio/utils'
 import classNames from 'classnames'
-import { CreateElement } from 'vue'
+import { CreateElement, RenderContext } from 'vue'
 import { Component, Prop, Ref, Vue } from 'vue-property-decorator'
 
 import { debounce } from '@/utils/decorators'
 import { functionalComponent } from '@/utils/vue'
+import { VueConstructor } from 'vue/types/umd'
 
 interface WPState {
   width: number
@@ -69,7 +70,7 @@ class WidthProvideRGL extends Vue {
   }
 }
 
-export function WidthProvider (component: Vue) {
+export function WidthProvider (component: VueConstructor) {
   return functionalComponent(function (h: CreateElement, context: Kv) {
     const { props, on } = context
     return (
