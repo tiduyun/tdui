@@ -74,3 +74,15 @@ export const eventsFor = {
     stop: 'mouseup'
   }
 }
+
+export function parseClass (className: string): Kv {
+  className = className || ''
+  const classArr = className.trim().split(' ')
+  const classItems = classArr.reduce((item: Kv, val) => {
+    if (val) {
+      item[val] = true
+    }
+    return item
+  }, {})
+  return classItems
+}

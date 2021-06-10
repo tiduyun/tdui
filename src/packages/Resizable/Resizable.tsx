@@ -1,10 +1,15 @@
 // @flow
-import { pick } from '@tdio/utils'
+import { merge, pick } from '@tdio/utils'
+import classNames from 'classnames'
 import { CreateElement, VNode } from 'vue'
 import { Component, Mixins, Prop, Vue } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
+
+import { parseClass } from '@/utils'
+
 import {DraggableCore} from '../Draggable'
 import {Axis, DragCallbackData, Props, RESIZABLE_PROPS_ARR, ResizableProps, ResizableState, ResizeHandleAxis} from './utils/propTypes'
+
 
 @Component
 export class Resizable extends Mixins(ResizableProps) {
@@ -173,13 +178,25 @@ export class Resizable extends Mixins(ResizableProps) {
     return <span class={`v-resizable-handle v-resizable-handle-${resizeHandleAxis}`} />
   }
 
+  isElement (children: VNode[]): boolean {
+    const node = this.$slots.default?.[0]?.elm
+    return node?.nodeType !== 8
+  }
+
   appendSlotsChild () {
     const { resizeHandles, draggableOpts, className } = this.props
     const el = document.createElement('div')
-    if (this.$slots.default) {
+    if (this.$slots.default && this.isElement(this.$slots.default)) {
       const defaultEl: HTMLElement = this.$slots.default[0].elm as HTMLElement
-      const classNames: string = `${className ? `${className} ` : ''}v-resizable`
-      defaultEl.setAttribute('class', classNames)
+      const curElClass = parseClass(defaultEl.className)
+      const propClass = parseClass(className || '')
+      const classNm = classNames(
+        merge(curElClass, propClass, {
+          'v-resizable': true
+        })
+      )
+      // const classNames: string = `${className ? `${className} ` : ''}v-resizable`
+      defaultEl.setAttribute('class', classNm)
       defaultEl!.appendChild(el)
       const handleVnodes: VNode[] = resizeHandles.map((handleAxis) => (
         <DraggableCore

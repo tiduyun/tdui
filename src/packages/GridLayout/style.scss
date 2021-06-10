@@ -1,0 +1,123 @@
+.v-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.v-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+}
+
+.v-grid-item img {
+  pointer-events: none;
+  user-select: none;
+}
+
+.v-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.v-grid-item.resizing {
+  z-index: 1;
+  will-change: width, height;
+}
+
+.v-grid-item.v-draggable-dragging {
+  transition: none;
+  z-index: 3;
+  will-change: transform;
+}
+
+.v-grid-item.dropping {
+  visibility: hidden;
+}
+
+.v-grid-item.v-grid-placeholder {
+  background: red;
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.v-grid-item > .v-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.v-grid-item > .v-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-sw {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+  transform: rotate(90deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-nw {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+  transform: rotate(180deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-ne {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+  transform: rotate(270deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-w,
+.v-grid-item > .v-resizable-handle.v-resizable-handle-e {
+  top: 50%;
+  margin-top: -10px;
+  cursor: ew-resize;
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-w {
+  left: 0;
+  transform: rotate(135deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-e {
+  right: 0;
+  transform: rotate(315deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-n,
+.v-grid-item > .v-resizable-handle.v-resizable-handle-s {
+  left: 50%;
+  margin-left: -10px;
+  cursor: ns-resize;
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-n {
+  top: 0;
+  transform: rotate(225deg);
+}
+
+.v-grid-item > .v-resizable-handle.v-resizable-handle-s {
+  bottom: 0;
+  transform: rotate(45deg);
+}

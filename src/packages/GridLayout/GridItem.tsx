@@ -4,6 +4,9 @@ import classNames from 'classnames'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
+
+import { parseClass } from '@/utils'
+
 import { DraggableCore } from '../Draggable'
 import { Resizable } from '../Resizable'
 import {
@@ -30,7 +33,6 @@ import type {
   ResizeHandle,
   ResizeHandleAxis
 } from './GridLayoutPropTypes'
-import './style/gridItem.scss'
 
 interface PartialPosition { top: number, left: number }
 type GridItemCallback<T> = (
@@ -632,7 +634,6 @@ export default class GridItem extends Vue {
 
     const child: VNode[] = this.$slots.default || []
     const newChild: VNode = this.mixinResizable(child[0], pos, isResizable)
-
     return this.mixinDraggable(newChild, isDraggable)
   }
 
@@ -640,15 +641,8 @@ export default class GridItem extends Vue {
     this.syncUI()
   }
 
-  transformClass (str: string): Kv {
-    const classArr = str.trim().split(' ')
-    const classItems = classArr.reduce((item: Kv, val) => {
-      if (val) {
-        item[val] = true
-      }
-      return item
-    }, {})
-    return classItems
+  isElement (node: HTMLElement): boolean {
+    return node && node.nodeType !== 8
   }
 
   syncUI () {
@@ -672,8 +666,11 @@ export default class GridItem extends Vue {
     const child: VNode[] = this.$slots.default || []
 
     const ElSlots: HTMLElement = child[0].elm as HTMLElement
-    const curElClass = this.transformClass(ElSlots.className)
-    const propClass = this.transformClass(this.props.className)
+    if (!this.isElement(ElSlots)) {
+      return
+    }
+    const curElClass = parseClass(ElSlots.className)
+    const propClass = parseClass(this.props.className)
     const className = classNames(
       merge(curElClass, propClass, {
         'v-grid-item': true,
