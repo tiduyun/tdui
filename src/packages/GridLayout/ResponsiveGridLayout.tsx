@@ -409,6 +409,7 @@ export class ResponsiveReactGridLayout extends Vue {
       )
       return { layout: newLayout, layouts: curProps.value }
     }
+    return
   }
 
   @Watch('value', { immediate: true })

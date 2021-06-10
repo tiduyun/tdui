@@ -4,6 +4,9 @@ import classNames from 'classnames'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
+
+import { parseClass } from '@/utils'
+
 import { DraggableCore } from '../Draggable'
 import { Resizable } from '../Resizable'
 import {
@@ -638,18 +641,6 @@ export default class GridItem extends Vue {
     this.syncUI()
   }
 
-  transformClass (str: string): Kv {
-    str = str || ''
-    const classArr = str.trim().split(' ')
-    const classItems = classArr.reduce((item: Kv, val) => {
-      if (val) {
-        item[val] = true
-      }
-      return item
-    }, {})
-    return classItems
-  }
-
   isElement (node: HTMLElement): boolean {
     return node && node.nodeType !== 8
   }
@@ -678,8 +669,8 @@ export default class GridItem extends Vue {
     if (!this.isElement(ElSlots)) {
       return
     }
-    const curElClass = this.transformClass(ElSlots.className)
-    const propClass = this.transformClass(this.props.className)
+    const curElClass = parseClass(ElSlots.className)
+    const propClass = parseClass(this.props.className)
     const className = classNames(
       merge(curElClass, propClass, {
         'v-grid-item': true,
