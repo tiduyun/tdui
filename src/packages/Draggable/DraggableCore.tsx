@@ -76,9 +76,16 @@ export class DraggableCore extends Mixins(PropsMixins) {
 
   isMounted: boolean = false
 
+  isElement (node: HTMLElement) {
+    return node && node.nodeType !== 8
+  }
+
   mounted () {
     this.isMounted = true
     // Touch handlers must be added with {passive: false} to be cancelable.
+    if (!this.isElement(this.$el as HTMLElement)) {
+      return
+    }
     const thisNode = this.findDOMNode()
     if (thisNode) {
       // Reuse the child provided

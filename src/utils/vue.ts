@@ -4,7 +4,7 @@
  * @autho allex_wang
  */
 
-import Vue, { CreateElement, RenderContext, VNode } from 'vue'
+import Vue, { CreateElement, FunctionalComponentOptions, RenderContext, VNode } from 'vue'
 import { ScopedSlot } from 'vue/types/vnode'
 
 import { hasOwn, isArray } from '@tdio/utils'
@@ -121,7 +121,7 @@ export const functionalComponent = <Props> (render: FunctionalComponentRender<Pr
     }
     return (render as T2<Props>).call(scope, h, ctx)
   }
-})
+}) as FunctionalComponentOptions
 
 export const isVNode = (o: any): boolean => {
   let arr = o as VNode[]
