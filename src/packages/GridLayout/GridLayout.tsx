@@ -406,6 +406,7 @@ export class GridLayout extends Vue {
       )
       this.setState({ layout })
       this.props.fnLayoutChange(newLayout)
+      console.log('layout', layout)
       this.$emit('input', layout)
     }
   }

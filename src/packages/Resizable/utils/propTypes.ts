@@ -56,7 +56,7 @@ export class ResizableProps extends Vue {
   @Prop(VueTypes.oneOf(['both', 'x', 'y', 'none']))
   axis!: Axis
 
-  @Prop(VueTypes.string)
+  @Prop(VueTypes.string.def(''))
   className!: string
 
   /**
