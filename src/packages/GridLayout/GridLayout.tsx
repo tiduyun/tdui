@@ -394,7 +394,6 @@ export class GridLayout extends Vue {
   onLayoutMaybeChanged (newLayout: Layout, oldLayout?: Layout | null) {
     if (!oldLayout) oldLayout = this.state.layout
     if (!isEqual(oldLayout, newLayout)) {
-      // this.state.layout = newLayout
       const layout = synchronizeLayoutWithChildren(
         newLayout,
         // this.props.children,
@@ -405,8 +404,7 @@ export class GridLayout extends Vue {
         this.props.allowOverlap
       )
       this.setState({ layout })
-      this.props.fnLayoutChange(newLayout)
-      console.log('layout', layout)
+      this.props.fnLayoutChange(layout)
       this.$emit('input', layout)
     }
   }
@@ -771,12 +769,14 @@ export class GridLayout extends Vue {
   }
 
   render (): VNode {
-    const { className, style, isDroppable } = this.props
-
+    const { className, styles, margin, isDroppable } = this.props
     const mergedClassName = classNames(layoutClassName, className)
+    const gutter: number = margin[1]
     const mergedStyle = {
       height: this.containerHeight(),
-      ...style
+      marginRight: `-${gutter}px`,
+      marginLeft: `-${gutter}px`,
+      ...styles
     }
     const children: VNode[] = this.$slots.default || []
     return (
