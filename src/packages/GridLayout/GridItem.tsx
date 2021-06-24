@@ -404,10 +404,10 @@ export default class GridItem extends Vue {
     // Calculate min/max constraints using our min & maxes
     const mins = calcGridItemPosition(positionParams, 0, 0, minW, minH)
     const maxes = calcGridItemPosition(positionParams, 0, 0, maxW, maxH)
-    const minConstraints = [mins.width, mins.height]
+    const minConstraints = [mins.width || 0, mins.height || 0]
     const maxConstraints = [
-      Math.min(maxes.width, maxWidth),
-      Math.min(maxes.height, Infinity)
+      Math.min(maxes.width, maxWidth) || 0,
+      Math.min(maxes.height, Infinity) || 0
     ]
     return (
       <Resizable
