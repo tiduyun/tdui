@@ -6,9 +6,13 @@ import { Emittable } from '@/utils/emittable'
 
 import { IOption, Nil } from '../../types/common'
 
+import { createRef, installRef, RefObject } from '../../utils/directives/ref'
+
 type T = any
 
 const normalizeValue = (v: any) => v === '' ? undefined : v
+
+Vue.use(installRef)
 
 @Component
 @Emittable
@@ -34,12 +38,20 @@ export default class AbsSelectView extends Vue {
   @Prop({ type: Function, default: identity })
   optionMapper!: (o: T) => any
 
-  isValInvalid?: boolean
-  currentValue?: T | Nil = undefined
+  /* reactive properties */
+  currentValue: T | Nil = undefined
   currentOptions: IOption[] = []
+  valueChecked: boolean = true
 
-  private _initialValue: T | Nil
-  private _kvRefs: Kv<T> = {}
+  protected selectRef!: RefObject<AbsSelectView, Vue>
+
+  private _kvRefs!: Kv<T>
+  private _initialValue!: T | Nil
+
+  beforeCreate () {
+    this._kvRefs = {}
+    this.selectRef = createRef()
+  }
 
   @Watch('value')
   handleChange (val: T | undefined, oldVal?: T) {
@@ -50,7 +62,7 @@ export default class AbsSelectView extends Vue {
   }
 
   handleSelect (val: T | undefined) {
-    this.isValInvalid = false
+    this.valueChecked = true
     this.setSelectedValue(val)
   }
 
@@ -116,7 +128,7 @@ export default class AbsSelectView extends Vue {
     }
 
     // not a valid value (not exists in options)
-    this.isValInvalid = initial !== v && options.length > 0
+    this.valueChecked = initial !== v && options.length > 0
 
     this.setSelectedValue(v)
   }
@@ -137,7 +149,7 @@ export default class AbsSelectView extends Vue {
     }
   }
 
-  getEntity (k: string) {
+  protected getEntity (k: string) {
     return this._kvRefs[k]
   }
 

@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
@@ -7,14 +8,14 @@ export default class SvgIcon extends Vue {
   @Prop({ type: String, default: '' })
   iconName!: string
 
-  @Prop(String)
-  className!: string
+  @Prop()
+  className!: any
 
-  render (h: any) {
+  render () {
     const svgName = `#icon-${this.iconName.replace(/.svg$/, '')}`
-    const svgClass = `v-svg-icon ${this.className || ''}`.trim()
+    const svgClass = classNames('v-svg-icon', this.className)
     return (
-      <svg aria-hidden="true" class={svgClass} on={this.$listeners}>
+      <svg aria-hidden="true" className={svgClass} on={this.$listeners}>
         <use attrs={{ 'xlink:href': svgName }} />
       </svg>
     )

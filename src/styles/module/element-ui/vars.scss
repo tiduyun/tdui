@@ -8,7 +8,6 @@ $--font-path: '~element-ui/lib/theme-chalk/fonts';
 /* theme color */
 $--color-white: $color-white;
 $--color-black: #2c3e50;
-$--color-text-primary: $color-text-regular;
 
 $--color-primary: $color-primary;
 $--color-success: $color-success;
@@ -16,6 +15,8 @@ $--color-info: $color-info;
 $--color-warning: $color-warning;
 $--color-danger: $color-danger;
 
+$--color-text-primary: $color-text-primary;
+$--color-text-regular: $color-text-regular;
 $--color-text-secondary: $color-info;
 $--color-text-placeholder: $color-text-placeholder; // will be applied to input-placeholder
 
@@ -53,6 +54,7 @@ $--checkbox-checked-background-color: $--color-primary;
 $--checkbox-checked-icon-color: $--fill-base;
 
 /* date-picker */
+$--datepicker-hover-font-color: mix($color-highlight, $color-primary, 85%); // highlight hover color
 $--datepicker-active-color: $color-highlight;
 $--datepicker-inrange-background-color: lighten($color-highlight, 34%);
 $--datepicker-inrange-hover-background-color: lighten($color-highlight, 35%);

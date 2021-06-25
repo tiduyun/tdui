@@ -5,6 +5,7 @@ import { get, isEmpty } from '@tdio/utils'
 
 import { extractTooltip } from '@/utils/normalize'
 
+import { result } from '../../utils'
 import './Icon.scss'
 import SvgIcon from './Svg'
 
@@ -23,8 +24,6 @@ const getIconfontBaseClass = (s: string): string => {
   }
 }
 
-const result = (o: any, ...args: any[]) => (typeof o === 'function' ? o(...args) : o)
-
 const stripClassNames = (classNames: string): string => {
   // remove dot tailings
   return classNames.split(' ').map(s => s.replace(/\..*$/, '')).join(' ')
@@ -37,8 +36,8 @@ export class Icon extends Vue {
   @Prop({ type: String, default: '' })
   iconName!: string
 
-  @Prop({ type: String, default: '' })
-  className!: string
+  @Prop()
+  className!: any
 
   @Prop(Boolean)
   disabled!: boolean
@@ -89,8 +88,8 @@ export class Icon extends Vue {
     const style = get(this.$vnode, 'data.style')
 
     const icon = isSVG
-      ? (<SvgIcon iconName={this.iconName} class={iconClass} on={listeners} style={style} />)
-      : (<i class={iconClass} on={listeners} style={style} />)
+      ? (<SvgIcon iconName={this.iconName} className={iconClass} on={listeners} style={style} />)
+      : (<i className={iconClass} on={listeners} style={style} />)
 
     // Provide tooltip prop configs or tooltip slot impls
     return hasTooltip

@@ -52,12 +52,13 @@ export default class Select extends Mixins(AbsSelectView) {
     )
 
     let placeholder = this.placeholder
-    if (this.isValInvalid && this.initialLabel) {
+    if (!this.valueChecked && this.initialLabel) {
       placeholder = this.initialLabel
     }
 
     const selectNode = (
       <el-select
+        v-ref={this.selectRef}
         ref="select"
         class={classPrefix}
         popperClass={popperClass}
