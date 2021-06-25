@@ -1,6 +1,4 @@
-// TODO: use import when https://github.com/que-etc/resize-observer-polyfill/issues/80 been fixed
-// tslint:disable-next-line
-const ResizeObserver = require('resize-observer-polyfill')
+import { ResizeObserver } from '@juggle/resize-observer'
 
 type ObserverNode = Element & {
   __resizeListeners__: EventListener[];

@@ -102,9 +102,9 @@ type FunctionalComponentRender<Props> = T1<Props> | T2<Props>
  *
  * @param {Function} A plain vue render function. with context of the props, @see <FunctionalComponentRender>, <FunctionalComponentRenderContext>
  */
-export const functionalComponent = <Props> (render: FunctionalComponentRender<Props>) => ({
-  inheritAttrs: false,
+export const functionalComponent = <Props> (render: FunctionalComponentRender<Props>): FunctionalComponentOptions<Props> => ({
   functional: true,
+  inheritAttrs: false,
   render (h: CreateElement, context: RenderContext<Props>) {
     const { data, listeners, props, children, scopedSlots } = context
     const ctx: FunctionalComponentRenderContext<Props> = {
@@ -121,7 +121,7 @@ export const functionalComponent = <Props> (render: FunctionalComponentRender<Pr
     }
     return (render as T2<Props>).call(scope, h, ctx)
   }
-}) as FunctionalComponentOptions
+}) as FunctionalComponentOptions<Props>
 
 export const isVNode = (o: any): boolean => {
   let arr = o as VNode[]

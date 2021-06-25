@@ -75,7 +75,7 @@ export const eventsFor = {
   }
 }
 
-export function parseClass (className: string): Kv {
+export function parseClass (className: string): Kv<boolean> {
   className = className || ''
   const classArr = className.trim().split(' ')
   const classItems = classArr.reduce((item: Kv, val) => {
@@ -86,3 +86,5 @@ export function parseClass (className: string): Kv {
   }, {})
   return classItems
 }
+
+export const result = <T> (o: T, ...args: any[]) => (typeof o === 'function' ? o(...args) : o)
