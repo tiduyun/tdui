@@ -27,6 +27,7 @@
     "@tdio/locale": "^1.0.0",
     "@tdio/utils": "^1 || next",
     "classnames": "^2.2.6",
+    "clipboard": "^2.0.8",
     "querystring": "^0.2.0",
     "tslib": "^2",
     "vue-types": "^2.0.3"
@@ -49,7 +50,6 @@
     "babel-core": "bridge",
     "babel-jest": "^23.6.0",
     "babel-plugin-transform-async-to-promises": "^0.8.15",
-    "clipboard": "^2.0.8",
     "element-ui": "next",
     "husky": "^1.3.1",
     "jest": "^23.6.0",
