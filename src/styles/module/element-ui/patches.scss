@@ -151,16 +151,6 @@ $menu-item-height: 40px !default;
     position: static !important;
   }
 
-  &__item {
-    &:hover {
-      color: lighten($color-highlight, 10%);
-    }
-
-    &.is-active {
-      color: $color-highlight;
-    }
-  }
-
   &__active-bar {
     background-color: $color-highlight;
   }
