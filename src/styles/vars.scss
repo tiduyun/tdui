@@ -1,4 +1,4 @@
-/* --------- globally theme consts (start) ---------- */
+// globally theme consts
 
 // colors
 $color-black: #595a5d !default;
@@ -14,9 +14,11 @@ $color-highlight: #f38231 !default;
 $color-text-primary: #303133 !default;
 $color-text-regular: #606266 !default;
 $color-text-secondary: #909399 !default;
-$color-text-placeholder: #c0c4cc !default;
 
-$v-link-color: $color-text-regular !default;
+$color-text-placeholder: #c0c4cc !default;
+$color-text-link: $color-text-regular !default;
+
+$v-link-color: $color-text-link !default;
 $v-link-hover-color: #2b9dcd !default;
 
 // fonts
@@ -30,7 +32,8 @@ $font-size-title: $font-size-base !default;
 // border
 $border-color-hover: $color-text-placeholder !default;
 $border-color-base: #e4e7ed !default;
-$border-color-tint: lighten($border-color-base, 4%);
+$border-color-table: #ebeff1 !default;
+$border-color-tint: lighten($border-color-base, 4%); // TODO: deprecated
 $border-base: 1px solid $border-color-base !default;
 
 // background
@@ -58,5 +61,3 @@ $v-dialog-size-small: 460px !default;
 $v-dialog-size-normal: 640px !default;
 $v-dialog-size-large: 900px !default;
 $v-dialog-size-xlarge: 1000px !default;
-
-/* --------- globally theme consts (end) ------------ */

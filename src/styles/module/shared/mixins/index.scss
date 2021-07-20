@@ -149,3 +149,15 @@
     #{$cls}3 { #{$prefix}-#{$k}: 1rem; }
   }
 }
+
+@mixin initial-css-variables() {
+  :root {
+    --color-black: #{$color-black};
+    --color-white: #{$color-white};
+  }
+
+  [data-theme="dark"] {
+    --color-black: #{$color-white};
+    --color-white: #{$color-black};
+  }
+}
