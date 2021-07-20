@@ -17,7 +17,7 @@ $--color-danger: $color-danger;
 
 $--color-text-primary: $color-text-primary;
 $--color-text-regular: $color-text-regular;
-$--color-text-secondary: $color-info;
+$--color-text-secondary: $color-text-secondary;
 $--color-text-placeholder: $color-text-placeholder; // will be applied to input-placeholder
 
 $--fill-base: $--color-white;
@@ -30,9 +30,9 @@ $--button-small-font-size: $font-size-normal;
 $--button-mini-font-size: $font-size-normal;
 
 // Border
-$--border-color-base: $border-color-base;
-$--border-color-light: #dfe4ed;
-$--border-color-lighter: $border-color-base;
+$--border-color-base: $border-color-base !default;
+$--border-color-light: #dfe4ed !default;
+$--border-color-lighter: $border-color-table !default; // should be sync with `border-color-table` (element-ui/table.scss)
 
 // Disable base
 $--disabled-fill-base: $disabled-fill-base;
@@ -46,8 +46,8 @@ $--button-disabled-background-color: $background-color-base;
 $--button-font-weight: 400;
 
 /* tabel */
-$--table-border: 1px solid $border-color-base;
-$--table-striped-row-background-color: #fbfdff;
+$--table-border-color: $border-color-table !default;
+$--table-striped-row-background-color: #fbfdff !default;
 
 /* checkbox icon color */
 $--checkbox-checked-background-color: $--color-primary;
@@ -80,4 +80,4 @@ $--alert-title-font-size: $font-size-normal !default;
 
 /* tabs */
 $--tab-item-color-active: $color-highlight !default;
-$--tab-item-color-hover: lighten($color-highlight, 10%) !default;
+$--tab-item-color-hover: lighten($--tab-item-color-active, 10%) !default;

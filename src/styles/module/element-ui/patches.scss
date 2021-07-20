@@ -150,20 +150,17 @@ $menu-item-height: 40px !default;
   &__content {
     position: static !important;
   }
-
-  &__active-bar {
-    background-color: $color-highlight;
-  }
 }
 
 .el-table {
   &--small {
-    th,
     td { padding: 12px 0; }
+    th { padding: 0; }
   }
 
   th > .cell {
-    line-height: 1.5;
+    min-height: 34px;
+    line-height: 34px;
   }
 
   .cell {
