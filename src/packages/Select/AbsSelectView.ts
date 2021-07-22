@@ -106,7 +106,7 @@ export default class AbsSelectView extends Vue {
     this.parseOptions(entities)
 
     const options = this.currentOptions
-    const { currentValue, defaultFirstOption } = this
+    const { currentValue, defaultFirstOption, $attrs } = this
     const initial = isValue(currentValue) ? currentValue : this._initialValue
 
     let v = initial
@@ -116,8 +116,9 @@ export default class AbsSelectView extends Vue {
       // tslint:disable-next-line
       const item = options.find(o => o.value === v)
       if (!item) {
+        const val = options[0].value ?? undefined
         v = defaultFirstOption
-          ? options[0].value
+          ? ($attrs.multiple && val !== undefined ? [val] : val)
           : undefined
       } else {
         v = item.value
