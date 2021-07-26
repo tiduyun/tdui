@@ -1,6 +1,10 @@
 import './types/tsx'
 import './types/vue'
 
+// helpers
+export { functionalComponent } from '@/utils/vue'
+export { ComponentBuilder, buildComponent, registerComponent } from './packages/ComponentFactory/ComponentBuilder'
+
 // basic
 export * from './packages/Icon'
 export * from './packages/Text'
