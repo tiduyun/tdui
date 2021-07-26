@@ -1,13 +1,16 @@
-import { get, isEmpty, isFunction, isPromise, set, throttle } from '@tdio/utils'
+import { get, isEmpty, isFunction, isPromise, isString, set, throttle } from '@tdio/utils'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { Emittable } from '@/utils/emittable'
 import { extractTooltip } from '@/utils/normalize'
 
+import { Nil } from '../../types/common'
+
 const prefixCls = `v-button`
 
 type Func = Function
+type TextChildNode = VNode | VNode[] | string
 
 @Component({
   name: 'v-button',
@@ -20,6 +23,9 @@ export default class Button extends Vue {
   lock: boolean = false
   isFirst: boolean = false
   isLast: boolean = false
+
+  @Prop(String)
+  text!: string
 
   @Prop(Boolean)
   visible!: boolean
@@ -36,7 +42,7 @@ export default class Button extends Vue {
   // public api for <button-group /> injection
   type: string = ''
 
-  initialSlot?: VNode[]
+  initialSlot?: TextChildNode | Nil
 
   @Watch('visible')
   handleVisible (newVal: boolean) {
@@ -52,6 +58,15 @@ export default class Button extends Vue {
   ) {
     this.isFirst = first === this
     this.isLast = last === this
+  }
+
+  getText (): TextChildNode | Nil {
+    let textSlot: TextChildNode | undefined = this.$slots.default
+    let text: string
+    if (!textSlot && (text = this.text)) {
+      textSlot = isString(text) ? this._v(text) : text
+    }
+    return textSlot || null
   }
 
   created () {
@@ -108,7 +123,7 @@ export default class Button extends Vue {
 
     this.$on('hook:updated', initLocker)
     this.$on('hook:mounted', () => {
-      this.initialSlot = this.$slots.default
+      this.initialSlot = this.getText()
       initLocker()
     })
   }
@@ -124,7 +139,7 @@ export default class Button extends Vue {
     const type = this.type || $attrs.type
     const isLoading = loading || lock
 
-    let text: VNode[] | string | undefined = $slots.default
+    let text = this.getText()
     if (this.loadingText) {
       if (isLoading) {
         // cache the initialize text slots
@@ -144,7 +159,7 @@ export default class Button extends Vue {
         props={{ ...$attrs, type }}
         on={{ ...$listeners, click: this.handleClick }}
       >
-        { text || null }
+        { text }
       </el-button>
     )
 
