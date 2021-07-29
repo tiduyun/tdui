@@ -44,7 +44,6 @@ const plugins = [
 ]
 
 export default {
-  destDir: resolve('lib'),
   vue: true,
   dependencies: { events: true, ...dependencies, ...peerDependencies },
   compress: false,
@@ -56,7 +55,7 @@ export default {
         return id.indexOf(utilPrefix) === 0 || next(id, true)
       },
       output: [
-        { format: 'es', file: 'tdui.esm.js', banner: banner(name, true) }
+        { dir: './lib', format: 'es', banner: banner(name, true), entryFileNames: '[name].[format].js' }
       ]
     }
   ]
