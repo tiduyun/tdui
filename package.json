@@ -2,7 +2,7 @@
   "name": "@tdio/tdui",
   "version": "1.4.0-pre.0",
   "description": "Tiduyun.com Front-End UI",
-  "module": "lib/tdui.esm.js",
+  "module": "lib/index.es.js",
   "types": "lib/index.d.ts",
   "keywords": [
     "ui"
