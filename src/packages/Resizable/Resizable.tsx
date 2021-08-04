@@ -10,23 +10,22 @@ import { parseClass } from '@/utils'
 import {DraggableCore} from '../Draggable'
 import {Axis, DragCallbackData, Props, RESIZABLE_PROPS_ARR, ResizableProps, ResizableState, ResizeHandleAxis} from './utils/propTypes'
 
-
 @Component
 export class Resizable extends Mixins(ResizableProps) {
   @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([20, 20])})
-  handleSize!: [number, number]
+  handleSize: [number, number] = [20, 20]
 
   @Prop({...VueTypes.oneOf(['both', 'x', 'y', 'none']), default: 'both'})
-  axis!: Axis
+  axis: Axis = 'both'
 
   @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([20, 20]) })
-  minConstraints!: number[]
+  minConstraints: number[] = [20, 20]
 
   @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([Infinity, Infinity])})
-  maxConstraints!: number[]
+  maxConstraints: number[] = [Infinity, Infinity]
 
   @Prop({...VueTypes.arrayOf(VueTypes.oneOf(['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'])), default: () => (['se'])})
-  resizeHandles!: any
+  resizeHandles: string[] = ['se']
 
   get props (): Props {
     return pick(this, RESIZABLE_PROPS_ARR) as any
