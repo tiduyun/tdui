@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.3.0...1.4.0) (2021-10-13)
+
+
+### Features
+
+* add button with text property ([d429173](https://git.tiduyun.com/f2e-modules/tdui/commit/d429173666d603d8c23ab66c14ee3e79f72af91f))
+* add checkbox-group ([b881f35](https://git.tiduyun.com/f2e-modules/tdui/commit/b881f3534613a35c4b7def5406dc826717d2d4f5))
+* add component factory helper/builder ([872c693](https://git.tiduyun.com/f2e-modules/tdui/commit/872c693dc64cd18d735c124bd1ac95b258f501f1))
+* add scss var `button-default-background-color` ([fd61537](https://git.tiduyun.com/f2e-modules/tdui/commit/fd61537ac6184b19dfae53f3e5a854eb43393dfd))
+* add v-ref inspired from react ref ([683c80d](https://git.tiduyun.com/f2e-modules/tdui/commit/683c80dac9850ab7a77835863ae2bb3278c3c8de))
+* add vue-grid-layout ([66fd690](https://git.tiduyun.com/f2e-modules/tdui/commit/66fd690c2b56197e4ff9f8bdfc77cd2ff0f96e70))
+* vue-load-skeleton ([cbe1d61](https://git.tiduyun.com/f2e-modules/tdui/commit/cbe1d617ea2ba35dcf4d8e3c82c4ab3573a65ef5))
+
+
+### Bug Fixes
+
+* bump tsc 4.4.x spec ([4111ba5](https://git.tiduyun.com/f2e-modules/tdui/commit/4111ba513652d705ae9cb2a89d058b96f0ee292c))
+* functionalComponent type declaration ([7a03129](https://git.tiduyun.com/f2e-modules/tdui/commit/7a031299fd9a449292721447e5c8a49dc2481fb9))
+* grid-layout抛出最新数据修复 ([d57a606](https://git.tiduyun.com/f2e-modules/tdui/commit/d57a606e83fac98b9d6d3a8c16e89a07d2f1f679))
+* improve elemeui vars ([b299c64](https://git.tiduyun.com/f2e-modules/tdui/commit/b299c646e89d9fc7569b7e4c082deaad66c10dd8))
+* resizable原始类名丢失修复 gridlayout代码结构优化 ([5a78b7f](https://git.tiduyun.com/f2e-modules/tdui/commit/5a78b7f897c41b9b4ac63bf525985f2eefe9cee9))
+* resize-observer constructor invalid issue ([6d8e012](https://git.tiduyun.com/f2e-modules/tdui/commit/6d8e012df3d04a2f9d7f33d798042d33c9d42603))
+* responsiveGridLayout组件优化 宽度组件优化 ([9b162ad](https://git.tiduyun.com/f2e-modules/tdui/commit/9b162addb06c42d3dc99075885da6b355a90d401))
+* select多选默认值报错修复 ([7f5a8d0](https://git.tiduyun.com/f2e-modules/tdui/commit/7f5a8d0ad8d09fca1776e6093b8adab6e38df171))
+* strip table th.cell line-height ([c1a50fc](https://git.tiduyun.com/f2e-modules/tdui/commit/c1a50fcda7da81c32f0ca06c586e98aa72409f90))
+* **tab:** add active and hove color vars ([2779d52](https://git.tiduyun.com/f2e-modules/tdui/commit/2779d52f98450505731dc38574850c691c3b805b))
+* 宽度自适应组件功能 ([6b39a77](https://git.tiduyun.com/f2e-modules/tdui/commit/6b39a770bcc6b0d57701e539f06fdb3b0f5d9755))
+
 ## [1.3.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.3.0-1...1.3.0) (2021-05-13)
 
 ## [1.3.0-1](https://git.tiduyun.com/f2e-modules/tdui/compare/1.3.0-0...1.3.0-1) (2021-04-23)
