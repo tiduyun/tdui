@@ -159,8 +159,11 @@ $menu-item-height: 40px !default;
   }
 
   th > .cell {
-    min-height: 34px;
-    line-height: 34px;
+    padding: 7px 10px;
+
+    .caret-wrapper {
+      margin: -7px 0;
+    }
   }
 
   .cell {
