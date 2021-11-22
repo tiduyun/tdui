@@ -4,7 +4,7 @@ import { CreateElement } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import {
-  assign, cleanup, debounce, deepClone, defaultTo, deferred, DeferredPromise, get, guid, hasOwn, identity, isEmpty,
+  assign, deepClone, defaultTo, deferred, DeferredPromise, get, guid, hasOwn, identity, isEmpty,
   isEqual, isObject, merge, omit, pick, set, unset
 } from '@tdio/utils'
 

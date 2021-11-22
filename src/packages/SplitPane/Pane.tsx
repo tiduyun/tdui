@@ -5,8 +5,8 @@ import VueTypes from 'vue-types'
 
 @Component
 export default class Pane extends Vue {
-  @Prop(VueTypes.string.isRequired)
-  className!: string
+  @Prop(VueTypes.oneOfType([String, Object]).isRequired)
+  className!: string | object
 
   @Prop({ type: Object, default: () => ({})})
   styles!: any
