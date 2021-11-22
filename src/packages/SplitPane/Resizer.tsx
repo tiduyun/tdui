@@ -7,8 +7,8 @@ export const RESIZER_DEFAULT_CLASSNAME = 'Resizer'
 
 @Component
 export default class Resizer extends Vue {
-  @Prop({ ...VueTypes.string.isRequired })
-  className!: string
+  @Prop(VueTypes.oneOfType([String, Object]).isRequired)
+  className!: string | object
 
   @Prop({ ...VueTypes.func })
   fnClick!: any

@@ -225,8 +225,8 @@ export default class GridItem extends Vue {
   transformScale!: number
 
   // Others
-  @Prop(VueTypes.string.def(''))
-  className!: string
+  @Prop(VueTypes.oneOfType([String, Object]).def(''))
+  className!: string | object
 
   @Prop()
   styles!: CSSStyleDeclaration

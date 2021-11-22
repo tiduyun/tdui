@@ -50,8 +50,8 @@ export class Skeleton extends Vue {
   @Prop({ ...VueTypes.oneOfType([VueTypes.string, VueTypes.number]), default: '' })
   height!: number | string
 
-  @Prop({ ...VueTypes.string, default: '' })
-  className!: number
+  @Prop(VueTypes.oneOfType([String, Object]).def(''))
+  className!: string | object
 
   @Prop()
   styles!: any
