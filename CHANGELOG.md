@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [1.4.1](https://git.tiduyun.com/f2e-modules/tdui/compare/1.4.0...1.4.1) (2021-11-22)
+
+
+### Bug Fixes
+
+* **util/vue:** `findUpward` always returns null ([55e7e88](https://git.tiduyun.com/f2e-modules/tdui/commit/55e7e882f07c8bfeb360309ffa2de2b8a782e240))
+* 优化组件 props 类型重载 `Avoid mutating a prop directly` 警告 ([aaf8e8e](https://git.tiduyun.com/f2e-modules/tdui/commit/aaf8e8ea0dddd210e06353ce4186182402cf89a7))
+
 ## [1.4.0](https://git.tiduyun.com/f2e-modules/tdui/compare/1.3.0...1.4.0) (2021-10-13)
 
 
