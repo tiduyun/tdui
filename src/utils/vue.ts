@@ -22,10 +22,9 @@ export function findUpward (context: Vue, componentName: string | string[]): Vue
   }
 
   let parent = context.$parent
-  let name = context.parent?.$options?.name
+  let name = parent?.$options?.name
 
-  // @ts-ignore
-  while (parent && (!name || componentNames.indexOf(name) < 0)) {
+  while (parent != null && (!name || componentNames.indexOf(name) < 0)) {
     parent = parent.$parent
     if (parent) name = parent.$options.name
   }
