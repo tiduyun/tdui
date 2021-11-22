@@ -82,8 +82,8 @@ export class GridLayout extends Vue {
   // TODO publish internal ReactClass displayName transform
   static displayName?: string = 'GridLayout'
 
-  @Prop(VueTypes.string.def(''))
-  className!: string
+  @Prop(VueTypes.oneOfType([String, Object]).def(''))
+  className!: string | object
 
   @Prop(VueTypes.object.def({}))
   styles!: CSSStyleDeclaration

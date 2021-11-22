@@ -12,20 +12,25 @@ import {Axis, DragCallbackData, Props, RESIZABLE_PROPS_ARR, ResizableProps, Resi
 
 @Component
 export class Resizable extends Mixins(ResizableProps) {
-  @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([20, 20])})
-  handleSize: [number, number] = [20, 20]
+  @Prop(VueTypes.arrayOf(VueTypes.number).def([20, 20]))
+  // @ts-ignore
+  handleSize!: [number, number]
 
-  @Prop({...VueTypes.oneOf(['both', 'x', 'y', 'none']), default: 'both'})
-  axis: Axis = 'both'
+  @Prop(VueTypes.oneOf(['both', 'x', 'y', 'none']).def('both'))
+  // @ts-ignore
+  axis!: Axis
 
-  @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([20, 20]) })
-  minConstraints: number[] = [20, 20]
+  @Prop(VueTypes.arrayOf(VueTypes.number).def([20, 20]))
+  // @ts-ignore
+  minConstraints!: number[]
 
-  @Prop({...VueTypes.arrayOf(VueTypes.number), default: () => ([Infinity, Infinity])})
-  maxConstraints: number[] = [Infinity, Infinity]
+  @Prop(VueTypes.arrayOf(VueTypes.number).def([Infinity, Infinity]))
+  // @ts-ignore
+  maxConstraints!: number[]
 
-  @Prop({...VueTypes.arrayOf(VueTypes.oneOf(['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'])), default: () => (['se'])})
-  resizeHandles: string[] = ['se']
+  @Prop(VueTypes.arrayOf(VueTypes.oneOf(['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne'])).def(['se']))
+  // @ts-ignore
+  resizeHandles!: string[]
 
   get props (): Props {
     return pick(this, RESIZABLE_PROPS_ARR) as any

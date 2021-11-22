@@ -56,8 +56,8 @@ export class ResizableProps extends Vue {
   @Prop(VueTypes.oneOf(['both', 'x', 'y', 'none']))
   axis!: Axis
 
-  @Prop(VueTypes.string.def(''))
-  className!: string
+  @Prop(VueTypes.oneOfType([String, Object]).def(''))
+  className!: string | object
 
   /**
    * Require that one and only one child be present.
@@ -111,7 +111,7 @@ export class ResizableProps extends Vue {
    * Min X & Y measure
    */
   @Prop(VueTypes.arrayOf(VueTypes.number))
-  minConstraints!: number[]
+  minConstraints!: any
 
   /**
    * Called on stop resize event
