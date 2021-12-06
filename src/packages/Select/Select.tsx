@@ -56,18 +56,22 @@ export default class Select extends Mixins(AbsSelectView) {
       placeholder = this.initialLabel
     }
 
+    const props = {
+      ...this.$attrs,
+      class: classPrefix,
+      popperClass,
+      placeholder,
+      reserveKeyword: true,
+      disabled: calcDisabled,
+      clearable: this.clearable,
+      multiple: this.multiple,
+    }
+
     const selectNode = (
       <el-select
-        v-ref={this.selectRef}
         ref="select"
-        class={classPrefix}
-        popperClass={popperClass}
         value={this.currentValue}
-        reserveKeyword={true}
-        clearable={this.clearable}
-        disabled={calcDisabled}
-        props={this.$attrs}
-        placeholder={placeholder}
+        props={props}
         onInput={this.handleSelect}
       >
         { $slots.prefix ? (<template slot="prefix">{ $slots.prefix }</template>) : null }

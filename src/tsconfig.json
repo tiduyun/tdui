@@ -18,7 +18,7 @@
     "noImplicitReturns": true,
     "strictNullChecks": true,
     "diagnostics": true,
-    "listFiles": true,
+    "listFiles": false,
     "pretty": true,
     "noEmitOnError": false,
     "allowSyntheticDefaultImports": true,

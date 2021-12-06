@@ -1,18 +1,12 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { get, hasOwn, identity, isEmpty, isPrimitive, isValue, set, valueEquals } from '@tdio/utils'
+import { get, hasOwn, identity, isArray, isEmpty, isEqual, isPrimitive, isValue, set, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
 import { IOption, Nil } from '../../types/common'
 
-import { createRef, installRef, RefObject } from '../../utils/directives/ref'
-
 type T = any
-
-const normalizeValue = (v: any) => v === '' ? undefined : v
-
-Vue.use(installRef)
 
 @Component
 @Emittable
@@ -32,6 +26,9 @@ export default class AbsSelectView extends Vue {
   @Prop({ type: Boolean, default: true })
   defaultFirstOption!: boolean
 
+  @Prop(Boolean)
+  multiple!: boolean
+
   @Prop()
   entity: any
 
@@ -41,23 +38,31 @@ export default class AbsSelectView extends Vue {
   /* reactive properties */
   currentValue: T | Nil = undefined
   currentOptions: IOption[] = []
+  currentEntity: object | undefined = undefined
   valueChecked: boolean = true
-
-  protected selectRef!: RefObject<AbsSelectView, Vue>
 
   private _kvRefs!: Kv<T>
   private _initialValue!: T | Nil
 
   beforeCreate () {
     this._kvRefs = {}
-    this.selectRef = createRef()
   }
 
   @Watch('value')
-  handleChange (val: T | undefined, oldVal?: T) {
-    oldVal = this.currentValue
-    if (val !== oldVal) {
-      this.setSelectedValue(val)
+  valueWatchFn (val: T | undefined, oldVal?: T) {
+    if (!isEqual(val, this.currentValue)) {
+      this.setSelectedValue(val, true)
+      this.dispatch('ElFormItem', 'el.form.change', val)
+    }
+  }
+
+  @Watch('entity')
+  setCurrEntity (entity: object | object[] | undefined) {
+    const prev = this.currentEntity
+    if (prev !== entity) {
+      this.currentEntity = entity
+      this.$emit('entity', entity)
+      this.$emit('update:entity', entity)
     }
   }
 
@@ -66,34 +71,34 @@ export default class AbsSelectView extends Vue {
     this.setSelectedValue(val)
   }
 
-  setSelectedValue (val: T | undefined) {
-    const v = normalizeValue(val)
-    const isModified = v !== this.currentValue
-    const dic = this._kvRefs
+  /**
+   * Set and emit current selected value (break reference with a shadow copy)
+   *
+   * @param val {any} The current selected value
+   * @param skipEmit {Boolean} skip model emit (input & change events)
+   */
+  setSelectedValue (val: T | T[] | undefined, skipEmit?: boolean) {
+    const v = this.normalizeValue(val)
+    const isModified = !isEqual(v, this.currentValue)
 
     // tslint:disable-next-line
     if (isModified) {
       const prev = this.currentValue
       this.currentValue = v
-
-      // tslint:disable-next-line
-      if (val !== this.value) { // prevent cycle rollback emits
+      if (!skipEmit) {
         this.$emit('input', v)
         this.$emit('change', v, prev)
-        this.dispatch('ElFormItem', 'el.form.change', v)
       }
     }
 
     // is value changed indeed or initialize lifecycle
-    if (isModified || !hasOwn(this, '_currEntity')) {
+    if (isModified || (!isEmpty(v) && isEmpty(this.currentEntity))) {
+      const dic = this._kvRefs
       // emit entity
-      const o = dic[v]
-      const { entity, propValue } = this
-      if (o !== entity && (isEmpty(entity) || !valueEquals(get(entity, propValue), get(o, propValue)))) {
-        set(this, '_currEntity', o)
-        this.$emit('update:entity', o)
-      }
-      this.$emit('entity', o)
+      const o = this.multiple
+        ? v.map((k: any) => dic[k])
+        : dic[v]
+      this.setCurrEntity(o)
     }
   }
 
@@ -106,7 +111,7 @@ export default class AbsSelectView extends Vue {
     this.parseOptions(entities)
 
     const options = this.currentOptions
-    const { currentValue, defaultFirstOption, $attrs } = this
+    const { currentValue, defaultFirstOption } = this
     const initial = isValue(currentValue) ? currentValue : this._initialValue
 
     let v = initial
@@ -118,7 +123,7 @@ export default class AbsSelectView extends Vue {
       if (!item) {
         const val = options[0].value ?? undefined
         v = defaultFirstOption
-          ? ($attrs.multiple && val !== undefined ? [val] : val)
+          ? (this.multiple && val !== undefined ? [val] : val)
           : undefined
       } else {
         v = item.value
@@ -135,7 +140,8 @@ export default class AbsSelectView extends Vue {
   }
 
   created () {
-    this._initialValue = normalizeValue(this.value)
+    this.setCurrEntity(this.entity)
+    this._initialValue = this.normalizeValue(this.value)
   }
 
   mounted () {
@@ -152,6 +158,18 @@ export default class AbsSelectView extends Vue {
 
   protected getEntity (k: string) {
     return this._kvRefs[k]
+  }
+
+  private normalizeValue (v: any): any | undefined {
+    if (this.multiple) {
+      if (isArray(v)) {
+        return [...v]
+      } else if (!isEmpty(v)) {
+        return [v]
+      }
+      return []
+    }
+    return isEmpty(v) ? undefined : v
   }
 
   private parseOptions (items: T[]): void {
