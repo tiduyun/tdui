@@ -171,12 +171,11 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   @Watch('treeParams', { immediate: true })
   initTreeParams (v: TreeParams<D>) {
-    const treeParams = this.params.tree = deepAssign({}, getVuePropDefault(this, 'treeParams'), omit(v, 'data'))
-
-    const { multiple } = this.params.select
-    const { props } = treeParams
     const data = v.data || []
+    const treeParams = deepAssign({}, getVuePropDefault(this, 'treeParams'), omit(v, 'data'))
+    const { props } = treeParams
 
+    this.params.tree = treeParams
     this.propsValue = props.value
     this.propsLabel = props.label
     this.propsDisabled = props.disabled
@@ -186,7 +185,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
     this.nextTick(() => {
       this.ids = []
-      this.labels = multiple ? [] : ''
+      this.labels = this.params.select.multiple ? [] : ''
 
       if (data.length > 0) {
         // initial the checked item and sync fake select label text
@@ -201,6 +200,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   mounted () {
+    this.keywords = ''
     this.syncPopperUI()
     this.nextTick(() => this.initClickOutside())
   }
@@ -258,9 +258,12 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
           {
             this.params.tree.filterable ? (
               <div class="fbox">
-                <el-input v-model={this.keywords} size="mini" class="input-with-select" onChange={this.handleFilter}>
-                  <el-button slot="append" icon="el-icon-search" />
-                </el-input>
+                <el-input
+                  v-model={this.keywords}
+                  size="mini"
+                  class="input-with-select"
+                  nativeOn={{click: this.keywordsClick}}
+                />
               </div>
             ) : null
           }
@@ -269,12 +272,17 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
               ref="tree"
               key={treeProps.nodeKey}
               v-show={this.data.length > 0}
-              props={(unset(treeProps, 'data'), treeProps)}
+              props={omit(treeProps, 'data')}
               data={this.data}
               accordion={this.accordion}
               on-check={this.handleTreeCheck}
               on-node-click={this.handleTreeNodeClick}
               on-current-change={this.handleTreeCurrentChange}
+              { ...{
+                scopedSlots: {
+                  default: (item: any) => (<span class="el-tree-node__label" title={item.node.label}>{item.node.label}</span>)
+                }
+              }}
             />
             { this.data.length === 0 ? (<div class="el-select-dropdown__empty">{$t('No Data')}</div>) : null }
           </el-scrollbar>
@@ -283,8 +291,15 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     )
   }
 
-  handleFilter () {
-    this.$emit('search', this.keywords)
+  @Watch('keywords')
+  handleFilter (q: string) {
+    this.$tree.filter(q)
+    this.$emit('search', q)
+  }
+
+  keywordsClick ($event: any) {
+    $event.stopPropagation()
+    this.showPopper()
   }
 
   /**
@@ -416,6 +431,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   hidePopper (trigger: boolean = true) {
     this.visible = false
+    this.keywords = ''
     if (trigger) {
       this.$select.toggleMenu()
     }
