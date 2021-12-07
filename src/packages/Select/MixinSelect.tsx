@@ -21,6 +21,7 @@ class MixinSelect extends Vue {
 
   propLabel: string = 'label'
   propValue: string = 'value'
+  filterable: boolean = false
 
   @Prop()
   value!: any
@@ -127,6 +128,7 @@ class MixinSelect extends Vue {
         propLabel={this.propLabel}
         propValue={this.propValue}
         value={value}
+        filterable={this.filterable}
         entity={this.entity}
         on={this.$listeners}
         slots={$slots}

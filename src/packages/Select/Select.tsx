@@ -44,10 +44,10 @@ export default class Select extends Mixins(AbsSelectView) {
         ? (
           <el-option key={o.value} props={o} class="icon-option">
             <Icon iconName={entity.icon} />
-            <span>{o.label}</span>
+            <span title={o.label}>{o.label}</span>
           </el-option>
         ) : (
-          <el-option key={o.value} props={o} />
+          <el-option key={o.value} props={o} title={o.label} />
         )
     )
 

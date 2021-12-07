@@ -27,6 +27,9 @@ export default class AbsFormDialog extends MixinDialog {
   @Prop(String)
   dialogClass!: string
 
+  @Prop({ type: Boolean, default: true })
+  showClose!: boolean
+
   // For skip builtin validator
   @Prop(Boolean)
   skipValidator!: boolean
@@ -88,6 +91,7 @@ export default class AbsFormDialog extends MixinDialog {
       size,
       width,
       appendToBody,
+      showClose,
       entity
     } = this
 
@@ -108,8 +112,10 @@ export default class AbsFormDialog extends MixinDialog {
         on={{ 'update:visible': (e: boolean) => entity.visible = e }}
         title={entity.title}
         width={width}
+        show-close={showClose}
         append-to-body = {appendToBody}
         closeOnClickModal={false}
+        close-on-press-escape={false}
         on-close={() => this.$emit('close')}
         on-closed={() => { this.isShow = false; this.$emit('closed') }}
         on-open={() => { this.isShow = true; this.$emit('show') }}

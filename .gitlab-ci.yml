@@ -21,6 +21,7 @@ deployment:
     - yarn lint
     - yarn build
     - yarn test
+    - git release-npm -t dev -r 1.4.2-pre.5 -f
   stage: build
   only:
     - branches
