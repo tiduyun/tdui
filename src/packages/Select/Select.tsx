@@ -23,9 +23,6 @@ export default class Select extends Mixins(AbsSelectView) {
   @Prop({ type: String, default: $t('Select...') })
   placeholder!: string
 
-  @Prop({ type: String, default: '' })
-  initialLabel!: string
-
   @Prop({ type: Boolean, default: null })
   disabled!: boolean
 
@@ -51,10 +48,7 @@ export default class Select extends Mixins(AbsSelectView) {
         )
     )
 
-    let placeholder = this.placeholder
-    if (!this.valueChecked && this.initialLabel) {
-      placeholder = this.initialLabel
-    }
+    const placeholder = this.placeholder
 
     const props = {
       ...this.$attrs,
