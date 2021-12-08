@@ -39,7 +39,6 @@ export default class AbsSelectView extends Vue {
   currentValue: T | Nil = undefined
   currentOptions: IOption[] = []
   currentEntity: object | undefined = undefined
-  valueChecked: boolean = true
 
   private _kvRefs!: Kv<T>
   private _initialValue!: T | Nil
@@ -67,7 +66,6 @@ export default class AbsSelectView extends Vue {
   }
 
   handleSelect (val: T | undefined) {
-    this.valueChecked = true
     this.setSelectedValue(val)
   }
 
@@ -132,9 +130,6 @@ export default class AbsSelectView extends Vue {
       // cleanup current value when reset options (means the previous items not empty)
       v = undefined
     }
-
-    // not a valid value (not exists in options)
-    this.valueChecked = initial !== v && options.length > 0
 
     this.setSelectedValue(v)
   }
