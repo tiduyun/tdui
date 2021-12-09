@@ -4,7 +4,7 @@ import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 import { Button } from '../Button'
 import ButtonGroupInter from '../Button/ButtonGroup'
 
-import AbsSelectView from './AbsSelectView'
+import { AbsSelectView } from './AbsSelectView'
 
 @Component({
   components: { ButtonGroupInter, Button }

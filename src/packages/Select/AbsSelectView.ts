@@ -1,21 +1,28 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { get, hasOwn, identity, isArray, isEmpty, isEqual, isPrimitive, isValue, set, valueEquals } from '@tdio/utils'
+import { constant, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isPrimitive, isValue, set } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
 import { IOption, Nil } from '../../types/common'
 
-type T = any
+type IOptionKeyType = PrimaryKey
+
+export type TSelectedVal = IOptionKeyType | IOptionKeyType[]
+export type IOptionEntity = object | string | number // object or any primitive types
+export type OptionsProvider = IOptionEntity[] | ((...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[])
 
 @Component
 @Emittable
-export default class AbsSelectView extends Vue {
+export class AbsSelectView extends Vue {
   @Prop()
-  value!: T | undefined
+  value!: TSelectedVal | Nil
 
-  @Prop({ type: Array, default: () => ([]) })
-  options!: T[]
+  @Prop()
+  entity!: IOptionEntity
+
+  @Prop({ type: [Array, Function], default: () => ([]) })
+  options!: OptionsProvider
 
   @Prop({ type: String, default: 'label' })
   propLabel!: string
@@ -29,26 +36,28 @@ export default class AbsSelectView extends Vue {
   @Prop(Boolean)
   multiple!: boolean
 
-  @Prop()
-  entity: any
+  /**
+   * A predicate function for options filter, to test each element of the options.
+   * Return a value that coerces to true to keep the element, or to false otherwise.
+   */
+  @Prop({ type: Function, default: constant(true) })
+  optionsFilterFunc!: (raw: IOptionEntity) => boolean
 
-  @Prop({ type: Function, default: identity })
-  optionMapper!: (o: T) => any
+  /**
+   * Cleanup the obsolete selected value
+   */
+  @Prop({ type: Boolean, default: true })
+  cleanupObsolete!: boolean
 
   /* reactive properties */
-  currentValue: T | Nil = undefined
+  currentValue: TSelectedVal | Nil = this.normalizeValue(this.value)
   currentOptions: IOption[] = []
-  currentEntity: object | undefined = undefined
+  currentEntity: Many<IOptionEntity> | Nil = this.entity
 
-  private _kvRefs!: Kv<T>
-  private _initialValue!: T | Nil
-
-  beforeCreate () {
-    this._kvRefs = {}
-  }
+  private _refIndexes!: Map<IOptionKeyType, IOptionEntity>
 
   @Watch('value')
-  valueWatchFn (val: T | undefined, oldVal?: T) {
+  valueWatchFn (val: TSelectedVal | Nil, oldVal?: TSelectedVal) {
     if (!isEqual(val, this.currentValue)) {
       this.setSelectedValue(val, true)
       this.dispatch('ElFormItem', 'el.form.change', val)
@@ -56,16 +65,16 @@ export default class AbsSelectView extends Vue {
   }
 
   @Watch('entity')
-  setCurrEntity (entity: object | object[] | undefined) {
+  setCurrEntity (entity: Many<IOptionEntity> | Nil) {
     const prev = this.currentEntity
-    if (prev !== entity) {
+    if (prev !== entity && !(isEmpty(prev) && isEmpty(entity))) {
       this.currentEntity = entity
       this.$emit('entity', entity)
       this.$emit('update:entity', entity)
     }
   }
 
-  handleSelect (val: T | undefined) {
+  handleSelect (val: TSelectedVal | Nil) {
     this.setSelectedValue(val)
   }
 
@@ -75,7 +84,7 @@ export default class AbsSelectView extends Vue {
    * @param val {any} The current selected value
    * @param skipEmit {Boolean} skip model emit (input & change events)
    */
-  setSelectedValue (val: T | T[] | undefined, skipEmit?: boolean) {
+  setSelectedValue (val: TSelectedVal | Nil, skipEmit?: boolean) {
     const v = this.normalizeValue(val)
     const isModified = !isEqual(v, this.currentValue)
 
@@ -91,71 +100,98 @@ export default class AbsSelectView extends Vue {
 
     // is value changed indeed or initialize lifecycle
     if (isModified || (!isEmpty(v) && isEmpty(this.currentEntity))) {
-      const dic = this._kvRefs
-      // emit entity
-      const o = this.multiple
-        ? v.map((k: any) => dic[k])
-        : dic[v]
-      this.setCurrEntity(o)
+      this.syncEntity()
     }
   }
 
   @Watch('options')
-  handleOptionsChange (entities: T[], old: T[] = []) {
-    if (!entities.length && !old.length) {
-      return
+  async handleOptionsChange (provider: OptionsProvider): Promise<IOption[]> {
+    let rawItems: IOptionEntity[] = []
+
+    // Handle options as a promise loader when it is function
+    if (isFunction(provider)) {
+      if (isFunction(this.optionsDecorator)) {
+        rawItems = await this.optionsDecorator(provider) || []
+      } else {
+        throw new TypeError('Illegal arguments, use <AsyncSelect /> instead')
+      }
+    } else if (isArray(provider)) {
+      rawItems = provider
+    } else {
+      throw new Error('The [[options]] type nerther Generator<Promise> or Array')
     }
 
-    this.parseOptions(entities)
+    const lastOptions = this.currentOptions
+    if (rawItems.length === 0 && lastOptions.length === 0) {
+      return lastOptions
+    }
+
+    this.interSetOptions(rawItems)
 
     const options = this.currentOptions
-    const { currentValue, defaultFirstOption } = this
-    const initial = isValue(currentValue) ? currentValue : this._initialValue
+    const { multiple, currentValue, defaultFirstOption, cleanupObsolete } = this
 
-    let v = initial
-    if (options.length) {
-      // Keep previous value if exists in new options (implicit match)
-      // or else select first item when `defaultFirstOption`
-      // tslint:disable-next-line
-      const item = options.find(o => o.value === v)
-      if (!item) {
-        const val = options[0].value ?? undefined
-        v = defaultFirstOption
-          ? (this.multiple && val !== undefined ? [val] : val)
-          : undefined
-      } else {
-        v = item.value
-      }
-    } else if (!isEmpty(old)) {
-      // cleanup current value when reset options (means the previous items not empty)
-      v = undefined
+    // Keep previous value if exists in new options (implicit match)
+    let v = currentValue
+
+    // cleanup obsolete selected value
+    if (cleanupObsolete && !isEmpty(v)) {
+      const assert = (v: IOptionKeyType) => this._refIndexes.has(v)
+      v = multiple
+        ? (v as IOptionKeyType[]).filter(assert)
+        : assert(v as IOptionKeyType)
+          ? v : undefined
     }
 
-    this.setSelectedValue(v)
+    if (options.length > 0 && defaultFirstOption && isEmpty(v)) {
+      // or else select first item when `defaultFirstOption`
+      const firstVal = options[0].value
+      v = multiple ? [firstVal] : firstVal
+    }
+
+    if (v !== currentValue) {
+      this.setSelectedValue(v)
+    }
+
+    return options
+  }
+
+  /**
+   * Api method for update options provider programming manually
+   *
+   * @param options {OptionsProvider}
+   */
+  setOptions (options: OptionsProvider): Promise<IOption[]> {
+    return this.handleOptionsChange(options)
+  }
+
+  beforeCreate () {
+    this._refIndexes = new Map<IOptionKeyType, IOptionEntity>()
   }
 
   created () {
-    this.setCurrEntity(this.entity)
-    this._initialValue = this.normalizeValue(this.value)
+    this.setSelectedValue(this.value)
+    this.syncEntity()
   }
 
-  mounted () {
+  mounted (): Promise<any> {
     const { value, $slots, defaultFirstOption, options } = this
 
     // Get options by mockup slots
     if (defaultFirstOption && !isEmpty($slots.default) && !isValue(value)) {
       const v = get($slots, 'default[0].componentInstance.currentValue') // It's should be a ElOption instance
       this.setSelectedValue(v)
-    } else if (!isEmpty(options)) {
-      this.handleOptionsChange(options)
+      return Promise.resolve()
+    } else {
+      return this.handleOptionsChange(options)
     }
   }
 
-  protected getEntity (k: string) {
-    return this._kvRefs[k]
+  protected getEntity (k: string): IOptionEntity | Nil {
+    return this._refIndexes.get(k)
   }
 
-  private normalizeValue (v: any): any | undefined {
+  private normalizeValue (v: any): TSelectedVal | undefined {
     if (this.multiple) {
       if (isArray(v)) {
         return [...v]
@@ -167,27 +203,41 @@ export default class AbsSelectView extends Vue {
     return isEmpty(v) ? undefined : v
   }
 
-  private parseOptions (items: T[]): void {
-    const dic: Kv<T> = {}
-    const { propLabel, propValue, optionMapper } = this
+  /**
+   * Update internal options list
+   */
+  private interSetOptions (raw: IOptionEntity[]): void {
+    const { propLabel, propValue, optionsFilterFunc } = this
 
-    const options = items.reduce((r, o) => {
-      o = optionMapper(o)
-      const option: IOption = isPrimitive(o)
-        ? { label: o, value: o }
-        : { label: get(o, propLabel), value: get(o, propValue) }
+    const dic: Map<IOptionKeyType, IOptionEntity> = new Map<IOptionKeyType, IOptionEntity>()
+    const options = raw.filter(optionsFilterFunc).reduce<IOption[]>((r, o) => {
+      const option: IOption<IOptionKeyType> = isPrimitive(o)
+        ? { label: String(o), value: o as IOptionKeyType }
+        : { label: get(o, propLabel)!, value: get<IOptionKeyType>(o, propValue)! }
       const disabled = !!get(o, 'disabled')
       if (disabled) {
         option.disabled = disabled
       }
-      dic[option.value] = o
       r.push(option)
+      dic.set(option.value, o)
       return r
-    }, [] as IOption[])
+    }, [])
+
+    // cache the option reference indexes
+    this._refIndexes = dic
 
     this.currentOptions = options
+  }
 
-    // cache the options k/v for selection `entity` sync
-    this._kvRefs = dic
+  private syncEntity () {
+    const v = this.currentValue
+    const dic = this._refIndexes
+
+    // normalize entity and emit
+    const o = this.multiple
+      ? (v as IOptionKeyType[]).map((k: IOptionKeyType) => dic.get(k)).filter(Boolean)
+      : dic.get(v as IOptionKeyType)
+
+    this.setCurrEntity(o)
   }
 }
