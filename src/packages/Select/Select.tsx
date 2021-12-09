@@ -1,4 +1,3 @@
-import { CreateElement } from 'vue'
 import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 
 import { $t } from '@tdio/locale'
@@ -9,7 +8,7 @@ import { extractTooltip } from '@/utils/normalize'
 import { IOption } from '../../types/common'
 import { Icon } from '../Icon'
 
-import AbsSelectView from './AbsSelectView'
+import { AbsSelectView } from './AbsSelectView'
 import './Select.scss'
 
 @Component({
@@ -29,6 +28,12 @@ export default class Select extends Mixins(AbsSelectView) {
   @Prop()
   tooltip!: string | {}
 
+  /**
+   * Abstract property set for the derived component overrides
+   * @abstract
+   */
+  selectProps: Kv = {}
+
   render () {
     const { $slots, $scopedSlots, disabled } = this
     const calcDisabled = isValue(disabled) ? disabled : false
@@ -37,7 +42,7 @@ export default class Select extends Mixins(AbsSelectView) {
     const popperClass = `${classPrefix}--popper ${this.popperClass || ''}`.trim()
 
     const renderOption = (o: IOption, entity: any) => (
-      entity.icon
+      entity?.icon
         ? (
           <el-option key={o.value} props={o} class="icon-option">
             <Icon iconName={entity.icon} />
@@ -50,8 +55,9 @@ export default class Select extends Mixins(AbsSelectView) {
 
     const placeholder = this.placeholder
 
-    const props = {
+    const props: Kv = {
       ...this.$attrs,
+      ...this.selectProps,
       class: classPrefix,
       popperClass,
       placeholder,
@@ -61,10 +67,13 @@ export default class Select extends Mixins(AbsSelectView) {
       multiple: this.multiple,
     }
 
+    // Prevent show the plain value when options is a await loader
+    const selValue = props.inputLoading ? undefined : this.currentValue
+
     const selectNode = (
       <el-select
         ref="select"
-        value={this.currentValue}
+        value={selValue}
         props={props}
         onInput={this.handleSelect}
       >
@@ -73,12 +82,12 @@ export default class Select extends Mixins(AbsSelectView) {
         {
           $slots.default
             ? $slots.default
-            : this.currentOptions.map((o, i) => {
+            : this.currentOptions.map(o => {
               const entity = this.getEntity(o.value)
               return (
                 $scopedSlots.option
                   ? $scopedSlots.option({ ...o, entity })
-                  : renderOption(o, this.options[i]))
+                  : renderOption(o, entity))
             })
         }
       </el-select>

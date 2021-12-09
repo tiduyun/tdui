@@ -1,4 +1,5 @@
 import { decode as b64Decode, encode as b64Encode } from '@allex/base64'
+import { isFunction } from '@tdio/utils'
 
 export {
   b64Decode, b64Encode
@@ -88,3 +89,20 @@ export function parseClass (className: string): Kv<boolean> {
 }
 
 export const result = <T> (o: T, ...args: any[]) => (typeof o === 'function' ? o(...args) : o)
+
+/**
+ * Ensure the provided object is a promise
+ *
+ * @param o
+ * @returns
+ */
+export const toPromise = <T> (o: any): Promise<T> => {
+  if (isFunction(o?.catch)) {
+    return o as Promise<T>
+  } else {
+    if (o instanceof Error) {
+      return Promise.reject(o)
+    }
+    return Promise.resolve(o)
+  }
+}

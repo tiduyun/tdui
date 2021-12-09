@@ -4,7 +4,6 @@
     "outDir": "../lib",
     "target": "esnext",
     "module": "esnext",
-    "lib": ["dom", "es6", "es2017"],
     "importHelpers": true,
     "strict": true,
     "jsx": "preserve",
@@ -35,8 +34,8 @@
       "@/*": [ "./*" ]
     },
     "lib": [
-      "esnext",
       "dom",
+      "esnext",
       "dom.iterable"
     ]
   },

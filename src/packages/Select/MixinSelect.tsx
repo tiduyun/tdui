@@ -1,17 +1,13 @@
-import { CreateElement } from 'vue'
+import { constant, isArray, isEmpty, isFunction, isObject, isPromise, valueEquals } from '@tdio/utils'
 import { Component, Mixins, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { debounce } from '@/utils/decorators'
-import { constant, isArray, isEmpty, isFunction, isObject, isPromise, valueEquals } from '@tdio/utils'
-
+import { IOptionEntity, OptionsProvider } from './AbsSelectView'
 import Select from './Select'
 
 const values = (o: any) => (isObject(o) ? Object.values(o) : o)
 const isValueEquals = (o: any, p: any) => valueEquals(values(o), values(p))
 
-type IOptionEntity = any // object
 type IOptionsLoader = (...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[]
-type OptionsImpl = IOptionEntity | IOptionsLoader
 
 @Component
 class MixinSelect extends Vue {
@@ -21,7 +17,6 @@ class MixinSelect extends Vue {
 
   propLabel: string = 'label'
   propValue: string = 'value'
-  filterable: boolean = false
 
   @Prop()
   value!: any
@@ -41,18 +36,23 @@ class MixinSelect extends Vue {
   private _inited?: boolean // duplicate initialize fetching locker
   private _pending?: IOptionsLoader
 
-  initOptions <T> (options: OptionsImpl, p?: OptionsImpl) {
+  @Watch('lock')
+  emitLoading (v: boolean): void {
+    this.$emit('update:loading', v)
+  }
+
+  initOptions <T> (provider: OptionsProvider, force?: boolean) {
     const { keys } = this
-    const v = options
+    const v = provider
 
     if (isFunction(v)) {
       const f: IOptionsLoader = (v as IOptionsLoader).bind(this)
-      if (this.lock) {
+      if (this.lock && !force) {
         this._pending = f
         return
       }
 
-      this.setLoading(true)
+      this.lock = true
 
       const handleCb = (err: Error | null, r?: IOptionEntity[]) => {
         if (!err) {
@@ -61,7 +61,9 @@ class MixinSelect extends Vue {
           }
           this.setOptions(r || [])
         }
-        this.setLoading(false)
+
+        this.lock = false
+
         const pending = this._pending
         if (pending) {
           this._pending = undefined
@@ -89,12 +91,12 @@ class MixinSelect extends Vue {
   /**
    * API for retrieve select options.
    */
-  load () {
-    this.initOptions(this.options)
+  load (force?: boolean) {
+    this.initOptions(this.options, force)
   }
 
   mounted () {
-    this.load()
+    this.load(true)
     // Add a watcher to assert auto reload options
     this.$watch('keys', (v: string | Kv, p: string | Kv) => {
       if (!isEmpty(p) && this._inited && isValueEquals(v, p)) return
@@ -106,42 +108,44 @@ class MixinSelect extends Vue {
   }
 
   render () {
-    const { $slots, $scopedSlots } = this
     const {
+      // attrs for internal select properties (forward)
+      lock: inputLoading,
+
+      // props
       value,
+      entity,
+      propLabel,
+      propValue,
       items: options,
-      $attrs: attrs,
+
+      // slots
+      $slots,
+      $scopedSlots,
     } = this
+
     const children = Object.keys($slots).map(slot => <template slot={slot}>{ $slots[slot] }</template>)
+
     return (
       <Select
-        {
-          ...{
-            attrs: {
-              ...this.props,
-              ...attrs,
-              inputLoading: this.lock
-            }
-          }
-        }
-        options={options}
-        propLabel={this.propLabel}
-        propValue={this.propValue}
-        value={value}
-        filterable={this.filterable}
-        entity={this.entity}
+        attrs={{
+          ...this.props,
+          ...this.$attrs,
+          inputLoading
+        }}
+        props={{
+          value,
+          options,
+          propLabel,
+          propValue,
+          entity,
+        }}
         on={this.$listeners}
-        slots={$slots}
         scopedSlots={$scopedSlots}
       >
         { children }
       </Select>
     )
-  }
-
-  private setLoading (v: boolean): void {
-    this.lock = v
-    this.$emit('update:loading', v)
   }
 
   private setOptions (items: IOptionEntity[]): void {
