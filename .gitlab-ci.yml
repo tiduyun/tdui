@@ -5,6 +5,7 @@ cache:
 variables:
   NODE_ENV: 'production'
   DEVTOOL: 'source-map'
+  CI_NEXT_VERSION: 1.4.2
 
 before_script:
   - npm config get registry
@@ -21,6 +22,7 @@ deployment:
     - yarn lint
     - yarn build
     - yarn test
+    - git release-npm -t insiders --next-version ${CI_NEXT_VERSION} -f
   stage: build
   only:
     - branches
