@@ -1,7 +1,7 @@
 import { functionalComponent } from '@/utils/vue'
 import { $t } from '@tdio/locale'
 import { get, hasOwn, identity, isFunction, template } from '@tdio/utils'
-import { CreateElement } from 'vue'
+import { CreateElement, FunctionalComponentOptions } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { StatefulTag } from './StatefulTag'
@@ -12,10 +12,10 @@ export interface StatefulUISpec {
   text?: string;
 }
 
-export type StatefulUISpecReducer <TResult = StatefulUISpec | string | undefined, T = string | number, TRef = Kv> =
-  (val: T, ref?: TRef, enumPattern?: string) => TResult
+export type StatefulUISpecType = StatefulUISpec | string
 
-type StatefulUISpecDic = Kv<StatefulUISpec | string>
+export type StatefulUISpecReducer <TResult = StatefulUISpecType | undefined, T = string | number, TRef = Kv> =
+  (val: T, ref?: TRef, enumPattern?: string) => TResult
 
 function getEnumKey <T> (o: T, v: any): string | undefined {
   /* eslint-disable no-restricted-syntax */
@@ -35,7 +35,7 @@ function translateEnumText (v: string, enumNS: string) {
   return $t.te(path) ? $t(path) : $t(v)
 }
 
-function buildDefaultSpecReducer (dic: StatefulUISpecDic): StatefulUISpecReducer {
+function buildDefaultSpecReducer (dic: Kv<StatefulUISpecType>): StatefulUISpecReducer {
   return (val, ref, enumPattern) => {
     if (hasOwn(dic, val)) {
       return get(dic, val)
@@ -48,10 +48,10 @@ function buildDefaultSpecReducer (dic: StatefulUISpecDic): StatefulUISpecReducer
   }
 }
 
-const normalizeSpecCalc = (impl: StatefulUISpecDic | StatefulUISpecReducer): StatefulUISpecReducer<StatefulUISpec> => {
+const normalizeSpecCalc = (impl: Kv<StatefulUISpecType> | StatefulUISpecReducer): StatefulUISpecReducer<StatefulUISpec> => {
   const fn = isFunction(impl)
     ? impl as StatefulUISpecReducer
-    : buildDefaultSpecReducer(impl as StatefulUISpecDic)
+    : buildDefaultSpecReducer(impl as Kv<StatefulUISpecType>)
 
   return (val, ref, enumPattern = '') => {
     let specs = fn(val, ref, enumPattern)
@@ -63,6 +63,7 @@ const normalizeSpecCalc = (impl: StatefulUISpecDic | StatefulUISpecReducer): Sta
       const variant: string = specs
       specs = { variant }
     }
+
     const text = specs.text || translateEnumText(
       ref && getEnumKey(ref, val) || String(val),
       enumPattern
@@ -98,7 +99,7 @@ export class EnumTag extends Vue {
    * Provide a spec configs dictionary or a spec-evaluate function
    */
   @Prop()
-  uiSpec!: Kv<StatefulUISpec | string> | StatefulUISpecReducer
+  uiSpec!: Kv<StatefulUISpecType> | StatefulUISpecReducer
 
   render () {
     const {
@@ -125,16 +126,13 @@ export class EnumTag extends Vue {
 
 type PropsReducer<T = Kv> = (v: T) => T
 
-export const createEnumTagComponent = (
-  enumRef: any,
-  enumPattern: string,
-  uiSpec: Kv<StatefulUISpec> | StatefulUISpecReducer,
-  propsReducer?: PropsReducer
-) => {
+function createEnumTagComponent <T> (enumRef: T, uiSpec: Kv<StatefulUISpecType> | StatefulUISpecReducer, propsReducer?: PropsReducer): FunctionalComponentOptions
+function createEnumTagComponent <T> (enumRef: T, enumPattern: string, uiSpec: Kv<StatefulUISpecType> | StatefulUISpecReducer, propsReducer?: PropsReducer): FunctionalComponentOptions
+function createEnumTagComponent <T> (enumRef: T, enumPattern: any, uiSpec: any, propsReducer?: PropsReducer) {
   // #(enumRef, uiSpec, propsReducer)
   if (typeof enumPattern !== 'string') {
-    propsReducer = uiSpec as any
-    uiSpec = enumPattern as any
+    propsReducer = uiSpec
+    uiSpec = enumPattern
     enumPattern = ''
   }
   propsReducer = propsReducer || identity
@@ -143,3 +141,5 @@ export const createEnumTagComponent = (
     return (<EnumTag enumRef={enumRef} enumPattern={enumPattern} uiSpec={uiSpec} {...props} on={on} />)
   })
 }
+
+export { createEnumTagComponent }
