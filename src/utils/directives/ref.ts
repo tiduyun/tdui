@@ -27,8 +27,9 @@ export const installRef = (Vue: VueConstructor<Vue>): void => {
       binding.value(vnode.componentInstance || el, vnode.key)
     },
     update (el, binding, vnode, oldVnode) {
-      if (oldVnode.data && oldVnode.data.directives) {
-        const oldBinding = oldVnode.data.directives.find((directive) => directive.name === directiveName)
+      const { data } = oldVnode
+      if (data && data.directives) {
+        const oldBinding = data.directives.find((directive) => directive.name === directiveName)
         if (oldBinding && oldBinding.value !== binding.value) {
           if (oldBinding) {
             oldBinding.value(null, oldVnode.key)

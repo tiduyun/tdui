@@ -1,6 +1,6 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { constant, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isPrimitive, isValue, set } from '@tdio/utils'
+import { constant, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isObject, isPrimitive, isValue, merge, pick, set } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
@@ -214,11 +214,14 @@ export class AbsSelectView extends Vue {
       const option: IOption<IOptionKeyType> = isPrimitive(o)
         ? { label: String(o), value: o as IOptionKeyType }
         : { label: get(o, propLabel)!, value: get<IOptionKeyType>(o, propValue)! }
-      const disabled = !!get(o, 'disabled')
-      if (disabled) {
-        option.disabled = disabled
+
+      // pick some extra properties
+      if (typeof o === 'object') {
+        merge(option, pick<Kv, string>(o, ['disabled', 'tooltip', 'icon']))
       }
+
       r.push(option)
+
       dic.set(option.value, o)
       return r
     }, [])

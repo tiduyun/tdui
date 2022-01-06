@@ -3,7 +3,7 @@ import { Message } from 'element-ui'
 
 // FIX: actually clipboard extends from tiny-emitter(with all of the event apis)
 interface ClipboardExt extends Clipboard {
-  off (event: string, callback?: Function): this
+  off (event: string, callback?: ICallback): this
 }
 
 type DestroyFunc = () => void

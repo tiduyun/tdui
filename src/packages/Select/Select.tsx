@@ -1,7 +1,7 @@
 import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 
 import { $t } from '@tdio/locale'
-import { isValue } from '@tdio/utils'
+import { isObject, isValue } from '@tdio/utils'
 
 import { extractTooltip } from '@/utils/normalize'
 
@@ -41,17 +41,24 @@ export default class Select extends Mixins(AbsSelectView) {
     const classPrefix = 'v-select'
     const popperClass = `${classPrefix}--popper ${this.popperClass || ''}`.trim()
 
-    const renderOption = (o: IOption, entity: any) => (
-      entity?.icon
-        ? (
-          <el-option key={o.value} props={o} class="icon-option">
-            <Icon iconName={entity.icon} />
-            <span title={o.label}>{o.label}</span>
-          </el-option>
-        ) : (
-          <el-option key={o.value} props={o} title={o.label} />
-        )
-    )
+    const renderOption = (o: IOption, _entity: any) => {
+      const { tooltip, icon } = o
+      const hasIcon = !!icon
+      const tipContent = tooltip || ''
+      const hasTip = !!tipContent
+      const optionTip = hasTip
+        ? isObject(tooltip) ? tooltip : { content: tooltip }
+        : null
+      return (
+        <el-option key={o.value} props={o} title={o.label} class={{'has-icon': hasIcon, 'has-tip': hasTip}}>
+          <span class="option-label">
+            { hasIcon ? <Icon iconName={icon} /> : null }
+            { o.label }
+          </span>
+          { hasTip ? <Icon className="option-tip fr" iconName="td-icon-info-circle" tooltip={{ placement: 'right', popperStyle: { maxWidth: '300px' }, ...optionTip }} /> : null }
+        </el-option>
+      )
+    }
 
     const placeholder = this.placeholder
 
