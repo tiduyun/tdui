@@ -4,10 +4,9 @@
  * @autho allex_wang
  */
 
+import { hasOwn, isArray } from '@tdio/utils'
 import Vue, { CreateElement, FunctionalComponentOptions, RenderContext, VNode } from 'vue'
 import { ScopedSlot } from 'vue/types/vnode'
-
-import { hasOwn, isArray } from '@tdio/utils'
 
 /**
  * Find components upward
