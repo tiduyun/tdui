@@ -65,7 +65,7 @@ export class Tabs extends Vue {
         {
           this.tabs.map(t => {
             return (
-              <el-tab-pane key={t.name} name={t.name} label={t.label}>
+              <el-tab-pane key={t.name} props={t}>
                 {
                   t.name === this.activeTab && (
                     t.async === false

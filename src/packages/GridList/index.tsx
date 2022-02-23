@@ -268,6 +268,10 @@ export class GridList <Q extends IQuery = IQuery,  T = any> extends Vue {
     this.debounceLoad()
   }
 
+  setState <T> (k: string, v: T) {
+    this.st.set(k, v)
+  }
+
   render () {
     const state = this.st.get<IListResult<Q, T>>()!
     const {

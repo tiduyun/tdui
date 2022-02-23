@@ -70,7 +70,10 @@ export default class AbsFormDialog extends MixinDialog {
     this.isShow = entity.visible!
 
     this.$on('closed', () => {
-      this.form!.resetFields()
+      const f = this.form!
+      if (f) {
+        f.resetFields()
+      }
 
       // reset to initialize state
       reactSet(this.entity.data = {}, initial)

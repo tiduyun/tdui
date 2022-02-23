@@ -60,7 +60,7 @@ export class ComponentBuilder extends Vue {
     const {
       type,
       modelKey,
-      model,
+      model, // handle model as a builtin property
       component,
       props = {},
       on = {},
