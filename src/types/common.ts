@@ -19,7 +19,10 @@ export interface ITabComponent {
   name: string;
   label: string;
   impl: string | Vue;
-  async: boolean;
+  async?: boolean;
+  disabled?: boolean;
+  closable?: boolean;
+  lazy?: boolean;
 }
 
 export interface IProps extends Kv {

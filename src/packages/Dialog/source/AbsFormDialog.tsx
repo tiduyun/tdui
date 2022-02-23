@@ -44,7 +44,9 @@ export default class AbsFormDialog extends MixinDialog {
       let valid = false
       try {
         valid = await this.validate()
-      } catch (e) {}
+      } catch (e) {
+        console.error('form valid failed')
+      }
       if (!valid) {
         return true
       }
@@ -67,7 +69,10 @@ export default class AbsFormDialog extends MixinDialog {
     this.isShow = entity.visible!
 
     this.$on('closed', () => {
-      this.form!.resetFields()
+      const f = this.form!
+      if (f) {
+        f.resetFields()
+      }
 
       // reset to initialize state
       reactSet(this.entity.data = {}, initial)
