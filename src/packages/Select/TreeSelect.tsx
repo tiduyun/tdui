@@ -4,7 +4,7 @@ import { ElTree, TreeData, TreeNode } from 'element-ui/types/tree'
 import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
 import { $t } from '@tdio/locale'
-import { deepAssign, get, isArray, isValue, noop, unset, valueEquals } from '@tdio/utils'
+import { deepAssign, get, isArray, isValue, noop, omit, unset, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 import { contains, off, on } from '@tdio/dom-utils'
@@ -171,8 +171,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   @Watch('treeParams', { immediate: true })
   initTreeParams (v: TreeParams<D>) {
-    const treeParams = this.params.tree
-    deepAssign(treeParams, getVuePropDefault(this, 'treeParams'), { props: v.props || {}, filterable: v.filterable || false })
+    const treeParams = this.params.tree = deepAssign({}, getVuePropDefault(this, 'treeParams'), omit(v, 'data'))
 
     const { multiple } = this.params.select
     const { props } = treeParams
@@ -202,7 +201,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   mounted () {
-    this.keywords = ''
     this.syncPopperUI()
     this.nextTick(() => this.initClickOutside())
   }
@@ -260,14 +258,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
           {
             this.params.tree.filterable ? (
               <div class="fbox">
-                <el-input
-                  v-model={this.keywords}
-                  size="mini"
-                  class="input-with-select"
-                  {
-                    ...{ nativeOn: { click: this.keywordsClick }}
-                  }
-                >
+                <el-input v-model={this.keywords} size="mini" class="input-with-select" onChange={this.handleFilter}>
                   <el-button slot="append" icon="el-icon-search" />
                 </el-input>
               </div>
@@ -284,12 +275,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
               on-check={this.handleTreeCheck}
               on-node-click={this.handleTreeNodeClick}
               on-current-change={this.handleTreeCurrentChange}
-              filter-node-method={this.filterNodeMethod}
-              { ...{
-                scopedSlots: {
-                  default: (item: any) => (<span class="el-tree-node__label" title={item.node.label}>{item.node.label}</span>)
-                }
-              }}
             />
             { this.data.length === 0 ? (<div class="el-select-dropdown__empty">{$t('No Data')}</div>) : null }
           </el-scrollbar>
@@ -298,15 +283,8 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     )
   }
 
-  @Watch('keywords')
-  handleFilter (q: string) {
-    this.$tree.filter(q)
-    this.$emit('search', q)
-  }
-
-  keywordsClick ($event: any) {
-    $event.stopPropagation()
-    this.showPopper()
+  handleFilter () {
+    this.$emit('search', this.keywords)
   }
 
   /**
@@ -350,7 +328,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   // @see element-ui/types/tree#ElTree.filterNodeMethod
   filterNodeMethod (value: string, data: D, node: TreeNode<K, D>): boolean {
     if (!value) return true
-    console.log(data)
     return data[this.propsLabel].indexOf(value) !== -1
   }
 
@@ -396,6 +373,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   handleTreeCurrentChange (data: D | null, node: TreeNode<K, D>) {
+    this.$emit('update:entity', data)
   }
 
   // handle tag removed
@@ -438,7 +416,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   hidePopper (trigger: boolean = true) {
     this.visible = false
-    this.keywords = ''
     if (trigger) {
       this.$select.toggleMenu()
     }
@@ -464,12 +441,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     if (!valueEquals(this.ids, indexes)) {
       this.ids = indexes
       this.setTreeCheckedKeys(indexes)
-      this.nextTick(() => {
-        const node = this.getCurrentNode()
-        if (node) {
-          this.$emit('update:entity', node.data)
-        }
-      })
     }
 
     const { multiple } = this.params.select
