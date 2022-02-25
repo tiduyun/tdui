@@ -4,7 +4,7 @@ import { ElTree, TreeData, TreeNode } from 'element-ui/types/tree'
 import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
 import { $t } from '@tdio/locale'
-import { deepAssign, get, isArray, isValue, noop, unset, valueEquals } from '@tdio/utils'
+import { deepAssign, get, isArray, isValue, noop, omit, unset, valueEquals } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 import { contains, off, on } from '@tdio/dom-utils'
@@ -171,8 +171,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
 
   @Watch('treeParams', { immediate: true })
   initTreeParams (v: TreeParams<D>) {
-    const treeParams = this.params.tree
-    deepAssign(treeParams, getVuePropDefault(this, 'treeParams'), { props: v.props || {} })
+    const treeParams = this.params.tree = deepAssign({}, getVuePropDefault(this, 'treeParams'), omit(v, 'data'))
 
     const { multiple } = this.params.select
     const { props } = treeParams
