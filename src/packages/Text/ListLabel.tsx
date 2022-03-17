@@ -4,9 +4,9 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { truncate } from '@/utils'
 import { isEmpty } from '@tdio/utils'
 
-type ItemRenderFunc<D = any> = (item: D, h: CreateElement) => VNode | string
+type ListIterateeRender<T> = (item: T, h: CreateElement) => VNode | string
 
-const defaultItemRender: ItemRenderFunc = (o, h) => o
+const defaultItemRender: ListIterateeRender<any> = (o, h) => o
 
 @Component({
   functional: true
@@ -22,7 +22,7 @@ export default class ListLabel <D = string | {}> extends Vue {
     type: Function,
     default: defaultItemRender
   })
-  itemRender!: ItemRenderFunc<D>
+  itemRender!: ListIterateeRender<D>
 
   @Prop({ type: String, default: '-' })
   label!: string

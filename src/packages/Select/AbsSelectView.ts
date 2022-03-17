@@ -12,6 +12,14 @@ export type TSelectedVal = IOptionKeyType | IOptionKeyType[]
 export type IOptionEntity = object | string | number // object or any primitive types
 export type OptionsProvider = IOptionEntity[] | ((...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[])
 
+export interface SelectMetaProps {
+  key: string;
+  label: string;
+  disabled: string;
+}
+
+const defaultMetaProps: SelectMetaProps = { key: 'value', label: 'label', disabled: 'disabled' }
+
 @Component
 @Emittable
 export class AbsSelectView extends Vue {
@@ -48,6 +56,25 @@ export class AbsSelectView extends Vue {
    */
   @Prop({ type: Boolean, default: true })
   cleanupObsolete!: boolean
+
+  props: SelectMetaProps = defaultMetaProps
+
+  /**
+   * Unify meta props
+   */
+  get metaProps (): SelectMetaProps {
+    let { props, propLabel, propValue } = this
+    if (props === defaultMetaProps) {
+      props = {
+        ...props,
+        key: propValue,
+        label: propLabel
+      }
+    } else {
+      props = { ...defaultMetaProps, ...props }
+    }
+    return props
+  }
 
   /* reactive properties */
   currentValue: TSelectedVal | Nil = this.normalizeValue(this.value)
@@ -207,13 +234,13 @@ export class AbsSelectView extends Vue {
    * Update internal options list
    */
   private interSetOptions (raw: IOptionEntity[]): void {
-    const { propLabel, propValue, optionsFilterFunc } = this
+    const { metaProps, optionsFilterFunc } = this
 
     const dic: Map<IOptionKeyType, IOptionEntity> = new Map<IOptionKeyType, IOptionEntity>()
     const options = raw.filter(optionsFilterFunc).reduce<IOption[]>((r, o) => {
       const option: IOption<IOptionKeyType> = isPrimitive(o)
         ? { label: String(o), value: o as IOptionKeyType }
-        : { label: get(o, propLabel)!, value: get<IOptionKeyType>(o, propValue)! }
+        : { label: get(o, metaProps.label)!, value: get<IOptionKeyType>(o, metaProps.key)! }
 
       // pick some extra properties
       if (typeof o === 'object') {
