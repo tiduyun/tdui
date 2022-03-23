@@ -388,7 +388,6 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   handleTreeCurrentChange (data: D | null, node: TreeNode<K, D>) {
-    this.$emit('update:entity', data)
   }
 
   // handle tag removed
@@ -457,6 +456,12 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     if (!valueEquals(this.ids, indexes)) {
       this.ids = indexes
       this.setTreeCheckedKeys(indexes)
+      this.nextTick(() => {
+        const node = this.getCurrentNode()
+        if (node) {
+          this.$emit('update:entity', node.data)
+        }
+      })
     }
 
     const { multiple } = this.params.select
