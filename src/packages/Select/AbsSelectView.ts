@@ -13,12 +13,21 @@ export type IOptionEntity = object | string | number // object or any primitive 
 export type OptionsProvider = IOptionEntity[] | ((...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[])
 
 export interface SelectMetaProps {
-  key: string;
+  value: string;
+  key?: string; // alias value, be deprecated
   label: string;
   disabled: string;
 }
 
-const defaultMetaProps: SelectMetaProps = { key: 'value', label: 'label', disabled: 'disabled' }
+interface EntityStateType<T> {
+  key: string;
+  entity: T;
+  ready?: boolean;
+}
+
+const defaultMetaProps: SelectMetaProps = { value: 'value', label: 'label', disabled: 'disabled' }
+
+const getBusterKey = <T> (o: T): string => JSON.stringify(o)
 
 @Component
 @Emittable
@@ -67,11 +76,15 @@ export class AbsSelectView extends Vue {
     if (props === defaultMetaProps) {
       props = {
         ...props,
-        key: propValue,
+        value: propValue,
         label: propLabel
       }
     } else {
-      props = { ...defaultMetaProps, ...props }
+      props = {
+        ...defaultMetaProps,
+        ...props,
+        value: props.value || props.key || defaultMetaProps.value
+      }
     }
     return props
   }
@@ -79,9 +92,9 @@ export class AbsSelectView extends Vue {
   /* reactive properties */
   currentValue: TSelectedVal | Nil = this.normalizeValue(this.value)
   currentOptions: IOption[] = []
-  currentEntity: Many<IOptionEntity> | Nil = this.entity
 
   private _refIndexes!: Map<IOptionKeyType, IOptionEntity>
+  private _entityState!: EntityStateType<Many<IOptionEntity> | undefined>
 
   @Watch('value')
   valueWatchFn (val: TSelectedVal | Nil, oldVal?: TSelectedVal) {
@@ -92,10 +105,15 @@ export class AbsSelectView extends Vue {
   }
 
   @Watch('entity')
-  setCurrEntity (entity: Many<IOptionEntity> | Nil) {
-    const prev = this.currentEntity
-    if (prev !== entity && !(isEmpty(prev) && isEmpty(entity))) {
-      this.currentEntity = entity
+  setCurrEntity (entity: Many<IOptionEntity> | undefined) {
+    const { ready, entity: prevEntity, key: prevKey } = this._entityState
+
+    // calc identity entity changes buster based on current value
+    const key = getBusterKey(this.currentValue)
+
+    if (ready && key !== prevKey && prevEntity !== entity) {
+      // refresh buster
+      Object.assign(this._entityState, { entity, key })
       this.$emit('entity', entity)
       this.$emit('update:entity', entity)
     }
@@ -125,10 +143,7 @@ export class AbsSelectView extends Vue {
       }
     }
 
-    // is value changed indeed or initialize lifecycle
-    if (isModified || (!isEmpty(v) && isEmpty(this.currentEntity))) {
-      this.syncEntity()
-    }
+    this.syncEntity()
   }
 
   @Watch('options')
@@ -178,6 +193,9 @@ export class AbsSelectView extends Vue {
 
     if (v !== currentValue) {
       this.setSelectedValue(v)
+    } else {
+      // emit entity additionally
+      this.syncEntity()
     }
 
     return options
@@ -194,11 +212,18 @@ export class AbsSelectView extends Vue {
 
   beforeCreate () {
     this._refIndexes = new Map<IOptionKeyType, IOptionEntity>()
+    this._entityState = {
+      key: '',
+      entity: undefined,
+      ready: false
+    }
   }
 
   created () {
+    Object.assign(this._entityState, {
+      entity: this.entity
+    })
     this.setSelectedValue(this.value)
-    this.syncEntity()
   }
 
   mounted (): Promise<any> {
@@ -240,7 +265,7 @@ export class AbsSelectView extends Vue {
     const options = raw.filter(optionsFilterFunc).reduce<IOption[]>((r, o) => {
       const option: IOption<IOptionKeyType> = isPrimitive(o)
         ? { label: String(o), value: o as IOptionKeyType }
-        : { label: get(o, metaProps.label)!, value: get<IOptionKeyType>(o, metaProps.key)! }
+        : { label: get(o, metaProps.label)!, value: get<IOptionKeyType>(o, metaProps.value)! }
 
       // pick some extra properties
       if (typeof o === 'object') {
@@ -256,10 +281,17 @@ export class AbsSelectView extends Vue {
     // cache the option reference indexes
     this._refIndexes = dic
 
+    // set entity state active
+    this._entityState.ready = true
+
     this.currentOptions = options
   }
 
   private syncEntity () {
+    if (!this._entityState.ready) {
+      return
+    }
+
     const v = this.currentValue
     const dic = this._refIndexes
 
