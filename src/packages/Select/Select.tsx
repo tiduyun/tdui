@@ -11,6 +11,21 @@ import { Icon } from '../Icon'
 import { AbsSelectView } from './AbsSelectView'
 import './Select.scss'
 
+/**
+ * scoped-slots: options, option
+ *
+ * ```
+ * <Select>
+ *   <template #options="items">
+ *     <el-option-group v-for="group in items" :key="group.label" :label="group.label">
+ *       <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
+ *     </el-option-group>
+ *   </template>
+ *   <template #opttion="option">{{option.lable}}</template>
+ * </Select>
+ * ```
+ */
+
 @Component({
   name: 'Select',
   inheritAttrs: false
@@ -75,7 +90,9 @@ export default class Select extends Mixins(AbsSelectView) {
     }
 
     // Prevent show the plain value when options is a await loader
-    const selValue = props.inputLoading ? undefined : this.currentValue
+    const selValue = props.inputLoading
+      ? (this.multiple ? [] : undefined)
+      : this.currentValue
 
     const selectNode = (
       <el-select
@@ -89,13 +106,15 @@ export default class Select extends Mixins(AbsSelectView) {
         {
           $slots.default
             ? $slots.default
-            : this.currentOptions.map(o => {
-              const entity = this.getEntity(o.value)
-              return (
-                $scopedSlots.option
-                  ? $scopedSlots.option({ ...o, entity })
-                  : renderOption(o, entity))
-            })
+            : $scopedSlots.options
+              ? $scopedSlots.options(this.currentOptions)
+              : this.currentOptions.map(o => {
+                const entity = this.getEntity(o.value)
+                return (
+                  $scopedSlots.option
+                    ? $scopedSlots.option({ ...o, entity })
+                    : renderOption(o, entity))
+              })
         }
       </el-select>
     )

@@ -1,6 +1,6 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { constant, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isObject, isPrimitive, isValue, merge, pick, set } from '@tdio/utils'
+import { constant, defaultTo, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isObject, isPrimitive, isValue, merge, pick, set } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
@@ -9,7 +9,7 @@ import { IOption, Nil } from '../../types/common'
 type IOptionKeyType = PrimaryKey
 
 export type TSelectedVal = IOptionKeyType | IOptionKeyType[]
-export type IOptionEntity = object | string | number // object or any primitive types
+export type IOptionEntity = Kv | string | number // object or any primitive types
 export type OptionsProvider = IOptionEntity[] | ((...args: any[]) => Promise<IOptionEntity[]> | IOptionEntity[])
 
 export interface SelectMetaProps {
@@ -246,7 +246,7 @@ export class AbsSelectView extends Vue {
   private normalizeValue (v: any): TSelectedVal | undefined {
     if (this.multiple) {
       if (isArray(v)) {
-        return [...v]
+        return v
       } else if (!isEmpty(v)) {
         return [v]
       }
@@ -261,25 +261,38 @@ export class AbsSelectView extends Vue {
   private interSetOptions (raw: IOptionEntity[]): void {
     const { metaProps, optionsFilterFunc } = this
 
-    const dic: Map<IOptionKeyType, IOptionEntity> = new Map<IOptionKeyType, IOptionEntity>()
-    const options = raw.filter(optionsFilterFunc).reduce<IOption[]>((r, o) => {
-      const option: IOption<IOptionKeyType> = isPrimitive(o)
-        ? { label: String(o), value: o as IOptionKeyType }
-        : { label: get(o, metaProps.label)!, value: get<IOptionKeyType>(o, metaProps.value)! }
+    const indexes = new Map<IOptionKeyType, IOptionEntity>()
 
-      // pick some extra properties
-      if (typeof o === 'object') {
-        merge(option, pick<Kv, string>(o, ['disabled', 'tooltip', 'icon']))
-      }
+    const processOptions = (raw: IOptionEntity[]): IOption[] =>
+      raw.filter(optionsFilterFunc).reduce<IOption[]>((r, o) => {
+        const option: IOption<IOptionKeyType> = { label: '', value: '' }
 
-      r.push(option)
+        if (typeof o === 'object') {
+          option.label = defaultTo(o.label, get(o, metaProps.label)!)
+          if (isArray(o.options)) {
+            // parse nest groups
+            option.options = processOptions(o.options)
+          } else {
+            option.value = defaultTo(o.value, get<IOptionKeyType>(o, metaProps.value)!)
+            // pick some extra properties
+            const keys = ['disabled', 'tooltip', 'icon']
+            keys.forEach(k => option[k] = o[k])
+          }
+        } else {
+          option.label = String(o)
+          option.value = o as IOptionKeyType
+        }
 
-      dic.set(option.value, o)
-      return r
-    }, [])
+        r.push(option)
+        indexes.set(option.value, o)
+
+        return r
+      }, [])
+
+    const options = processOptions(raw)
 
     // cache the option reference indexes
-    this._refIndexes = dic
+    this._refIndexes = indexes
 
     // set entity state active
     this._entityState.ready = true
