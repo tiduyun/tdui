@@ -527,3 +527,12 @@ $menu-item-height: 40px !default;
     min-width: 100px;
   }
 }
+
+// fix <select multiple /> with tags overflow issue
+.el-select {
+  .el-tag {
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
