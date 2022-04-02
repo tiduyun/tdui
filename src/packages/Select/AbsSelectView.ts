@@ -1,6 +1,6 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { constant, defaultTo, get, hasOwn, identity, isArray, isEmpty, isEqual, isFunction, isObject, isPrimitive, isValue, merge, pick, set } from '@tdio/utils'
+import { constant, get, isArray, isEmpty, isEqual, isFunction, isValue } from '@tdio/utils'
 
 import { Emittable } from '@/utils/emittable'
 
@@ -268,12 +268,12 @@ export class AbsSelectView extends Vue {
         const option: IOption<IOptionKeyType> = { label: '', value: '' }
 
         if (typeof o === 'object') {
-          option.label = defaultTo(o.label, get(o, metaProps.label)!)
+          option.label = get<string>(o, metaProps.label, o.label)!
           if (isArray(o.options)) {
             // parse nest groups
             option.options = processOptions(o.options)
           } else {
-            option.value = defaultTo(o.value, get<IOptionKeyType>(o, metaProps.value)!)
+            option.value = get<IOptionKeyType>(o, metaProps.value, o.value)!
             // pick some extra properties
             const keys = ['disabled', 'tooltip', 'icon']
             keys.forEach(k => option[k] = o[k])
