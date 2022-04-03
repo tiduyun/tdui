@@ -22,7 +22,6 @@ export interface SelectMetaProps {
 interface EntityStateType<T> {
   key: string;
   entity: T;
-  ready?: boolean;
 }
 
 const defaultMetaProps: SelectMetaProps = { value: 'value', label: 'label', disabled: 'disabled' }
@@ -89,15 +88,19 @@ export class AbsSelectView extends Vue {
     return props
   }
 
-  /* reactive properties */
-  currentValue: TSelectedVal | Nil = this.normalizeValue(this.value)
+  /* reactive properties for builtin passthrough */
+  currentValue: TSelectedVal | Nil = null
   currentOptions: IOption[] = []
 
+  private _ready!: boolean
   private _refIndexes!: Map<IOptionKeyType, IOptionEntity>
   private _entityState!: EntityStateType<Many<IOptionEntity> | undefined>
 
   @Watch('value')
   valueWatchFn (val: TSelectedVal | Nil, oldVal?: TSelectedVal) {
+    if (!this._ready) {
+      return
+    }
     if (!isEqual(val, this.currentValue)) {
       this.setSelectedValue(val, true)
       this.dispatch('ElFormItem', 'el.form.change', val)
@@ -106,12 +109,16 @@ export class AbsSelectView extends Vue {
 
   @Watch('entity')
   setCurrEntity (entity: Many<IOptionEntity> | undefined) {
-    const { ready, entity: prevEntity, key: prevKey } = this._entityState
+    if (!this._ready) {
+      return
+    }
+
+    const { entity: prevEntity, key: prevKey } = this._entityState
 
     // calc identity entity changes buster based on current value
     const key = getBusterKey(this.currentValue)
 
-    if (ready && key !== prevKey && prevEntity !== entity) {
+    if (key !== prevKey && prevEntity !== entity) {
       // refresh buster
       Object.assign(this._entityState, { entity, key })
       this.$emit('entity', entity)
@@ -127,17 +134,16 @@ export class AbsSelectView extends Vue {
    * Set and emit current selected value (break reference with a shadow copy)
    *
    * @param val {any} The current selected value
-   * @param skipEmit {Boolean} skip model emit (input & change events)
+   * @param silent {Boolean} skip model emit (input & change events)
    */
-  setSelectedValue (val: TSelectedVal | Nil, skipEmit?: boolean) {
+  setSelectedValue (val: TSelectedVal | Nil, silent?: boolean) {
     const v = this.normalizeValue(val)
     const isModified = !isEqual(v, this.currentValue)
 
-    // tslint:disable-next-line
     if (isModified) {
       const prev = this.currentValue
       this.currentValue = v
-      if (!skipEmit) {
+      if (!silent) {
         this.$emit('input', v)
         this.$emit('change', v, prev)
       }
@@ -163,40 +169,31 @@ export class AbsSelectView extends Vue {
       throw new Error('The [[options]] type nerther Generator<Promise> or Array')
     }
 
-    const lastOptions = this.currentOptions
-    if (rawItems.length === 0 && lastOptions.length === 0) {
-      return lastOptions
+    if (!(rawItems.length === 0 && this.currentOptions.length === 0)) {
+      // update current option list `currentOptions`
+      this.interSetOptions(rawItems)
     }
 
-    this.interSetOptions(rawItems)
+    // set ready additonally
+    if (!this._ready) {
+      this.currentValue = this.normalizeValue(this.value)
+      this._ready = true
+    }
 
-    const options = this.currentOptions
     const { multiple, currentValue, defaultFirstOption, cleanupObsolete } = this
 
-    // Keep previous value if exists in new options (implicit match)
-    let v = currentValue
+    // normalize and cleanup
+    let v = this.normalizeValue(currentValue, this.cleanupObsolete)
 
-    // cleanup obsolete selected value
-    if (cleanupObsolete && !isEmpty(v)) {
-      const assert = (v: IOptionKeyType) => this._refIndexes.has(v)
-      v = multiple
-        ? (v as IOptionKeyType[]).filter(assert)
-        : assert(v as IOptionKeyType)
-          ? v : undefined
-    }
-
+    const options = this.currentOptions
     if (options.length > 0 && defaultFirstOption && isEmpty(v)) {
-      // or else select first item when `defaultFirstOption`
+      // Optional set initial value by first item based on `defaultFirstOption`
       const firstVal = options[0].value
       v = multiple ? [firstVal] : firstVal
     }
 
-    if (v !== currentValue) {
-      this.setSelectedValue(v)
-    } else {
-      // emit entity additionally
-      this.syncEntity()
-    }
+    // update select value (with sync entity)
+    this.setSelectedValue(v)
 
     return options
   }
@@ -214,25 +211,24 @@ export class AbsSelectView extends Vue {
     this._refIndexes = new Map<IOptionKeyType, IOptionEntity>()
     this._entityState = {
       key: '',
-      entity: undefined,
-      ready: false
+      entity: undefined
     }
   }
 
   created () {
-    Object.assign(this._entityState, {
-      entity: this.entity
-    })
-    this.setSelectedValue(this.value)
+    // set `currentValue` initial state (not sync with prop `value`)
+    this.currentValue = this.multiple ? [] : undefined
+    this._entityState.entity = this.entity
   }
 
   mounted (): Promise<any> {
-    const { value, $slots, defaultFirstOption, options } = this
-
-    // Get options by mockup slots
-    if (defaultFirstOption && !isEmpty($slots.default) && !isValue(value)) {
-      const v = get($slots, 'default[0].componentInstance.currentValue') // It's should be a ElOption instance
-      this.setSelectedValue(v)
+    let { value, $slots, defaultFirstOption, options } = this
+    if (!isEmpty($slots.default)) {
+      // Get value by mockup slots
+      if (defaultFirstOption && !isValue(value)) {
+        value = get($slots, 'default[0].componentInstance.currentValue') // It's should be a ElOption instance
+      }
+      this.setSelectedValue(value, true)
       return Promise.resolve()
     } else {
       return this.handleOptionsChange(options)
@@ -243,16 +239,47 @@ export class AbsSelectView extends Vue {
     return this._refIndexes.get(k)
   }
 
-  private normalizeValue (v: any): TSelectedVal | undefined {
-    if (this.multiple) {
+  /**
+   * Unify select value, also check the values(s) exists in options, ensure a array if multi-mode
+   */
+  private normalizeValue <T extends TSelectedVal | Nil> (v: T, cleanup: boolean = false): TSelectedVal | undefined {
+    let parsed: TSelectedVal | undefined = v!
+    const multi = this.multiple
+
+    // normalize select value first
+    if (multi) {
       if (isArray(v)) {
-        return v
-      } else if (!isEmpty(v)) {
-        return [v]
+        parsed = v
+      } else if (v != null && v !== '') {
+        parsed = [v]
+      } else {
+        // ensure return a array in multi-mode
+        parsed = []
       }
-      return []
     }
-    return isEmpty(v) ? undefined : v
+
+    // Optional cleanup the obsoleted value(s)
+    if (cleanup) {
+      const assert = (v: IOptionKeyType): boolean => {
+        const r = this._refIndexes.has(v)
+        if (!r) {
+          console.warn(`[Select] got a invalid value of ${typeof v}: ${String(v)}`)
+        }
+        return r
+      }
+      if (isArray(parsed)) {
+        parsed = parsed.reduce<IOptionKeyType[]>((list, item) => {
+          if (assert(item)) {
+            list.push(item)
+          }
+          return list
+        }, [])
+      } else {
+        parsed = assert(parsed) ? parsed : undefined
+      }
+    }
+
+    return parsed
   }
 
   /**
@@ -294,14 +321,11 @@ export class AbsSelectView extends Vue {
     // cache the option reference indexes
     this._refIndexes = indexes
 
-    // set entity state active
-    this._entityState.ready = true
-
     this.currentOptions = options
   }
 
   private syncEntity () {
-    if (!this._entityState.ready) {
+    if (!this._ready) {
       return
     }
 
