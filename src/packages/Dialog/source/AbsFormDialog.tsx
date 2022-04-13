@@ -1,41 +1,63 @@
-import { ElDialog } from 'element-ui/types/dialog'
-import { ElForm } from 'element-ui/types/form'
-import { CreateElement } from 'vue'
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Dialog, Form } from 'element-ui'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { findDownward, reactSet } from '@/utils/vue'
 import { $t } from '@tdio/locale'
 import { deepClone } from '@tdio/utils'
 
-import MixinDialog from './MixinDialog'
-
+import { parseProps } from '../../../utils/vue/parseProps'
 import { Button } from '../../Button'
 
-const getForm = (root: Vue): ElForm | null => findDownward(root, 'ElForm') as ElForm
+import MixinDialog from './MixinDialog'
+
+const getForm = (root: Vue): Form | null => findDownward(root, 'ElForm') as Form
 
 @Component
 export default class AbsFormDialog extends MixinDialog {
-  @Prop(String)
-  width!: string
+  /* Override some @ElDialog props default value */
 
   @Prop(String)
-  size!: string
+  width!: string
 
   @Prop({ type: Boolean, default: false })
   appendToBody!: boolean
 
+  @Prop({ type: Boolean, default: false })
+  closeOnClickModal!: boolean
+
+  @Prop(String)
+  customClass!: string
+
+  /* Defines some local props */
+
+  @Prop(String)
+  size!: string
+
   @Prop(String)
   dialogClass!: string
 
-  @Prop({ type: Boolean, default: true })
-  showClose!: boolean
-
-  // For skip builtin validator
+  /**
+   * Skip builtin form validator
+   */
   @Prop(Boolean)
   skipValidator!: boolean
 
+  @Prop({ type: Boolean, default: true })
+  showConfirmButton!: boolean
+
+  @Prop({ type: Boolean, default: true })
+  showCancelButton!: boolean
+
+  @Prop({ type: String, default: 'Save' })
+  confirmButtonText!: string
+
+  @Prop({ type: String, default: 'Cancel' })
+  cancelButtonText!: string
+
+  /* Private data fields */
+
   isShow: boolean = false
-  form: ElForm | null = null
+  form: Form | null = null
 
   validate (): Promise<boolean> {
     const f = this.form
@@ -94,47 +116,51 @@ export default class AbsFormDialog extends MixinDialog {
       size,
       width,
       appendToBody,
-      showClose,
-      entity
+      entity,
+      closeOnClickModal,
+      customClass
     } = this
 
-    const dlgClassNames = [
-      dialogClass,
-      size ? `v-dialog--${size}` : ''
-    ].filter(Boolean)
-
-
     const isVisible = this.inited && this.isShow
+
+    const parsedProps = parseProps({
+      title: entity.title || this.title,
+      width,
+      appendToBody,
+      closeOnClickModal,
+      customClass: [
+        dialogClass,
+        customClass,
+        size ? `v-dialog--${size}` : ''
+      ].filter(Boolean).join(' '),
+      ...this.$attrs
+    }, Dialog)
 
     return (
       <el-dialog
         ref="dlg"
         class={[{ [className]: !!className }, 'v-form-dlg']}
-        customClass={dlgClassNames.join(' ')}
         visible={entity.visible}
         on={{ 'update:visible': (e: boolean) => entity.visible = e }}
-        title={entity.title}
-        width={width}
-        show-close={showClose}
-        append-to-body = {appendToBody}
-        closeOnClickModal={false}
-        close-on-press-escape={false}
-        on-close={() => this.$emit('close')}
-        on-closed={() => { this.isShow = false; this.$emit('closed') }}
-        on-open={() => { this.isShow = true; this.$emit('show') }}
-        on-opened={() => this.$emit('opened')}
+        {...parsedProps}
+        onClose={() => this.$emit('close')}
+        onClosed={() => { this.isShow = false; this.$emit('closed') }}
+        onOpen={() => { this.isShow = true; this.$emit('show') }}
+        onOpened={() => this.$emit('opened')}
       >
         {
           isVisible ? [
             $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : null,
             <template slot="footer">
               {
-                $scopedSlots.footer ? $scopedSlots.footer({ $self: entity, $this: this }) : (
-                  <div class="dialog-footer">
-                    <Button onClick={this.close}>{$t('Cancel')}</Button>
-                    <Button type="primary" onClick={this.submit}>{$t('Save')}</Button>
-                  </div>
-                )
+                $scopedSlots.footer
+                  ? $scopedSlots.footer({ $self: entity, $this: this })
+                  : (
+                      <div class="dialog-footer">
+                        { this.showConfirmButton && (<Button onClick={this.close}>{$t(this.cancelButtonText)}</Button>) }
+                        { this.showCancelButton && (<Button type="primary" onClick={this.submit}>{$t(this.confirmButtonText)}</Button>) }
+                      </div>
+                    )
               }
             </template>
           ] : null
