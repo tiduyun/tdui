@@ -33,7 +33,7 @@
     "vue-types": "^2.0.3"
   },
   "peerDependencies": {
-    "element-ui": "next",
+    "element-ui": "*",
     "vue": "^2.6.6",
     "vue-property-decorator": "^8",
     "vuex": "^3.0.1"
