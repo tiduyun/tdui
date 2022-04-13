@@ -155,12 +155,9 @@ $menu-item-height: 40px !default;
 .el-table {
   &--small {
     td { padding: 12px 0; }
-    th { padding: 0; }
   }
 
   th > .cell {
-    padding: 7px 10px;
-
     .caret-wrapper {
       margin: -7px 0;
     }
