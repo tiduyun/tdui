@@ -257,6 +257,9 @@ export class AbsSelectView extends Vue {
         // ensure return a array in multi-mode
         parsed = []
       }
+    } else {
+      // handle empty str as undefined
+      parsed = parsed === '' ? undefined : parsed
     }
 
     // Optional cleanup the obsoleted value(s)
@@ -276,7 +279,7 @@ export class AbsSelectView extends Vue {
           return list
         }, [])
       } else {
-        parsed = assert(parsed) ? parsed : undefined
+        parsed = parsed !== undefined && assert(parsed) ? parsed : undefined
       }
     }
 
