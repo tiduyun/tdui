@@ -1,6 +1,6 @@
 {
   "name": "@tdio/tdui",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Tiduyun.com Front-End UI",
   "module": "lib/index.es.js",
   "types": "lib/index.d.ts",
@@ -30,6 +30,7 @@
     "clipboard": "^2.0.8",
     "querystring": "^0.2.0",
     "tslib": "^2",
+    "vue-resize-observer": "^1.0.1",
     "vue-types": "^2.0.3"
   },
   "peerDependencies": {

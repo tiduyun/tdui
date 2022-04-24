@@ -3,6 +3,7 @@ import { pick } from '@tdio/utils'
 import classNames from 'classnames'
 import { CreateElement, RenderContext } from 'vue'
 import { Component, Prop, Ref, Vue } from 'vue-property-decorator'
+import { ResizeDetector } from 'vue-resize-observer'
 
 import { debounce } from '@/utils/decorators'
 import { functionalComponent } from '@/utils/vue'
@@ -22,19 +23,14 @@ class WidthProvideRGL extends Vue {
 
   width: number = 0
 
-  beforeDestroy () {
-    window.removeEventListener('resize', this.onWindowResize)
-  }
-
   mounted () {
-    window.addEventListener('resize', this.onWindowResize)
     // Call to properly set the breakpoint and resize the elements.
     // Note that if you're doing a full-width element, this can get a little wonky if a scrollbar
     // appears because of the grid. In that case, fire your own resize event, or set `overflow: scroll` on your body.
-    this.onWindowResize()
+    this.resize()
   }
 
-  onWindowResize () {
+  resize () {
     if (!this._isMounted) return
     const node = this.$provider.$el
     // const node = this.elementRef.current // Flow casts this to Text | Element
@@ -55,13 +51,16 @@ class WidthProvideRGL extends Vue {
       }
     }
     return (
-      <component
-        ref="$provider"
-        { ...props }
-        on={this.$listeners}
-      >
-        {this.$slots.default}
-      </component>
+      <div class="v-layout-gurd">
+        <ResizeDetector handleWidth={true} skipOnMount={false} onResize={this.resize} />
+        <component
+          ref="$provider"
+          { ...props }
+          on={this.$listeners}
+        >
+          {this.$slots.default}
+        </component>
+      </div>
     )
   }
 
