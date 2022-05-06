@@ -17,6 +17,7 @@ declare module 'element-ui/types/tree' {
   }
   interface TreeStore<K, D> {
     getCurrentNode (): TreeNode<K, D>;
+    getNode (data: D): TreeNode<K, D> | null;
   }
   interface TreeData {
     [p: string]: any;
@@ -329,8 +330,7 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
         if (el.getCurrentKey() !== key) {
           el.setCurrentKey(key)
         }
-        const node = this.getCurrentNode()
-        this.labels = this.parseTextModel(node ? node.data : null)
+        this.labels = this.parseTextModel(this.getCurrentNode()?.data)
       }
     }
   }
@@ -523,12 +523,20 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     })
   }
 
-  private parseTextModel (entity: D | D[] | null) {
-    const multiple = this.params.select.multiple
+  private getLabel (data: D): string {
     const { propsLabel } = this
-    const getLabel = (o: D): string => o && get(o, propsLabel) || ''
-    return !multiple
-      ? entity && getLabel(entity as D) || ''
-      : ((entity || []) as D[]).map(getLabel)
+    return typeof propsLabel === 'function'
+      ? (propsLabel as (data: D, node: TreeNode<K, D>) => string)(data, this.$tree.store.getNode(data)!)
+      : data && get(data, propsLabel) || ''
+  }
+
+  private parseTextModel (data: D | D[] | undefined) {
+    const multiple = this.params.select.multiple
+    if (!data) {
+      return multiple ? [] : ''
+    }
+    return multiple
+      ? (data as D[]).map(this.getLabel.bind(this))
+      : this.getLabel(data as D) || ''
   }
 }
