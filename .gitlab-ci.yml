@@ -13,6 +13,7 @@ before_script:
 
 stages:
  - build
+ - prerelease
  - release
 
 deployment:
@@ -22,10 +23,24 @@ deployment:
     - yarn lint
     - yarn build
     - yarn test
-    - git release-npm -t insiders --next-version ${CI_NEXT_VERSION} -f
   stage: build
   only:
     - branches
+    - triggers
+  except:
+    - master
+
+prerelease:
+  tags:
+    - development
+  script:
+    - yarn lint
+    - yarn build
+    - yarn test
+    - git release-npm -t insiders --next-version ${CI_NEXT_VERSION} -f
+  stage: prerelease
+  only:
+    - master
     - triggers
 
 release:
