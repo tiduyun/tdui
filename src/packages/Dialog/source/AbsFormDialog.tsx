@@ -157,8 +157,8 @@ export default class AbsFormDialog extends MixinDialog {
                   ? $scopedSlots.footer({ $self: entity, $this: this })
                   : (
                       <div class="dialog-footer">
-                        { this.showConfirmButton && (<Button onClick={this.close}>{$t(this.cancelButtonText)}</Button>) }
-                        { this.showCancelButton && (<Button type="primary" onClick={this.submit}>{$t(this.confirmButtonText)}</Button>) }
+                        { this.showCancelButton && (<Button onClick={this.close}>{$t(this.cancelButtonText)}</Button>) }
+                        { this.showConfirmButton && (<Button type="primary" onClick={this.submit}>{$t(this.confirmButtonText)}</Button>) }
                       </div>
                     )
               }
