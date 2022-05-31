@@ -25,10 +25,8 @@ deployment:
     - yarn test
   stage: build
   only:
-    - branches
+    - devel
     - triggers
-  except:
-    - master
 
 prerelease:
   tags:

@@ -50,7 +50,6 @@ export function byteLength (str: string | { toString (): string; [x: string]: an
 }
 
 export function truncate (s: string, option: ITruncateOption = {}) {
-  s = s.replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const l = option.isUnicodeLength ? byteLength(s) : s.length
   const textLength = option.textLength || 12
   let truncateStr = s
