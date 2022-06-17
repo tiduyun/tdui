@@ -31,3 +31,5 @@ export interface IProps extends Kv {
   label: string;
   key: string;
 }
+
+export type Many<T> = T | ReadonlyArray<T>

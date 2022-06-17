@@ -148,3 +148,5 @@ export const findVueComponents = (o: Vue, predicate: (o: Vue) => boolean) => {
   }, arr)
   return walk(o, [] as Vue[])
 }
+
+export const cloneVNode = Vue.cloneVNode

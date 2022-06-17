@@ -1,4 +1,6 @@
-.el-tree-select {
+@import "../../styles/inc.scss";
+
+.v-treeselect {
   display: inline-block;
   width: 100%;
 
@@ -12,61 +14,87 @@
     width: 100%;
   }
 
-  .select-option {
-    display: none !important;
-  }
-}
-
-.el-tree-select-popper {
-  $content-wrapper-padding: 4px;
-
-  padding: $content-wrapper-padding 0;
-  max-height: 400px;
-  font-size: 12px;
-
-  [aria-disabled='true'] > .el-tree-node__content {
-    color: inherit !important;
-    background: transparent !important;
-    cursor: no-drop !important;
+  &__selector-ctl {
+    // hide <Select /> popper
+    &__popper {
+      display: none;
+    }
   }
 
-  &.disabled {
-    display: none !important;
-  }
+  &__popper {
+    $content-wrapper-padding: 6px;
 
-  .el-tree {
-    margin-right: 8px;
-  }
+    padding: $content-wrapper-padding 0 0;
+    max-height: 400px;
+    font-size: 12px;
 
-  .el-tree-node__label {
-    font-size: inherit;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    vertical-align: middle;
-    cursor: pointer;
-    white-space: nowrap;
-    display: block;
-  }
+    /* @override */
+    .el-tree-node[aria-disabled=true] > .el-tree-node__content {
+      cursor: no-drop;
+      background: transparent;
 
-  .el-button--small {
-    width: 25px !important;
-    min-width: 25px !important;
-  }
+      .el-tree-node__label {
+        cursor: inherit;
+        color: $disabled-color-base;
+        font-weight: normal;
+      }
+    }
 
-  .el-scrollbar__view {
-    border: 0;
-  }
+    &.disabled {
+      display: none !important;
+    }
 
-  .el-tree-node__content {
-    width: 100%;
-    overflow: hidden;
-  }
+    .el-tree {
+      margin-right: 8px;
+    }
 
-  .fbox {
-    padding: 0 $content-wrapper-padding $content-wrapper-padding;
-  }
+    .el-tree-node__label {
+      font-size: inherit;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+      cursor: pointer;
+      white-space: nowrap;
+      display: block;
+    }
 
-  .el-select-dropdown__empty {
-    padding: 5px 0;
+    .el-button--small {
+      width: 25px !important;
+      min-width: 25px !important;
+    }
+
+    .el-scrollbar__view {
+      border: 0;
+    }
+
+    .el-tree-node__content {
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .filter-box {
+      padding: 0 $content-wrapper-padding 1px;
+    }
+
+    .el-select-dropdown__empty {
+      padding: 5px 0;
+    }
+
+    // override and sync with .el-select-dropdown__empty
+    .el-tree__empty-block {
+      color: $color-text-placeholder;
+      height: auto;
+      min-height: initial;
+      padding: 5px 0;
+
+      .el-tree__empty-text {
+        position: static;
+        top: auto;
+        left: auto;
+        transform: none;
+        font-size: inherit;
+        color: inherit;
+      }
+    }
   }
 }

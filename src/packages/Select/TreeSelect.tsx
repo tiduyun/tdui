@@ -1,23 +1,27 @@
 import { ElPopover } from 'element-ui/types/popover'
-import { ElSelect } from 'element-ui/types/select'
 import { ElTree, TreeData, TreeNode } from 'element-ui/types/tree'
-import { Component, Emit, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
-import { $t } from '@tdio/locale'
-import { deepAssign, get, isArray, isValue, noop, omit, unset, valueEquals } from '@tdio/utils'
-
-import { Emittable } from '@/utils/emittable'
 import { contains, off, on } from '@tdio/dom-utils'
+import { $t } from '@tdio/locale'
+import { defaultTo, get, hasOwn, isArray, isEqual, isValue, memoize, merge, noop, omit, valueEquals } from '@tdio/utils'
 
+import { debounce as Debounce } from '@/utils/decorators'
+import { Emittable } from '@/utils/emittable'
+
+import { IOption, Many, Nil } from '../../types/common'
+
+import { DisplayValuesChangeInfo, Selector } from './Selector'
 import './TreeSelect.scss'
 
 declare module 'element-ui/types/tree' {
   interface ElTree <K, D> {
-    setCurrentKey (key: K | null): void;
+    setCurrentKey (key: K | undefined): void;
   }
   interface TreeStore<K, D> {
     getCurrentNode (): TreeNode<K, D>;
-    getNode (data: D): TreeNode<K, D> | null;
+    setCurrentNode (): void;
+    getNode (data: D | K): TreeNode<K, D> | null;
   }
   interface TreeData {
     [p: string]: any;
@@ -30,18 +34,17 @@ declare module 'element-ui/types/popover' {
   }
 }
 
-type Many<T> = T | ReadonlyArray<T>
+interface ITreeData extends TreeData {}
 
-interface ITreeData extends TreeData {
-}
-
-interface TreeParams<D extends ITreeData> extends Kv {
+export interface TreeParams<K, D extends ITreeData> extends Kv {
+  cacheKey: number;
   clickParent?: boolean;
-  filterable: boolean;
-  data: D[];
-  highlightCurrent: boolean;
+  data?: D[];
+  currentNodeKey?: K;
+  highlightCurrent?: boolean;
   expandOnClickNode?: boolean;
   defaultExpandedKeys?: Array<string | number>;
+  defaultCheckedKeys?: K[];
   props: {
     children: string;
     label: string;
@@ -50,34 +53,62 @@ interface TreeParams<D extends ITreeData> extends Kv {
   }
 }
 
-interface SelectParams extends Kv {
-  clearable?: boolean;
-}
-
 interface TreeCheckEventArgs<K, D> {
   checkedNodes: D[]; // @see element-ui/packages/tree/store/getCheckedNodes()
   checkedKeys: K[];
   halfCheckedNodes: D[];
-  halfCheckedKeys: K[]
+  halfCheckedKeys: K[];
 }
 
 const normalizeCssWidth = (n: string | number): string => {
   const s = String(n)
   return (/^\d+$/.test(s) ? `${s}px` : s)
 }
-const ensureArray = (n: any): any[] => (isArray(n) ? n : isValue(n) ? [n] : [])
+
+function ensureArray <T> (n: Many<T> | Nil): T[] {
+  return (isArray(n) ? n : isValue(n) ? [n] : [])
+}
+
+function getBusterKey <T> (o: T[]): string {
+  return o.join(',')
+}
 
 const getVuePropDefault = (o: Vue, prop: string) => {
   const p = get(o, `constructor.extendOptions.props.${prop}`)
   return p ? p.default() : undefined
 }
 
-@Component
+interface TreeSelectState<K, D> {
+  popperWidth: number;
+  visible: boolean; // popover v-model
+
+  /* @deprecated select params */
+  select: Kv;
+
+  // tree
+  tree: TreeParams<K, D>;
+  query: string;
+  ids: K[];
+  selectedValues: IOption[];
+
+  // internal entity state
+  ready: boolean;
+  entityKey: string;
+  lastEntity: D[];
+}
+
+const deprecated = memoize(
+  (deprecatedKey: string, alt = '') => console.warn(`<TreeSelect /> [${deprecatedKey}] is deprecated. ${alt}`)
+)
+
+@Component({
+  componentName: 'TreeSelect',
+  inheritAttrs: false
+})
 @Emittable
 export default class TreeSelect <K = string | number, D extends ITreeData = ITreeData> extends Vue {
-
   @Prop({ default: undefined })
-  value!: Many<string | number>
+  value!: Many<K> | Nil
 
   @Prop({ type: String, default: 'bottom' })
   placement!: string
@@ -94,27 +125,38 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   @Prop(Boolean)
   defaultFirstOption!: boolean
 
-  @Prop({ type: Boolean, default: false })
+  @Prop(Boolean)
   accordion!: boolean
 
-  @Prop({
-    type: Object,
-    default: () => ({
-      multiple: false,
-      clearable: true,
-      disabled: false,
-      placeholder: $t('Select...')
-    })
-  })
-  selectParams!: SelectParams
+  @Prop(Boolean)
+  multiple!: boolean
+
+  @Prop(Boolean)
+  filterable!: boolean
+
+  @Prop({ type: Boolean, default: true })
+  clearable!: boolean
+
+  @Prop({ type: String, default: $t('Select...') })
+  placeholder!: string
+
+  @Prop({ type: String, default: 'v-treeselect' })
+  prefixCls!: string
+
+  @Prop(Array)
+  data!: D[] | null
+
+  @Prop(Object)
+  selectParams!: Kv
+
+  @Prop(Boolean)
+  loading!: boolean
 
   @Prop({
     type: Object,
     default: () => ({
+      cacheKey: Date.now(),
       clickParent: true,
-      filterable: false,
-      data: [],
-      highlightCurrent: true,
       props: {
         children: 'children',
         label: 'name',
@@ -123,29 +165,20 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       }
     })
   })
-  treeParams!: TreeParams<D>
+  treeParams!: TreeParams<K, D>
 
-  propsValue: string = 'value'
-  propsLabel: string = 'name'
-  propsDisabled: string = 'disabled'
-  propsChildren: string = 'children'
-
-  data: any[] = []
-  keywords: string = ''
-  labels: string | string[] = '' // aspect for fake select v-model bindings
-  ids: K[] = [] // selected option id list (indexes)
-  visible: boolean = false // popover v-model
-
-  params: {
-    tree: TreeParams<D>,
-    select: SelectParams
-  } = {
+  // internal state
+  state: TreeSelectState<K, D> = {
+    popperWidth: this.width || 150,
+    visible: false,
+    ids: [],  // K[] selected id list (indexes), should be synced with model value
+    selectedValues: [], // selected items IOption[]
+    query: '',
     tree: this.treeParams,
-    select: this.selectParams
-  }
-
-  state: Kv = {
-    width: this.width || 150
+    select: this.selectParams,
+    ready: false,
+    entityKey: '',
+    lastEntity: []
   }
 
   @Ref('tree')
@@ -154,273 +187,288 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   @Ref('popover')
   $popover!: ElPopover
 
-  @Ref('select')
-  $select!: ElSelect
-
   @Watch('value')
-  watchValue (val: any, oldVal: any) {
-    const ids = ensureArray(val)
-    if (!valueEquals(this.ids, ids)) {
-      this.emitModel(ids)
+  watchValue (val: Many<K> | Nil, oldVal: Many<K>) {
+    if (!this.state.ready || valueEquals(val, oldVal)) {
+      return
     }
+    const ids: K[] = ensureArray(val)
+    if (!valueEquals(this.state.ids, ids)) {
+      this.setCurrentIds(ids, true)
+    }
+    this.dispatch('ElFormItem', 'el.form.change', val)
   }
 
   @Watch('selectParams', { immediate: true })
-  initSelectParams (v: SelectParams) {
-    deepAssign(this.params.select, getVuePropDefault(this, 'selectParams'), v)
+  initSelectParams (o: Kv) {
+    const deprecatedProps: Kv<0 | string> = { multiple: 0, clearable: 0, disabled: 0, placeholder: 0, inputLoading: 'loading' }
+    const selectParams = merge({}, this.state.select, omit(o, Object.keys(deprecatedProps)))
+    this.setState({ select: selectParams })
+    for (const k in deprecatedProps) {
+      if (hasOwn(o, k)) {
+        const altKey = deprecatedProps[k] || k
+        this.$setState(altKey, o[k])
+        deprecated(`#selectParams.${k}`, altKey !== k ? `Use [#${altKey}] instead` : '')
+      }
+    }
   }
 
   @Watch('treeParams', { immediate: true })
-  initTreeParams (v: TreeParams<D>) {
-    const data = v.data || []
-    const treeParams = deepAssign({}, getVuePropDefault(this, 'treeParams'), omit(v, 'data'))
-    const { props } = treeParams
+  initTreeParams (v: TreeParams<K, D>) {
+    const { data, filterable, ...rest } = v
 
-    this.params.tree = treeParams
-    this.propsValue = props.value
-    this.propsLabel = props.label
-    this.propsDisabled = props.disabled
-    this.propsChildren = props.children
+    // rebuild tree if meta changed
+    if (rest.props) {
+      rest.cacheKey = Date.now()
+    }
 
-    this.data = data.length > 0 ? [...data] : []
+    // adaptor treeSelect.filterable with #.filterable
+    if (filterable !== undefined) {
+      deprecated('#treeParams.filterable')
+      this.$setState('filterable', filterable)
+    }
 
-    this.nextTick(() => {
-      this.ids = []
-      this.labels = this.params.select.multiple ? [] : ''
+    this.setState({
+      tree: merge({}, getVuePropDefault(this, 'treeParams'), rest)
+    })
 
-      if (data.length > 0) {
-        // initial the checked item and sync fake select label text
-        // optional select the first item
-        const ids = (this.defaultFirstOption && data.length)
-          ? [data[0]![props.value]]
-          : ensureArray(this.value)
+    if (isArray(data)) {
+      deprecated('#treeParams.data')
+      this.$setState('data', data)
+    }
+  }
 
-        this.emitModel(ids)
+  @Watch('data', { immediate: true })
+  handleDataInitial (data: D, prev: D) {
+    if (isArray(data) && !this.state.ready) {
+      this.setState({ ready: true })
+      this.nextTick(() => this.$emit('ready'))
+    }
+  }
+
+  setState (state: Partial<TreeSelectState<K, D>>) {
+    Object.keys(state).forEach((k) => {
+      this.$set(this.state, k, state[k as keyof TreeSelectState<K, D>])
+    })
+  }
+
+  getState <T> (type: string): T {
+    return get<T>(this.state, type)!
+  }
+
+  created () {
+    this.$once('ready', () => {
+      const { tree } = this.state
+      const data: D[] = this.data || []
+      let ids = ensureArray(this.value)
+
+      // sync internal ids state, optional select the first item for single-mode
+      if (!this.multiple && this.defaultFirstOption && ids.length === 0 && data.length > 0) {
+        const firstKey = get(data[0], tree.props.value)
+        ids = [firstKey]
       }
+
+      this.setCurrentIds(ids, true)
+    })
+
+    this.$on('collapse', () => {
+      this.handleTreeFilter('')
     })
   }
 
   mounted () {
-    this.keywords = ''
-    this.syncPopperUI()
+    const elem = (this.$refs.select as Vue)!.$el as HTMLElement
+    if (elem) {
+      const popperWidth = elem.offsetWidth
+      this.setState({ popperWidth })
+    }
     this.nextTick(() => this.initClickOutside())
   }
 
   render () {
+    const {
+      $scopedSlots,
+      data,
+      state,
+      multiple,
+      disabled,
+      clearable,
+      placeholder,
+      prefixCls,
+      loading
+    } = this
+
+    const {
+      popperWidth,
+      tree: treeState,
+      select: selectState,
+    } = state
+
     const selectProps = {
-      width: this.width,
-      placeholder: $t('Select...'),
-      ...this.params.select,
-      filterable: false,
-      disabled: this.disabled,
-      popperClass: 'select-option',
-      popperAppendToBody: false,
-      hideOnClickOutside: false
+      placeholder,
+      disabled,
+      clearable,
+      loading,
+      ...selectState
     }
 
     const treeProps = {
-      ...this.params.tree,
-      nodeKey: this.propsValue,
+      ...treeState,
+      nodeKey: treeState.props.value,
       draggable: false,
-      currentNodeKey: this.ids.length > 0 ? this.ids[0] : '',
-      showCheckbox: this.params.select.multiple,
-      filterNodeMethod: this.filterNodeMethod
+      showCheckbox: multiple,
+      checkOnClickNode: multiple,
+      filterNodeMethod: this.filterNodeMethod,
+      data,
+      accordion: this.accordion
+    }
+
+    if (multiple) {
+      treeProps.defaultCheckedKeys = state.ids
+      treeProps.highlightCurrent = defaultTo(treeState.highlightCurrent, false)
+    } else {
+      treeProps.currentNodeKey = state.ids[0]
+      treeProps.highlightCurrent = defaultTo(treeState.highlightCurrent, true)
     }
 
     // prevent expand child when parent selectable
     if (treeProps.clickParent) {
       treeProps.expandOnClickNode = false
     }
-    treeProps.defaultExpandedKeys = ensureArray(this.ids)
 
-    const popperClass = ['el-tree-select-popper', 'el-select-dropdown', this.disabled ? 'disabled' : ''].filter(Boolean).join(' ')
+    const handleTreeCreated = () => {
+      // disable tree set current node
+      if (this.multiple) {
+        this.$tree.store.setCurrentNode = noop
+      }
+    }
+
+    const transitionName = 'el-zoom-in-top'
+    const isEmptyData = !data || data.length === 0
 
     return (
-      <div class="el-tree-select" style={{ ...this.styles, width: normalizeCssWidth(this.width) }}>
+      <div class={prefixCls} style={{ ...this.styles, width: normalizeCssWidth(this.width) }}>
         <el-popover
           ref="popover"
-          v-model={this.visible}
+          v-model={state.visible}
           placement={this.placement}
-          popperClass={popperClass}
-          width={this.state.width}
+          popperClass={[`${prefixCls}__popper`, disabled ? 'disabled' : ''].filter(Boolean).join(' ')}
+          width={popperWidth}
           trigger="manual"
+          transition={transitionName}
         >
-          <el-select
-            slot="reference"
+          <Selector
             ref="select"
-            v-model={this.labels}
-            props={selectProps}
-            accordion={this.accordion}
-            class="el-tree-select-input"
-            on-clear={this.handleSelectClear}
-            on-visible-change={this.togglePopper}
-            on-remove-tag={this.handleSelectRemoveTag}
+            slot="reference"
+            prefixCls={`${prefixCls}__selector`}
+            mode={multiple ? 'multiple' : undefined}
+            displayValues={state.selectedValues}
+            attrs={selectProps}
+            open={state.visible}
+            onToggleOpen={this.togglePopper}
+            onDisplayValuesChange={this.handleDisplayValuesChange}
+            onVisualUpdated={() => { if (multiple && state.visible) this.updatePopper() }}
+            getPlaceContainer={$scopedSlots.selector}
           />
-          {
-            this.params.tree.filterable ? (
-              <div class="fbox">
-                <el-input
-                  v-model={this.keywords}
-                  size="mini"
-                  class="input-with-select"
-                  nativeOn={{click: this.keywordsClick}}
-                />
-              </div>
-            ) : null
-          }
-          <el-scrollbar tag="div" wrapClass="el-select-dropdown__wrap" viewClass="el-select-dropdown__list" class="is-empty">
+          {this.filterable && (
+            <div class="filter-box">
+              <el-input value={state.query} onInput={this.handleTreeFilter} size="mini" prefixIcon="el-icon-search" clearable={true} validateEvent={false} />
+            </div>
+          )}
+          <el-scrollbar key="tree" tag="div" wrapClass="el-select-dropdown__wrap" viewClass="el-select-dropdown__list">
             <el-tree
               ref="tree"
-              key={treeProps.nodeKey}
-              v-show={this.data.length > 0}
-              props={omit(treeProps, 'data')}
-              data={this.data}
-              accordion={this.accordion}
-              on-check={this.handleTreeCheck}
-              on-node-click={this.handleTreeNodeClick}
-              on-current-change={this.handleTreeCurrentChange}
-              { ...{
-                scopedSlots: {
-                  default: (item: any) => (<span class="el-tree-node__label" title={item.node.label}>{item.node.label}</span>)
-                }
+              v-show={!isEmptyData}
+              key={state.tree.cacheKey}
+              props={treeProps}
+              on={{
+                check: this.handleTreeCheck,
+                'node-click': this.handleTreeNodeClick,
+                'hook:mounted': handleTreeCreated
               }}
+              {
+                ...{
+                  scopedSlots: {
+                    default: (item: any) => (<span class="el-tree-node__label" title={item.node.label}>{item.node.label}</span>)
+                  }
+                }
+              }
             />
-            { this.data.length === 0 ? (<div class="el-select-dropdown__empty">{$t('No Data')}</div>) : null }
+            {isEmptyData && (<div class="el-select-dropdown__empty">{$t('No Data')}</div>)}
           </el-scrollbar>
         </el-popover>
       </div>
     )
   }
 
-  @Watch('keywords')
-  handleFilter (q: string) {
+  @Debounce(200)
+  handleTreeFilter (q: string) {
+    if (this.state.query === q) {
+      return
+    }
     this.$tree.filter(q)
+    this.setState({ query: q })
     this.$emit('search', q)
   }
 
-  keywordsClick ($event: any) {
-    $event.stopPropagation()
-    this.showPopper()
+  getCurrentNode (): TreeNode<K, D> | null {
+    return this.$tree?.store?.getCurrentNode() || null
   }
 
   /**
-   * Update select label view and sync tree checked items
+   * Get tree node by purge data
    */
-  setTreeCheckedKeys (keys: K[]) {
-    const el = this.$tree
-    if (!el) {
-      throw new Error('tree instance not exists')
-    }
-
-    const { multiple } = this.params.select
-
-    if (keys.length === 0 || this.data.length === 0) {
-      this.labels = multiple ? [] : ''
-      if (multiple) {
-        el.setCheckedKeys([])
-      } else {
-        el.setCurrentKey(null)
-      }
-    } else {
-      if (multiple) {
-        el.setCheckedKeys(keys)
-        this.labels = this.parseTextModel(el.getCheckedNodes())
-      } else {
-        const key = keys[0]
-        if (el.getCurrentKey() !== key) {
-          el.setCurrentKey(key)
-        }
-        this.labels = this.parseTextModel(this.getCurrentNode()?.data)
-      }
-    }
-  }
-
-  getCurrentNode (): TreeNode<K, D> | null {
-    const tree = this.$tree
-    return tree && tree.store.getCurrentNode() || null
+  getNode (data: K | D): TreeNode<K, D> | null {
+    return this.$tree?.store?.getNode(data) || null
   }
 
   // @see element-ui/types/tree#ElTree.filterNodeMethod
-  filterNodeMethod (value: string, data: D, node: TreeNode<K, D>): boolean {
-    if (!value) return true
-    return data[this.propsLabel].indexOf(value) !== -1
+  filterNodeMethod (q: string, data: D, node: TreeNode<K, D>): boolean {
+    if (!q) return true
+    return node.label.indexOf(q) !== -1
   }
 
   handleTreeNodeClick (data: D, node: TreeNode<K, D>, vm: ElTree<K, D>) {
-    const { multiple } = this.params.select
-    const { clickParent } = this.params.tree
-    const { propsValue, propsChildren, propsDisabled } = this
+    // emit model when single-select mode
+    if (!node.disabled && !this.multiple) {
+      const { clickParent, props } = this.state.tree
+      const childrenProp = props.children
 
-    if (data[propsDisabled]) {
-      return
-    }
+      let ids: K[] = []
+      const nodeValue = node.key
 
-    let ids: K[] = []
-    if (node.checked) {
-      const value = data[this.propsValue]
-      ids = this.ids.filter(id => id !== value)
-    } else if (!multiple) {
       if (!clickParent) {
-        const children = data[propsChildren]
+        const children = data[childrenProp]
         if (!children || children.length === 0) {
-          ids = [data[propsValue]]
+          ids = [nodeValue]
           this.hidePopper()
         } else {
           return
         }
       } else {
-        ids = [data[propsValue]]
+        ids = [nodeValue]
         this.hidePopper()
       }
-    } else {
-      ids.push(data[propsValue])
+
+      this.setCurrentIds(ids)
     }
 
-    this.emitModel(ids)
+    // through node-click event
     this.$emit('node-click', data, node, vm)
   }
 
   handleTreeCheck (data: D, args: TreeCheckEventArgs<K, D>) {
-    const { propsValue } = this
-    const ids = args.checkedNodes.reduce((ids, n) => (ids.push(n[propsValue]), ids), [] as K[])
+    const ids = this.$tree.getCheckedKeys()
     this.$emit('check', data, args)
-    this.emitModel(ids)
+    this.setCurrentIds(ids)
   }
 
-  handleTreeCurrentChange (data: D | null, node: TreeNode<K, D>) {
-  }
-
-  // handle tag removed
-  handleSelectRemoveTag (tag: string) {
-    const { data, propsValue, propsLabel, propsChildren } = this
-
-    // remaining indexes
-    let ids = this.ids
-
-    const iterate = (d: D) => {
-      let children = []
-      if (d[propsChildren] && d[propsChildren].length > 0) {
-        children = d[propsChildren]
-      }
-      if (d[propsLabel] === tag) {
-        const value = d[propsValue]
-        ids = ids.filter(id => id !== value)
-      }
-      if (children.length) {
-        children.forEach(iterate)
-      }
-    }
-
-    data.forEach(iterate)
-
-    this.$tree.setCheckedKeys(ids)
-    this.$emit('removeTag', tag, ids)
-
-    this.emitModel(ids)
+  handleDisplayValuesChange (values: IOption[], info: DisplayValuesChangeInfo) {
+    this.setCurrentIds(values.map(o => o.value))
   }
 
   handleSelectClear () {
-    this.emitModel([])
+    this.setCurrentIds([])
     this.$emit('clear')
   }
 
@@ -429,17 +477,12 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
   }
 
   hidePopper (trigger: boolean = true) {
-    this.visible = false
-    this.keywords = ''
-    if (trigger) {
-      this.$select.toggleMenu()
-    }
+    this.setState({ visible: false })
     this.$emit('collapse')
   }
 
   showPopper () {
-    this.syncPopperUI()
-    this.visible = true
+    this.setState({ visible: true })
     this.$emit('expand')
   }
 
@@ -451,56 +494,102 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
     }
   }
 
-  // submit current checked values(s), trigger v-model and sync events
-  emitModel (indexes: K[]) {
-    if (!valueEquals(this.ids, indexes)) {
-      this.ids = indexes
-      this.setTreeCheckedKeys(indexes)
-      this.nextTick(() => {
-        const node = this.getCurrentNode()
-        if (node) {
-          this.$emit('update:entity', node.data)
-        }
+  /**
+   * Set checked nodes by keys (for multiple mode)
+   */
+  setCheckedKeys (keys: K[]) {
+    const tr = this.$tree
+    if (tr) {
+      tr.setCheckedKeys(keys)
+    }
+  }
+
+  /**
+   * Set current node by primary key
+   */
+  setCurrentKey (key: K) {
+    const tr = this.$tree
+    if (tr) {
+      tr.setCurrentKey(key)
+    }
+  }
+
+  /**
+   * Set current value (internal: state.ids), also may conditional emit models
+   *
+   * @param values {K[]} The current selected value
+   * @param silent {Boolean} skip model emit (input & change events)
+   */
+  setCurrentIds (values: K[], silent?: boolean) {
+    const { multiple, value } = this
+
+    if (this.state.ids !== values) {
+      this.state.ids = values
+      if (multiple) {
+        this.setCheckedKeys(values)
+      } else {
+        this.setCurrentKey(values[0])
+      }
+    }
+
+    const v = multiple
+      ? values
+      : values.length > 0 ? values[0] : undefined
+
+    // check value is changed indeed, null, undefined, shadow clones array are ignored
+    if (!(v == null && value == null || valueEquals(value, v))) {
+      if (!silent) {
+        this.$emit('input', v)
+        this.$emit('change', v, value)
+      }
+      if (!multiple) {
+        this.$emit('select-node', this.getCurrentNode())
+      }
+    }
+
+    if (this.state.ready) {
+      this.setState({
+        selectedValues: this.state.ids.reduce<IOption[]>((vals, k) => {
+          const n = this.getNode(k)
+          if (n) {
+            vals.push({
+              label: n.label,
+              value: n.key,
+              disabled: n.disabled
+            })
+          }
+          return vals
+        }, [])
       })
-    }
 
-    const { multiple } = this.params.select
-    const v = multiple ? indexes : indexes.length > 0 ? indexes[0] : undefined
-    if (!valueEquals(this.value, v)) {
-      this.$emit('input', v)
-      this.$emit('change', v)
-      this.$emit('select-node', this.getCurrentNode())
-      this.dispatch('ElFormItem', 'el.form.change', v)
+      // emit select entities
+      this.syncEntity()
     }
   }
 
-  nextTick (fn: () => void) {
-    this.$nextTick(() => {
-      if (this._isDestroyed) return
-      fn()
-    })
+  private syncEntity () {
+    const entity = this.state.ids.map(id => this.getNode(id)?.data)
+    const { lastEntity, entityKey } = this.state
+
+    // calc identity entity changes buster based on current value
+    const key = getBusterKey(this.state.ids.sort())
+    if (entityKey !== key && !valueEquals(lastEntity, entity)) {
+      Object.assign(this.state, { lastEntity: entity, entityKey: key })
+      const v = this.multiple ? entity : entity[0]
+      this.$emit('entity', v)
+      this.$emit('update:entity', v)
+    }
   }
 
-  syncPopperUI () {
-    this.state.width = this.$select.$el.getBoundingClientRect().width
-  }
-
-  /** API: update tree data */
-  setTreeData (data: D[]): void {
-    this.data = data
-    this.nextTick(() => this.setTreeCheckedKeys(this.ids))
-  }
-
-  /** API: filter tree */
-  filterTree (val: any): void {
-    this.$tree.filter(val)
+  private nextTick (fn: () => void) {
+    this.$nextTick(() => { if (!this._isDestroyed) fn() })
   }
 
   private initClickOutside () {
     const handleClick = (e: Event) => {
       const sender = e.target as Element
-      const isInter = [this.$el, ...Object.values((this.$refs as any) as Vue[]).map(o => o.$el)].some(c => contains(c, sender))
-      if (!isInter && this.visible) {
+      const isInter = [this.$el, this.$popover.popperElm].some(c => contains(c, sender))
+      if (!isInter && this.state.visible) {
         this.hidePopper()
       }
     }
@@ -521,22 +610,5 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       on(document, 'mouseup', handleClick)
       this.$once(releaseEvents, teardown)
     })
-  }
-
-  private getLabel (data: D): string {
-    const { propsLabel } = this
-    return typeof propsLabel === 'function'
-      ? (propsLabel as (data: D, node: TreeNode<K, D>) => string)(data, this.$tree.store.getNode(data)!)
-      : data && get(data, propsLabel) || ''
-  }
-
-  private parseTextModel (data: D | D[] | undefined) {
-    const multiple = this.params.select.multiple
-    if (!data) {
-      return multiple ? [] : ''
-    }
-    return multiple
-      ? (data as D[]).map(this.getLabel.bind(this))
-      : this.getLabel(data as D) || ''
   }
 }

@@ -65,6 +65,9 @@ export class AbsSelectView extends Vue {
   @Prop({ type: Boolean, default: true })
   cleanupObsolete!: boolean
 
+  @Prop({ type: String, default: 'v-select' })
+  prefixCls!: string
+
   props: SelectMetaProps = defaultMetaProps
 
   /**
