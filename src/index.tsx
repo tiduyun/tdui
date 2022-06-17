@@ -1,3 +1,5 @@
+import './i18n'
+
 // helpers
 export { functionalComponent } from '@/utils/vue'
 export { ComponentBuilder, buildComponent, registerComponent } from './packages/ComponentFactory/ComponentBuilder'

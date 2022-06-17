@@ -1,7 +1,7 @@
-import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
-
 import { $t } from '@tdio/locale'
 import { isObject, isValue } from '@tdio/utils'
+import { ElSelect } from 'element-ui/types/select'
+import { Component, Mixins, Prop, Ref, Watch } from 'vue-property-decorator'
 
 import { extractTooltip } from '@/utils/normalize'
 
@@ -13,6 +13,7 @@ import './Select.scss'
 
 /**
  * scoped-slots: options, option
+ * events: ['toggleOpen', 'input', 'change', 'entity']
  *
  * ```
  * <Select>
@@ -43,18 +44,38 @@ export default class Select extends Mixins(AbsSelectView) {
   @Prop()
   tooltip!: string | {}
 
+  @Prop({ type: Boolean })
+  open!: boolean
+
+  @Ref('select')
+  $select!: ElSelect
+
   /**
    * Abstract property set for the derived component overrides
    * @abstract
    */
   selectProps: Kv = {}
 
-  render () {
-    const { $slots, $scopedSlots, disabled } = this
-    const calcDisabled = isValue(disabled) ? disabled : false
+  @Watch('open')
+  watchVisiable (v: boolean) {
+    this.$select.visible = v
+  }
 
-    const classPrefix = 'v-select'
-    const popperClass = `${classPrefix}--popper ${this.popperClass || ''}`.trim()
+  render () {
+    const {
+      $slots,
+      $scopedSlots,
+      $props,
+      $attrs,
+      disabled,
+      placeholder,
+      clearable,
+      multiple,
+      prefixCls,
+      selectProps
+    } = this
+
+    const calcDisabled = isValue(disabled) ? disabled : false
 
     const renderOption = (o: IOption, _entity: any) => {
       const { tooltip, icon } = o
@@ -75,23 +96,24 @@ export default class Select extends Mixins(AbsSelectView) {
       )
     }
 
-    const placeholder = this.placeholder
-
+    // merge <el-select props />
     const props: Kv = {
-      ...this.$attrs,
-      ...this.selectProps,
-      class: classPrefix,
-      popperClass,
-      placeholder,
+      popperClass: this.popperClass,
+      ...$attrs,
+      ...selectProps,
+      class: prefixCls,
       reserveKeyword: true,
       disabled: calcDisabled,
-      clearable: this.clearable,
-      multiple: this.multiple,
+      clearable,
+      multiple,
+      placeholder
     }
+
+    props.popperClass = `${prefixCls}__popper ${props.popperClass || ''}`.trim()
 
     // Prevent show the plain value when options is a await loader
     const selValue = props.inputLoading
-      ? (this.multiple ? [] : undefined)
+      ? (multiple ? [] : undefined)
       : this.currentValue
 
     const selectNode = (
@@ -100,6 +122,9 @@ export default class Select extends Mixins(AbsSelectView) {
         value={selValue}
         props={props}
         onInput={this.handleSelect}
+        on-visible-change={this.handleVisiableChange}
+        on-clear={this.handleSelectClear}
+        on-remove-tag={this.handleSelectRemove}
       >
         { $slots.prefix ? (<template slot="prefix">{ $slots.prefix }</template>) : null }
         { $slots.suffix ? (<template slot="suffix">{ $slots.suffix }</template>) : null }
@@ -123,5 +148,19 @@ export default class Select extends Mixins(AbsSelectView) {
     return tooltip && tooltip.content
       ? (<el-tooltip props={tooltip}>{ selectNode }</el-tooltip>)
       : selectNode
+  }
+
+  handleVisiableChange (v: boolean) {
+    if (this.open !== v) {
+      this.$emit('toggleOpen', v)
+    }
+  }
+
+  handleSelectClear () {
+    this.$emit('clear')
+  }
+
+  handleSelectRemove <T> (val: T) {
+    this.$emit('removeValue', val)
   }
 }
