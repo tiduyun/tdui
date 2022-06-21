@@ -14,16 +14,19 @@ const getForm = (root: Vue): Form | null => findDownward(root, 'ElForm') as Form
 
 @Component
 export default class AbsFormDialog extends MixinDialog {
-  /* Override some @ElDialog props default value */
+  /* Override some props set defaults */
 
   @Prop(String)
   width!: string
 
-  @Prop({ type: Boolean, default: false })
+  @Prop(Boolean)
   appendToBody!: boolean
 
-  @Prop({ type: Boolean, default: false })
+  @Prop(Boolean)
   closeOnClickModal!: boolean
+
+  @Prop(Boolean)
+  closeOnPressEscape!: boolean
 
   @Prop(String)
   customClass!: string
@@ -118,16 +121,17 @@ export default class AbsFormDialog extends MixinDialog {
       appendToBody,
       entity,
       closeOnClickModal,
+      closeOnPressEscape,
       customClass
     } = this
 
     const isVisible = this.inited && this.isShow
 
     const parsedProps = parseProps({
-      title: entity.title || this.title,
       width,
       appendToBody,
       closeOnClickModal,
+      closeOnPressEscape,
       customClass: [
         dialogClass,
         customClass,
@@ -135,6 +139,35 @@ export default class AbsFormDialog extends MixinDialog {
       ].filter(Boolean).join(' '),
       ...this.$attrs
     }, Dialog)
+
+    const slotScope = {
+      $vm: this,
+      $this: this, // to be deprecated
+      $self: entity
+    }
+
+    const bodyNode = $scopedSlots.default
+      ? $scopedSlots.default({
+        model: entity.data,
+        rules: entity.rules,
+        ...slotScope
+      })
+      : null
+
+    const titleNode = $scopedSlots.title
+      ? $scopedSlots.title(slotScope)
+      : (
+        <span class="el-dialog__title">{ entity.title || this.title }</span>
+      )
+
+    const footerNode = $scopedSlots.footer
+      ? $scopedSlots.footer(slotScope)
+      : (
+        <div class="dialog-footer">
+          { this.showCancelButton && (<Button onClick={this.close}>{$t(this.cancelButtonText)}</Button>) }
+          { this.showConfirmButton && (<Button type="primary" onClick={this.submit}>{$t(this.confirmButtonText)}</Button>) }
+        </div>
+      )
 
     return (
       <el-dialog
@@ -150,19 +183,9 @@ export default class AbsFormDialog extends MixinDialog {
       >
         {
           isVisible ? [
-            $scopedSlots.default ? $scopedSlots.default({ model: entity.data, rules: entity.rules, $self: entity, $this: this }) : null,
-            <template slot="footer">
-              {
-                $scopedSlots.footer
-                  ? $scopedSlots.footer({ $self: entity, $this: this })
-                  : (
-                      <div class="dialog-footer">
-                        { this.showCancelButton && (<Button onClick={this.close}>{$t(this.cancelButtonText)}</Button>) }
-                        { this.showConfirmButton && (<Button type="primary" onClick={this.submit}>{$t(this.confirmButtonText)}</Button>) }
-                      </div>
-                    )
-              }
-            </template>
+            bodyNode,
+            <template slot="title">{ titleNode }</template>,
+            <template slot="footer">{ footerNode }</template>
           ] : null
         }
       </el-dialog>
