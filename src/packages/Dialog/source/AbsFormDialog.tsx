@@ -146,7 +146,7 @@ export default class AbsFormDialog extends MixinDialog {
       $self: entity
     }
 
-    const bodyNode = $scopedSlots.default
+    const getBodyNode = () => $scopedSlots.default
       ? $scopedSlots.default({
         model: entity.data,
         rules: entity.rules,
@@ -154,13 +154,13 @@ export default class AbsFormDialog extends MixinDialog {
       })
       : null
 
-    const titleNode = $scopedSlots.title
+    const titleNode = () => $scopedSlots.title
       ? $scopedSlots.title(slotScope)
       : (
         <span class="el-dialog__title">{ entity.title || this.title }</span>
       )
 
-    const footerNode = $scopedSlots.footer
+    const footerNode = () => $scopedSlots.footer
       ? $scopedSlots.footer(slotScope)
       : (
         <div class="dialog-footer">
@@ -183,9 +183,9 @@ export default class AbsFormDialog extends MixinDialog {
       >
         {
           isVisible ? [
-            bodyNode,
-            <template slot="title">{ titleNode }</template>,
-            <template slot="footer">{ footerNode }</template>
+            getBodyNode(),
+            <template slot="title">{ titleNode() }</template>,
+            <template slot="footer">{ footerNode() }</template>
           ] : null
         }
       </el-dialog>
