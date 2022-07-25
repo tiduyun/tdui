@@ -1,3 +1,5 @@
+image: tdio/janus:1.0.1
+
 cache:
   paths:
     - node_modules/
@@ -8,8 +10,11 @@ variables:
   CI_NEXT_VERSION: 1.4.3
 
 before_script:
-  - npm config get registry
+  - git-ci setup-devpot --preset v1.0.1
   - yarn --production=false
+
+after_script:
+  - git-ci cleanup-build-cache
 
 stages:
  - build
@@ -18,7 +23,7 @@ stages:
 
 deployment:
   tags:
-    - development
+    - sandbox
   script:
     - yarn lint
     - yarn build
@@ -30,7 +35,7 @@ deployment:
 
 prerelease:
   tags:
-    - development
+    - sandbox
   script:
     - yarn lint
     - yarn build
@@ -43,7 +48,7 @@ prerelease:
 
 release:
   tags:
-    - development
+    - sandbox
   script:
     - yarn build
     - git release-npm -t next -f
