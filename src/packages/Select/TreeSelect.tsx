@@ -262,13 +262,17 @@ export default class TreeSelect <K = string | number, D extends ITreeData = ITre
       const data: D[] = this.data || []
       let ids = ensureArray(this.value)
 
+      let silent = true
+
       // sync internal ids state, optional select the first item for single-mode
       if (!this.multiple && this.defaultFirstOption && ids.length === 0 && data.length > 0) {
         const firstKey = get(data[0], tree.props.value)
         ids = [firstKey]
+        // emit if value changed
+        silent = firstKey === this.value
       }
 
-      this.setCurrentIds(ids, true)
+      this.setCurrentIds(ids, silent)
     })
 
     this.$on('collapse', () => {
