@@ -247,6 +247,10 @@ $menu-item-height: 40px !default;
     .el-alert {
       margin: 8px 0 0;
     }
+
+    .el-alert__content {
+      line-height: initial;
+    }
   }
 }
 
@@ -373,7 +377,7 @@ $menu-item-height: 40px !default;
   }
 
   &__body {
-    padding: 20px;
+    padding: 14px 20px 20px;
     font-size: $font-size-normal;
   }
 
