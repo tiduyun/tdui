@@ -62,19 +62,6 @@ export function truncate (s: string, option: ITruncateOption = {}) {
   return truncateStr
 }
 
-export const eventsFor = {
-  touch: {
-    start: 'touchstart',
-    move: 'touchmove',
-    stop: 'touchend'
-  },
-  mouse: {
-    start: 'mousedown',
-    move: 'mousemove',
-    stop: 'mouseup'
-  }
-}
-
 export function parseClass (className: string): Kv<boolean> {
   className = className || ''
   const classArr = className.trim().split(' ')

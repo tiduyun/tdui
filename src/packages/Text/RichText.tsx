@@ -1,10 +1,10 @@
 import { CreateElement, RenderContext, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { truncate } from '@/utils'
-import { doCopy } from '@/utils/copyText'
+import { truncate } from '../../utils'
+import { doCopy } from '../../utils/copyText'
+import { extractTooltip, TooltipOptions } from '../../utils/normalize'
 
-import { extractTooltip, TooltipOptions } from '@/utils/normalize'
 import { Icon } from '../Icon'
 
 const renderTextWithTooltip = (h: CreateElement, context: RenderContext, text: string, tooltip: TooltipOptions | null) => {

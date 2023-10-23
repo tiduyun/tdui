@@ -2,9 +2,9 @@ import { ElDialog } from 'element-ui/types/dialog'
 import { Component, Mixins, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { get, hasOwn, isEmpty, isFunction, isPromise, isValue } from '@tdio/utils'
+import { findDownward } from '@tdio/vue-utils'
 
-import { parseBase64 } from '@/utils'
-import { findDownward } from '@/utils/vue'
+import { parseBase64 } from '../../../utils'
 
 import { IDialogModelService } from './DialogModelService'
 

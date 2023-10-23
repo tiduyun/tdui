@@ -26,6 +26,7 @@
     "@tdio/dom-utils": "^1.0.0",
     "@tdio/locale": "^1.0.0",
     "@tdio/utils": "^1 || next",
+    "@tdio/vue-utils": "^1",
     "classnames": "^2.2.6",
     "clipboard": "^2.0.8",
     "querystring": "^0.2.0",

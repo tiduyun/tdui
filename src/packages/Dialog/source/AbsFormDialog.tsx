@@ -1,11 +1,10 @@
 import { Dialog, Form } from 'element-ui'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { findDownward, reactSet } from '@/utils/vue'
 import { $t } from '@tdio/locale'
 import { deepClone } from '@tdio/utils'
+import { findDownward, parseProps, reactSet } from '@tdio/vue-utils'
 
-import { parseProps } from '../../../utils/vue/parseProps'
 import { Button } from '../../Button'
 
 import MixinDialog from './MixinDialog'

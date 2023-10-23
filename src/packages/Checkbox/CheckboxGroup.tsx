@@ -1,4 +1,4 @@
-import { functionalComponent } from '@/utils/vue'
+import { functionalComponent } from '@tdio/vue-utils'
 import { CreateElement } from 'vue'
 
 import { IOption } from '../../types/common'

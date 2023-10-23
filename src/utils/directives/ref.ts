@@ -1,4 +1,4 @@
-import Vue, { VueConstructor } from 'vue'
+import Vue, { VNode, VueConstructor } from 'vue'
 
 export interface RefObject<C, T> {
   (context?: any): void;
@@ -20,7 +20,7 @@ export const createRef = <C, T> (context?: C): RefObject<C, T> => {
 export const installRef = (Vue: VueConstructor<Vue>): void => {
   const directiveName = 'ref'
   Vue.directive(directiveName, {
-    bind (el, binding, vnode) {
+    bind (el: Vue | HTMLElement, binding: any, vnode: VNode) {
       Vue.nextTick(() => {
         binding.value(vnode.componentInstance || el, vnode.key)
       })

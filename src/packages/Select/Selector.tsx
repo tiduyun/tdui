@@ -1,10 +1,9 @@
 import { isFunction } from '@tdio/utils'
+import { cloneVNode, findDownward, parseProps } from '@tdio/vue-utils'
 import { VNode } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { IOption, Many, Nil } from '../../types/common'
-import { cloneVNode, findDownward } from '../../utils/vue'
-import { parseProps } from '../../utils/vue/parseProps'
 
 import Select from './Select'
 

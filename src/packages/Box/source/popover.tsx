@@ -3,12 +3,12 @@ import { Form as ElForm, Popover as ElPopover } from 'element-ui/types'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 
-import { addResizeListener, removeResizeListener } from '@/utils/resize-event'
-import { findDownward } from '@/utils/vue'
 import { off, on } from '@tdio/dom-utils'
 import { $t } from '@tdio/locale'
+import { findDownward } from '@tdio/vue-utils'
 
 import { IValidateRuleObject } from '../../../types/validate'
+import { addResizeListener, removeResizeListener } from '../../../utils/resize-event'
 
 import { Button } from '../../Button'
 
@@ -36,7 +36,7 @@ const prevent = (e: Event) => e.preventDefault()
 const getForm = (root: Vue): ElForm | null => findDownward(root, 'ElForm') as ElForm
 
 @Component
-class Popover<D extends {}> extends Vue {
+class Popover<D> extends Vue {
 
   /**
    * Provide a static helper for creating Popover component instances programmatically
@@ -44,7 +44,7 @@ class Popover<D extends {}> extends Vue {
    * @param reference {Element|Node}
    * @param options {PopoverOptions}
    */
-  static create <D = any> (
+  static create <D extends {} = any> (
     reference: { nodeType: number; nodeName: string; popoverVm?: Popover<D> | null }, // duck-like
     options: Partial<PopoverOptions<D>>,
   ): Popover<D> {

@@ -7,12 +7,11 @@ import {
   assign, deepClone, defaultTo, deferred, DeferredPromise, get, guid, hasOwn, identity, isEmpty,
   isEqual, isObject, merge, omit, pick, set, unset
 } from '@tdio/utils'
-
-import { debounce as Debounce } from '@/utils/decorators'
-import { createState, IStateService } from '@/utils/state-factory'
-import { findDownward, reactSet } from '@/utils/vue'
+import { findDownward } from '@tdio/vue-utils'
+import { debounce as Debounce } from '@tdio/vue-utils'
 
 import { Nullable } from '../../types/common'
+import { createState, IStateService } from '../../utils/state-factory'
 
 import './style.scss'
 
@@ -44,7 +43,7 @@ interface IListParams <Q extends IQuery = IQuery> {
 }
 
 // This interface for store list type data that with pagination info
-interface IListResult<Q, T> extends IListParams<Q> {
+interface IListResult<Q extends IQuery, T> extends IListParams<Q> {
   list: T[];
 }
 

@@ -1,7 +1,6 @@
 import { CreateElement, RenderContext, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { truncate } from '@/utils'
 import { isEmpty } from '@tdio/utils'
 
 type ListIterateeRender<T> = (item: T, h: CreateElement) => VNode | string

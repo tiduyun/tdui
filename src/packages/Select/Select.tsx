@@ -3,7 +3,7 @@ import { isObject, isValue } from '@tdio/utils'
 import { ElSelect } from 'element-ui/types/select'
 import { Component, Mixins, Prop, Ref, Watch } from 'vue-property-decorator'
 
-import { extractTooltip } from '@/utils/normalize'
+import { extractTooltip } from '../../utils/normalize'
 
 import { IOption } from '../../types/common'
 import { Icon } from '../Icon'

@@ -1,4 +1,6 @@
 // @deprecated
 export {
-  Emittable
+  createStore,
+  registerModules,
+  StoreProvide
 } from '@tdio/vue-utils'

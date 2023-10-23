@@ -2,7 +2,7 @@ import { hasOwn } from '@tdio/utils'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-import { extractTooltip } from '@/utils/normalize'
+import { extractTooltip } from '../../utils/normalize'
 
 import { Icon } from '../Icon'
 

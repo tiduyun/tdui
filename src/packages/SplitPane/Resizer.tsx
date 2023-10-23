@@ -1,7 +1,8 @@
-import { eventsFor } from '@/utils'
 import { pick } from '@tdio/utils'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
+
+import { eventsFor } from './common'
 
 export const RESIZER_DEFAULT_CLASSNAME = 'Resizer'
 

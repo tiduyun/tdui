@@ -1,10 +1,9 @@
 import { CreateElement } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { defaultTo, isValue } from '@tdio/utils'
-
-import { Emittable } from '@/utils/emittable'
 import { addClass, hasClass, removeClass } from '@tdio/dom-utils'
+import { defaultTo, isValue } from '@tdio/utils'
+import { Emittable } from '@tdio/vue-utils'
 
 import Button from './Button'
 

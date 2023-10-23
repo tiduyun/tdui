@@ -1,6 +1,6 @@
-import { functionalComponent } from '@/utils/vue'
 import { $t } from '@tdio/locale'
 import { get, hasOwn, identity, isFunction, template } from '@tdio/utils'
+import { functionalComponent } from '@tdio/vue-utils'
 import { CreateElement, FunctionalComponentOptions } from 'vue'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 

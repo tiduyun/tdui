@@ -1,8 +1,7 @@
 
 import { constant, isArray, isEmpty, isFunction, isObject, isPromise, keys, valueEquals } from '@tdio/utils'
+import { parseProps } from '@tdio/vue-utils'
 import { Component, Mixins, Prop, Ref, Vue } from 'vue-property-decorator'
-
-import { parseProps } from '../../utils/vue/parseProps'
 
 import { IOptionEntity, OptionsProvider } from './AbsSelectView'
 import { AsyncSelect } from './AsyncSelect'

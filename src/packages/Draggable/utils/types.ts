@@ -21,8 +21,6 @@ export class SVGElement extends HTMLElement {
 
 // Missing targetTouches
 export class TouchEvent2 extends TouchEvent {
-  changedTouches: TouchList
-  targetTouches: TouchList
 }
 
 export type MouseTouchEvent = MouseEvent & TouchEvent2

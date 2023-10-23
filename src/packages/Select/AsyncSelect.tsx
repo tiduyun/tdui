@@ -2,7 +2,7 @@ import { Component, Mixins, Prop, Watch } from 'vue-property-decorator'
 
 import { IOption } from '@/types/common'
 
-import { toPromise } from '@/utils'
+import { toPromise } from '../../utils'
 import { CancelablePromise, makeCancelablePromise } from '../../utils/CancelablePromise'
 import { IOptionEntity } from './AbsSelectView'
 import Select from './Select'

@@ -5,7 +5,7 @@ import { CreateElement, VNode } from 'vue'
 import { Component, Mixins, Prop, Vue } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 
-import { parseClass } from '@/utils'
+import { parseClass } from '../../utils'
 
 import {DraggableCore} from '../Draggable'
 import {Axis, DragCallbackData, Props, RESIZABLE_PROPS_ARR, ResizableProps, ResizableState, ResizeHandleAxis} from './utils/propTypes'

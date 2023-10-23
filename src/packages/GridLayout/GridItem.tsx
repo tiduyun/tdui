@@ -5,7 +5,7 @@ import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 
-import { parseClass } from '@/utils'
+import { parseClass } from '../../utils'
 
 import { DraggableCore } from '../Draggable'
 import { Resizable } from '../Resizable'

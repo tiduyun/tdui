@@ -5,9 +5,7 @@ import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 import { contains, off, on } from '@tdio/dom-utils'
 import { $t } from '@tdio/locale'
 import { defaultTo, get, hasOwn, isArray, isEqual, isValue, memoize, merge, noop, omit, valueEquals } from '@tdio/utils'
-
-import { debounce as Debounce } from '@/utils/decorators'
-import { Emittable } from '@/utils/emittable'
+import { debounce as Debounce, Emittable } from '@tdio/vue-utils'
 
 import { IOption, Many, Nil } from '../../types/common'
 
@@ -53,7 +51,7 @@ export interface TreeParams<K, D extends ITreeData> extends Kv {
   }
 }
 
-interface TreeCheckEventArgs<K, D> {
+interface TreeCheckEventArgs<K, D extends ITreeData> {
   checkedNodes: D[]; // @see element-ui/packages/tree/store/getCheckedNodes()
   checkedKeys: K[];
   halfCheckedNodes: D[];
@@ -66,7 +64,7 @@ const normalizeCssWidth = (n: string | number): string => {
 }
 
 function ensureArray <T> (n: Many<T> | Nil): T[] {
-  return (isArray(n) ? n : isValue(n) ? [n] : [])
+  return (isArray(n) ? n : isValue(n) ? [n as T] : [])
 }
 
 function getBusterKey <T> (o: T[]): string {
@@ -78,7 +76,7 @@ const getVuePropDefault = (o: Vue, prop: string) => {
   return p ? p.default() : undefined
 }
 
-interface TreeSelectState<K, D> {
+interface TreeSelectState<K, D extends ITreeData> {
   popperWidth: number;
   visible: boolean; // popover v-model
 

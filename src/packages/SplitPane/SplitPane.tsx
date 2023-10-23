@@ -1,9 +1,9 @@
-import { eventsFor } from '@/utils'
 import { pick } from '@tdio/utils'
 import { VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import VueTypes from 'vue-types'
 
+import { eventsFor } from './common'
 import Pane from './Pane'
 import Resizer, { RESIZER_DEFAULT_CLASSNAME } from './Resizer'
 

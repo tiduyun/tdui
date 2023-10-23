@@ -1,12 +1,8 @@
 // @flow
-import { pick } from '@tdio/utils'
-import classNames from 'classnames'
+import { functionalComponent } from '@tdio/vue-utils'
 import { CreateElement, RenderContext } from 'vue'
 import { Component, Prop, Ref, Vue } from 'vue-property-decorator'
 import { ResizeDetector } from 'vue-resize-observer'
-
-import { debounce } from '@/utils/decorators'
-import { functionalComponent } from '@/utils/vue'
 import { VueConstructor } from 'vue/types/umd'
 
 interface WPState {

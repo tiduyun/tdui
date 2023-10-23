@@ -3,7 +3,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { get, isEmpty } from '@tdio/utils'
 
-import { extractTooltip } from '@/utils/normalize'
+import { extractTooltip } from '../../utils/normalize'
 
 import { result } from '../../utils'
 import './Icon.scss'

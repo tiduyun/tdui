@@ -1,11 +1,10 @@
 import { get, isEmpty, isFunction, isPromise, isString, set, throttle } from '@tdio/utils'
+import { Emittable } from '@tdio/vue-utils'
 import { CreateElement, VNode } from 'vue'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
-import { Emittable } from '@/utils/emittable'
-import { extractTooltip } from '@/utils/normalize'
-
 import { Nil } from '../../types/common'
+import { extractTooltip } from '../../utils/normalize'
 
 const prefixCls = `v-button`
 

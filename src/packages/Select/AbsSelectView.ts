@@ -1,8 +1,7 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import { constant, get, isArray, isEmpty, isEqual, isFunction, isValue } from '@tdio/utils'
-
-import { Emittable } from '@/utils/emittable'
+import { Emittable } from '@tdio/vue-utils'
 
 import { IOption, Nil } from '../../types/common'
 
