@@ -22,19 +22,23 @@ const banner = (name, short = false) => {
 
 const resolve = p => path.resolve(__dirname, '.', p)
 
+const sourceDir = resolve('./src')
 const utilPrefix = resolve('./lib/utils/')
 
-const resolveDistUtils = () => ({
-  resolveId (id) {
-    return id.indexOf('@/utils/') === 0
-      ? `${utilPrefix}${id.replace('@/utils', '')}`
-      : null
-  }
+const resolveUtils = () => ({
+  resolveId (id, importer, options) {
+    const currDir = importer ? path.dirname(importer) : sourceDir
+    const rePath = path.relative(sourceDir, path.resolve(currDir, id))
+    if (rePath.startsWith('utils/')) {
+      return { id, external: true }
+    }
+    return null
+  },
 })
 
 const plugins = [
   'node-builtins',
-  resolveDistUtils(),
+  resolveUtils(),
   'resolve',
   'typescript',
   'babel',
@@ -47,12 +51,17 @@ export default {
   vue: true,
   dependencies: { events: true, ...dependencies, ...peerDependencies },
   compress: false,
+  plugins: {
+    typescript: {
+      tsconfig: resolve('./src/tsconfig.json')
+    }
+  },
   entry: [
     {
       input: resolve('src/index.tsx'),
       plugins,
       external: (id, format, next) => {
-        return id.indexOf(utilPrefix) === 0 || next(id, true)
+        return next(id, true)
       },
       output: [
         { dir: './lib', format: 'es', banner: banner(name, true), entryFileNames: '[name].[format].js' }
