@@ -11,6 +11,8 @@ import SvgIcon from './Svg'
 
 const iconfontRe = /^(iconfont|td-icon|icon|el-icon)-.*/
 
+const isFontName = (n: string) => iconfontRe.test(n)
+
 const getIconfontBaseClass = (s: string): string => {
   const prefix = s.replace(iconfontRe, '$1')
   switch (prefix) {
@@ -22,11 +24,6 @@ const getIconfontBaseClass = (s: string): string => {
     default:
       return ''
   }
-}
-
-const stripClassNames = (classNames: string): string => {
-  // remove dot tailings
-  return classNames.split(' ').map(s => s.replace(/\..*$/, '')).join(' ')
 }
 
 @Component
@@ -51,6 +48,9 @@ export class Icon extends Vue {
   @Prop({ type: [Object, String], default: null })
   tooltip!: Kv | string | null
 
+  @Prop(Boolean)
+  svg!: boolean
+
   render () {
     const {
       light,
@@ -72,11 +72,12 @@ export class Icon extends Vue {
 
     const listeners = disabled ? {} : this.$listeners
     const isBtnStyle = hasTooltip || !isEmpty(listeners.click)
-    const isSVG = this.isSVG()
+
+    const [name, isSvg] = this.normalizeName()
 
     const iconClass = [
-      this.iconClass(isSVG),
       {
+        ...this.iconClass(name, isSvg),
         'is-light': light && !disabled,
         'is-disabled': disabled,
         'is-active': active && !disabled,
@@ -87,8 +88,8 @@ export class Icon extends Vue {
     // forward component style
     const style = get(this.$vnode, 'data.style')
 
-    const icon = isSVG
-      ? (<SvgIcon iconName={this.iconName} className={iconClass} on={listeners} style={style} />)
+    const icon = isSvg
+      ? (<SvgIcon iconName={name} className={iconClass} on={listeners} style={style} />)
       : (<i className={iconClass} on={listeners} style={style} />)
 
     // Provide tooltip prop configs or tooltip slot impls
@@ -100,23 +101,38 @@ export class Icon extends Vue {
       : icon
   }
 
-  private isSVG (): boolean {
-    const name = this.iconName
-    return /.svg$/.test(name) || !iconfontRe.test(name)
+  /**
+   * Normalize icon name with font type
+   *
+   * @private
+   * @return [name, isSvg]
+   */
+  private normalizeName (): [string, boolean] {
+    let { svg, iconName } = this
+    if (svg || isFontName(iconName)) {
+      return [iconName, svg]
+    }
+
+    if (/.svg$/.test(iconName)) {
+      // strip .svg suffix
+      iconName = iconName.slice(0, -4)
+    }
+
+    // add prefix for svg symbolId
+    return [`icon-${iconName}`, true]
   }
 
-  private iconClass (svg: boolean): string {
+  private iconClass (name: string, svg: boolean): Record<string, boolean> {
     const classBase = 'v-icon'
-    const { iconName, className } = this
-    const classNames = [classBase]
-    if (className) {
-      classNames.push(className)
+    const dic: Record<string, boolean> = {
+      [classBase]: true
     }
     if (svg) {
-      classNames.push(`${classBase}--${iconName}`)
+      dic[`${classBase}--${name}`] = true
     } else {
-      classNames.push(getIconfontBaseClass(iconName), iconName)
+      dic[getIconfontBaseClass(name)] = true
+      dic[name] = true
     }
-    return stripClassNames(classNames.filter(Boolean).join(' '))
+    return dic
   }
 }

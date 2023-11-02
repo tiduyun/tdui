@@ -12,11 +12,10 @@ export default class SvgIcon extends Vue {
   className!: any
 
   render () {
-    const svgName = `#icon-${this.iconName.replace(/.svg$/, '')}`
     const svgClass = classNames('v-svg-icon', this.className)
     return (
       <svg aria-hidden="true" className={svgClass} on={this.$listeners}>
-        <use attrs={{ 'xlink:href': svgName }} />
+        <use attrs={{ 'xlink:href': `#${this.iconName}` }} />
       </svg>
     )
   }
