@@ -16,7 +16,7 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "strictNullChecks": true,
-    "diagnostics": true,
+    "diagnostics": false,
     "listFiles": false,
     "pretty": true,
     "noEmitOnError": false,

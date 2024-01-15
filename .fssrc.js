@@ -3,7 +3,7 @@
 
 import path from 'path'
 
-import { version, name, author, license, description, dependencies, peerDependencies } from './package.json'
+import { version, name, author, license, description } from './package.json'
 
 const banner = (name, short = false) => {
   let s
@@ -22,19 +22,24 @@ const banner = (name, short = false) => {
 
 const resolve = p => path.resolve(__dirname, '.', p)
 
-const utilPrefix = resolve('./lib/utils/')
+const sourceDir = resolve('./src')
 
-const resolveDistUtils = () => ({
-  resolveId (id) {
-    return id.indexOf('@/utils/') === 0
-      ? `${utilPrefix}${id.replace('@/utils', '')}`
-      : null
+const resolveUtils = () => ({
+  async load(id) {
+    const repath = path.relative(sourceDir, id)
+    if (repath.startsWith('utils/')) {
+      this.emitFile({
+        type: 'chunk',
+        id,
+        fileName: repath.replace(/.ts$/, '.js')
+      })
+    }
   }
 })
 
 const plugins = [
   'node-builtins',
-  resolveDistUtils(),
+  resolveUtils(),
   'resolve',
   'typescript',
   'babel',
@@ -45,17 +50,17 @@ const plugins = [
 
 export default {
   vue: true,
-  dependencies: { events: true, ...dependencies, ...peerDependencies },
-  compress: false,
+  plugins: {
+    typescript: {
+      tsconfig: resolve('./src/tsconfig.json')
+    }
+  },
   entry: [
     {
       input: resolve('src/index.tsx'),
       plugins,
-      external: (id, format, next) => {
-        return id.indexOf(utilPrefix) === 0 || next(id, true)
-      },
       output: [
-        { dir: './lib', format: 'es', banner: banner(name, true), entryFileNames: '[name].[format].js' }
+        { dir: 'lib', format: 'es', banner: banner(name, true), entryFileNames: '[name].[format].js' }
       ]
     }
   ]
